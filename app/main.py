@@ -1,7 +1,15 @@
 from fastapi import FastAPI
+
 # from fastapi.middleware.cors import CORSMiddleware
 from backbone.routers import (
-    cropping, perks, addons, characters, offerings, items, players, predict
+    cropping,
+    perks,
+    addons,
+    characters,
+    offerings,
+    items,
+    players,
+    predict,
 )
 
 app = FastAPI()

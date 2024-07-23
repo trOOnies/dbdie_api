@@ -15,10 +15,7 @@ router = APIRouter(prefix="/characters", tags=["characters"])
 
 
 @router.get("/count", response_model=int)
-def count_characters(
-    text: str = "",
-    db: Session = Depends(get_db)
-):
+def count_characters(text: str = "", db: Session = Depends(get_db)):
     query = db.query(models.Character)
     if text != "":
         query = filter_with_text(query, text, use_model="character")
@@ -26,27 +23,14 @@ def count_characters(
 
 
 @router.get("", response_model=list[schemas.Character])
-def get_characters(
-    limit: int = 10,
-    skip: int = 0,
-    db: "Session" = Depends(get_db)
-):
-    characters = (
-        db.query(models.Character)
-        .limit(limit)
-        .offset(skip)
-        .all()
-    )
+def get_characters(limit: int = 10, skip: int = 0, db: "Session" = Depends(get_db)):
+    characters = db.query(models.Character).limit(limit).offset(skip).all()
     return characters
 
 
 @router.get("/{id}", response_model=schemas.Character)
 def get_character(id: int, db: "Session" = Depends(get_db)):
-    character = (
-        db.query(models.Character)
-        .filter(models.Character.id == id)
-        .first()
-    )
+    character = db.query(models.Character).filter(models.Character.id == id).first()
     if character is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -68,8 +52,7 @@ def get_character_image(id: int):
 
 @router.post("", response_model=schemas.Character)
 def create_character(
-    character: schemas.CharacterCreate,
-    db: "Session" = Depends(get_db)
+    character: schemas.CharacterCreate, db: "Session" = Depends(get_db)
 ):
     if NOT_WS_PATT.search(character.name) is None:
         return status.HTTP_400_BAD_REQUEST
@@ -92,24 +75,15 @@ def create_character_full(
     name: str,
     is_killer: bool,
     perk_names: list[str],
-    addon_names: Optional[list[str]] = None
+    addon_names: Optional[list[str]] = None,
 ):
     prevalidate_new_character(perk_names, addon_names, is_killer)
 
     character = requests.post(
-        f"{os.environ['HOST']}/characters",
-        json={"name": name, "is_killer": is_killer}
+        f"{os.environ['HOST']}/characters", json={"name": name, "is_killer": is_killer}
     )
     character = character.json()
 
-    perks, addons = create_perks_and_addons(
-        character,
-        perk_names,
-        addon_names
-    )
+    perks, addons = create_perks_and_addons(character, perk_names, addon_names)
 
-    return {
-        "character": character,
-        "perks": perks,
-        "addons": addons
-    }
+    return {"character": character, "perks": perks, "addons": addons}

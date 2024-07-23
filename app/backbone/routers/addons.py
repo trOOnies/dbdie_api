@@ -13,10 +13,7 @@ router = APIRouter(prefix="/addons", tags=["addons"])
 
 
 @router.get("/count", response_model=int)
-def count_addons(
-    text: str = "",
-    db: Session = Depends(get_db)
-):
+def count_addons(text: str = "", db: Session = Depends(get_db)):
     query = db.query(models.Addon)
     if text != "":
         query = filter_with_text(query, text, use_model="addon")
@@ -24,27 +21,14 @@ def count_addons(
 
 
 @router.get("", response_model=list[schemas.Addon])
-def get_addons(
-    limit: int = 10,
-    skip: int = 0,
-    db: "Session" = Depends(get_db)
-):
-    addons = (
-        db.query(models.Addon)
-        .limit(limit)
-        .offset(skip)
-        .all()
-    )
+def get_addons(limit: int = 10, skip: int = 0, db: "Session" = Depends(get_db)):
+    addons = db.query(models.Addon).limit(limit).offset(skip).all()
     return addons
 
 
 @router.get("/{id}", response_model=schemas.Addon)
 def get_addon(id: int, db: "Session" = Depends(get_db)):
-    addon = (
-        db.query(models.Addon)
-        .filter(models.Addon.id == id)
-        .first()
-    )
+    addon = db.query(models.Addon).filter(models.Addon.id == id).first()
     if addon is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

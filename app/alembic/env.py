@@ -1,7 +1,7 @@
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 from logging.config import fileConfig
-from backbone.config import settings as STT
+from backbone.config import settings as ST
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -9,8 +9,9 @@ config = context.config
 config.set_main_option(
     "sqlalchemy.url",
     (
-        "postgresql+psycopg2://" + 
-        f"{STT.db_username}:{STT.db_password}@{STT.db_hostname}:{STT.db_port}/{STT.db_name}"
+        "postgresql+psycopg2://"
+        + f"{ST.db_username}:{ST.db_password}"
+        + f"@{ST.db_hostname}:{ST.db_port}/{ST.db_name}"
     ),
 )
 
@@ -69,9 +70,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()

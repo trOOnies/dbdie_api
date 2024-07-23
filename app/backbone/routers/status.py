@@ -18,7 +18,7 @@ def get_status(db: "Session" = Depends(get_db)):
             models.Status.name,
             models.Status.character_id,
             models.Status.is_dead,
-            models.Character.is_killer.label("is_for_killer")
+            models.Character.is_killer.label("is_for_killer"),
         )
         .join(models.Character)
         .all()
@@ -34,7 +34,7 @@ def get_status(id: int, db: "Session" = Depends(get_db)):
             models.Status.name,
             models.Status.character_id,
             models.Status.is_dead,
-            models.Character.is_killer.label("is_for_killer")
+            models.Character.is_killer.label("is_for_killer"),
         )
         .join(models.Character)
         .filter(models.Status.id == id)

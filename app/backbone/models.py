@@ -16,11 +16,7 @@ class Perk(Base):
 
     id = Column(Integer, primary_key=True, nullable=False)
     name = Column(String, nullable=False)
-    character_id = Column(
-        Integer,
-        ForeignKey("characters.id"),
-        nullable=False
-    )
+    character_id = Column(Integer, ForeignKey("characters.id"), nullable=False)
     character = relationship("Character")
 
 
@@ -36,11 +32,7 @@ class Item(Base):
 
     id = Column(Integer, primary_key=True, nullable=False)
     name = Column(String, nullable=False)
-    type_id = Column(
-        Integer,
-        ForeignKey("itemstypes.id"),
-        nullable=False
-    )
+    type_id = Column(Integer, ForeignKey("itemstypes.id"), nullable=False)
     type = relationship("ItemType")
 
 
@@ -56,19 +48,10 @@ class Addon(Base):
 
     id = Column(Integer, primary_key=True, nullable=False)
     name = Column(String, nullable=False)
-    type_id = Column(
-        Integer,
-        ForeignKey("addonstypes.id"),
-        nullable=False
-    )
+    type_id = Column(Integer, ForeignKey("addonstypes.id"), nullable=False)
     type = relationship("AddonType")
-    user_id = Column(
-        Integer,
-        ForeignKey("characters.id"),
-        nullable=False
-    )
+    user_id = Column(Integer, ForeignKey("characters.id"), nullable=False)
     user = relationship("Character")
-
 
 
 class OfferingType(Base):
@@ -83,17 +66,9 @@ class Offering(Base):
 
     id = Column(Integer, primary_key=True, nullable=False)
     name = Column(String, nullable=False)
-    type_id = Column(
-        Integer,
-        ForeignKey("offeringstypes.id"),
-        nullable=False
-    )
+    type_id = Column(Integer, ForeignKey("offeringstypes.id"), nullable=False)
     type = relationship("OfferingType")
-    user_id = Column(
-        Integer,
-        ForeignKey("characters.id"),
-        nullable=False
-    )
+    user_id = Column(Integer, ForeignKey("characters.id"), nullable=False)
     user = relationship("Character")
 
 
@@ -102,10 +77,6 @@ class Status(Base):
 
     id = Column(Integer, primary_key=True, nullable=False)
     name = Column(String, nullable=False)
-    character_id = Column(
-        Integer,
-        ForeignKey("characters.id"),
-        nullable=False
-    )
+    character_id = Column(Integer, ForeignKey("characters.id"), nullable=False)
     character = relationship("Character")
     is_dead = Column(Boolean, nullable=True)

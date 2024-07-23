@@ -21,10 +21,9 @@ async def get_all_info(ei_list: list[EncodedInfo]) -> dict:
     characters = await fetch_list("characters", [ei[0] for ei in ei_list])
     item = await fetch_list("items", [ei[2] for ei in ei_list])
     offering = await fetch_list("offerings", [ei[4] for ei in ei_list])
-    status = (
-        [Status(id=2, name="killed", is_dead=True) for _ in range(4)] \
-        + [Status(id=0, name="killer", is_dead=None)]
-    )
+    status = [Status(id=2, name="killed", is_dead=True) for _ in range(4)] + [
+        Status(id=0, name="killer", is_dead=None)
+    ]
     points = [ei[6] for ei in ei_list]
 
     perks = []
@@ -42,5 +41,5 @@ async def get_all_info(ei_list: list[EncodedInfo]) -> dict:
         "addons": addons,
         "offering": offering,
         "status": status,
-        "points": points
+        "points": points,
     }

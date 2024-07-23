@@ -17,11 +17,7 @@ def req_wrap(endpoint: str, id: int) -> dict:
     return resp.json()
 
 
-def filter_with_text(
-    query,
-    search_text: str,
-    use_model: Literal["perk", "character"]
-):
+def filter_with_text(query, search_text: str, use_model: Literal["perk", "character"]):
     if search_text != "":
         search_text = search_text.lower()
         model = MODELS_DICT[use_model]
@@ -30,4 +26,3 @@ def filter_with_text(
         else:
             raise NotImplementedError
     return query
-

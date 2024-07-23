@@ -1,12 +1,10 @@
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from PIL import Image
     from dbdie_ml.classes import SnippetCoords, SnippetInfo
 
-MOCK_SNIPPETS_COORDS = [
-    (67 + i * 117, 217, 67 + (i + 1) * 117, 897)
-    for i in range(5)
-]
+MOCK_SNIPPETS_COORDS = [(67 + i * 117, 217, 67 + (i + 1) * 117, 897) for i in range(5)]
 
 
 class MockSnippetModel:
@@ -23,7 +21,7 @@ class MockKillerModel:
             (10, 11),  # addons
             2,  # offering
             2,  # status
-            10_000  # points
+            10_000,  # points
         )
 
 
@@ -36,5 +34,5 @@ class MockPlayerModel:
             (10, 11),  # addons
             2,  # offering
             2,  # status
-            10_000  # points
+            10_000,  # points
         )

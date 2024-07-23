@@ -13,10 +13,7 @@ router = APIRouter(prefix="/perks", tags=["perks"])
 
 
 @router.get("/count", response_model=int)
-def count_perks(
-    text: str = "",
-    db: Session = Depends(get_db)
-):
+def count_perks(text: str = "", db: Session = Depends(get_db)):
     query = db.query(models.Perk)
     if text != "":
         query = filter_with_text(query, text, use_model="perk")
@@ -24,17 +21,13 @@ def count_perks(
 
 
 @router.get("", response_model=list[schemas.Perk])
-def get_perks(
-    limit: int = 10,
-    skip: int = 0,
-    db: "Session" = Depends(get_db)
-):
+def get_perks(limit: int = 10, skip: int = 0, db: "Session" = Depends(get_db)):
     perks = (
         db.query(
             models.Perk.id,
             models.Perk.name,
             models.Perk.character_id,
-            models.Character.is_killer.label("is_for_killer")
+            models.Character.is_killer.label("is_for_killer"),
         )
         .join(models.Character)
         .limit(limit)
@@ -52,7 +45,7 @@ def get_perk(id: int, db: "Session" = Depends(get_db)):
             models.Perk.id,
             models.Perk.name,
             models.Perk.character_id,
-            models.Character.is_killer.label("is_for_killer")
+            models.Character.is_killer.label("is_for_killer"),
         )
         .join(models.Character)
         .filter(models.Perk.id == id)

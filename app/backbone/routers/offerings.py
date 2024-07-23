@@ -11,18 +11,14 @@ router = APIRouter(prefix="/offerings", tags=["offerings"])
 
 
 @router.get("", response_model=list[schemas.Offering])
-def get_offerings(
-    limit: int = 10,
-    skip: int = 0,
-    db: "Session" = Depends(get_db)
-):
+def get_offerings(limit: int = 10, skip: int = 0, db: "Session" = Depends(get_db)):
     offerings = (
         db.query(
             models.Offering.id,
             models.Offering.name,
             models.Offering.type_id,
             models.Offering.user_id,
-            models.Character.is_killer.label("is_for_killer")
+            models.Character.is_killer.label("is_for_killer"),
         )
         .join(models.Character)
         .limit(limit)
@@ -40,7 +36,7 @@ def get_offering(id: int, db: "Session" = Depends(get_db)):
             models.Offering.name,
             models.Offering.type_id,
             models.Offering.user_id,
-            models.Character.is_killer.label("is_for_killer")
+            models.Character.is_killer.label("is_for_killer"),
         )
         .join(models.Character)
         .filter(models.Offering.id == id)

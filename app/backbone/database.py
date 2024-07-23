@@ -1,10 +1,14 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from backbone.config import settings
+from backbone.config import settings as ST
 
 # SQLALCHEMY_DATABASE_URL = "postgresql://<username>:<password>@<ip-address/hostname>/<database_name>"
-SQLALCHEMY_DATABASE_URL = f"postgresql://{settings.db_username}:{settings.db_password}@{settings.db_hostname}:{settings.db_port}/{settings.db_name}"
+SQLALCHEMY_DATABASE_URL = (
+    f"postgresql://{ST.db_username}" +
+    f":{ST.db_password}@{ST.db_hostname}" +
+    f":{ST.db_port}/{ST.db_name}"
+)
 # print(SQLALCHEMY_DATABASE_URL)
 
 engine = create_engine(
