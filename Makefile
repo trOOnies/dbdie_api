@@ -27,3 +27,7 @@ install:
 .PHONY: core-install
 core-install:
 	pip install $(core-path)
+
+.PHONY: api
+api:
+	uvicorn --app-dir=app --env-file=.env main:app

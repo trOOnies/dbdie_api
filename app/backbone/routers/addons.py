@@ -6,6 +6,7 @@ from fastapi import Depends, APIRouter, HTTPException, status
 from fastapi.responses import FileResponse
 from constants import ICONS_FOLDER
 from backbone import models
+from backbone.config import ST
 from backbone.database import get_db
 from backbone.endpoints import NOT_WS_PATT, filter_with_text, req_wrap
 
@@ -57,7 +58,7 @@ def create_addon(addon: schemas.AddonCreate, db: Session = Depends(get_db)):
     # TODO: assert type_id exists
 
     new_addon = addon.model_dump()
-    new_addon["id"] = requests.get(f"{os.environ['HOST']}/addons/count").json()
+    new_addon["id"] = requests.get(f"{ST.fastapi_host}/addons/count").json()
     new_addon = models.Addon(**new_addon)
 
     db.add(new_addon)

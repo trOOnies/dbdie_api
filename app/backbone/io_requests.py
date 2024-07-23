@@ -1,8 +1,8 @@
-import os
 import asyncio
 import aiohttp
 from dbdie_ml.classes import EncodedInfo
 from dbdie_ml.schemas import Status
+from backbone.config import ST
 
 
 async def fetch(session, url):
@@ -12,7 +12,7 @@ async def fetch(session, url):
 
 async def fetch_list(item_type: str, ids: list[int]):
     async with aiohttp.ClientSession() as session:
-        tasks = [fetch(session, f"{os['HOST']}/{item_type}/{id}") for id in ids]
+        tasks = [fetch(session, f"{ST.fastapi_host}/{item_type}/{id}") for id in ids]
         items = await asyncio.gather(*tasks)
     return items
 

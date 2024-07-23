@@ -7,6 +7,7 @@ from fastapi.responses import FileResponse
 from dbdie_ml import schemas
 from constants import ICONS_FOLDER
 from backbone import models
+from backbone.config import ST
 from backbone.database import get_db
 from backbone.endpoints import NOT_WS_PATT, filter_with_text, req_wrap
 from backbone.code.characters import prevalidate_new_character, create_perks_and_addons
@@ -58,7 +59,7 @@ def create_character(
         return status.HTTP_400_BAD_REQUEST
 
     new_character = character.model_dump()
-    new_character["id"] = requests.get(f"{os.environ['HOST']}/characters/count").json()
+    new_character["id"] = requests.get(f"{ST.fastapi_host}/characters/count").json()
     new_character = models.Character(**new_character)
 
     db.add(new_character)
@@ -80,7 +81,7 @@ def create_character_full(
     prevalidate_new_character(perk_names, addon_names, is_killer)
 
     character = requests.post(
-        f"{os.environ['HOST']}/characters", json={"name": name, "is_killer": is_killer}
+        f"{ST.fastapi_host}/characters", json={"name": name, "is_killer": is_killer}
     )
     character = character.json()
 

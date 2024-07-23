@@ -6,6 +6,7 @@ from fastapi import Depends, APIRouter, HTTPException, status
 from fastapi.responses import FileResponse
 from constants import ICONS_FOLDER
 from backbone import models
+from backbone.config import ST
 from backbone.database import get_db
 from backbone.endpoints import NOT_WS_PATT, req_wrap, filter_with_text
 
@@ -78,7 +79,7 @@ def create_perk(perk: schemas.PerkCreate, db: Session = Depends(get_db)):
     req_wrap("characters", perk.character_id)
 
     new_perk = perk.model_dump()
-    new_perk["id"] = requests.get(f"{os.environ['HOST']}/perks/count").json()
+    new_perk["id"] = requests.get(f"{ST.fastapi_host}/perks/count").json()
     new_perk = models.Perk(**new_perk)
 
     db.add(new_perk)

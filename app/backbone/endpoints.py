@@ -4,6 +4,7 @@ import requests
 from typing import Literal
 from sqlalchemy import func
 from dbdie_ml.schemas import Perk, Character, Addon
+from backbone.config import ST
 
 ENDPOINT_PATT = re.compile("[a-z]+$")
 NOT_WS_PATT = re.compile(r"\S")
@@ -13,7 +14,7 @@ MODELS_DICT = {"perk": Perk, "character": Character, "addon": Addon}
 
 def req_wrap(endpoint: str, id: int) -> dict:
     assert ENDPOINT_PATT.match(endpoint)
-    resp = requests.get(f"{os.environ['HOST']}/{endpoint}/{id}")
+    resp = requests.get(f"{ST.fastapi_host}/{endpoint}/{id}")
     return resp.json()
 
 

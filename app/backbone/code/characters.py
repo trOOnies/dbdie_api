@@ -2,6 +2,7 @@ import os
 import requests
 from typing import Optional
 from fastapi import HTTPException, status
+from backbone.config import ST
 
 ADDON_TYPE_ID = 1
 
@@ -32,7 +33,7 @@ def create_perks_and_addons(
     perks = []
     for perk_name in perk_names:
         p = requests.post(
-            f"{os.environ['HOST']}/perks",
+            f"{ST.fastapi_host}/perks",
             json={"name": perk_name, "character_id": character["id"]},
         )
         perks.append(p.json())
@@ -41,7 +42,7 @@ def create_perks_and_addons(
     if addon_names is not None:
         for addon_name in addon_names:
             a = requests.post(
-                f"{os.environ['HOST']}/addons",
+                f"{ST.fastapi_host}/addons",
                 json={
                     "name": addon_name,
                     "type_id": ADDON_TYPE_ID,
