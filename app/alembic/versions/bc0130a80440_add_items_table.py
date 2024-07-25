@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'bc0130a80440'
-down_revision = '7a9444ee8c15'
+revision = "bc0130a80440"
+down_revision = "7a9444ee8c15"
 branch_labels = None
 depends_on = None
 
@@ -21,12 +21,12 @@ def upgrade() -> None:
         "items",
         sa.Column("id", sa.Integer, primary_key=True),
         sa.Column("name", sa.String(64), nullable=False),
-        sa.Column("type_id", sa.Integer, nullable=False)
+        sa.Column("type_id", sa.Integer, nullable=False),
     )
     op.create_table(
         "itemstypes",
         sa.Column("id", sa.Integer, primary_key=True),
-        sa.Column("name", sa.String(32), nullable=False)
+        sa.Column("name", sa.String(32), nullable=False),
     )
 
     op.create_foreign_key(
@@ -34,7 +34,7 @@ def upgrade() -> None:
         source_table="items",
         referent_table="itemstypes",
         local_cols=["type_id"],
-        remote_cols=["id"]
+        remote_cols=["id"],
     )
 
 
