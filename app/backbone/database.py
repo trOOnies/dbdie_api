@@ -5,9 +5,9 @@ from backbone.config import ST
 
 # SQLALCHEMY_DATABASE_URL = "postgresql://<username>:<password>@<ip-address/hostname>/<database_name>"
 SQLALCHEMY_DATABASE_URL = (
-    f"postgresql://{ST.db_username}" +
-    f":{ST.db_password}@{ST.db_hostname}" +
-    f":{ST.db_port}/{ST.db_name}"
+    f"postgresql://{ST.db_username}"
+    + f":{ST.db_password}@{ST.db_hostname}"
+    + f":{ST.db_port}/{ST.db_name}"
 )
 # print(SQLALCHEMY_DATABASE_URL)
 
