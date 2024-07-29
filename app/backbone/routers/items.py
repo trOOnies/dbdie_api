@@ -7,7 +7,7 @@ from constants import ICONS_FOLDER
 from backbone import models
 from backbone.database import get_db
 
-router = APIRouter(prefix="/items", tags=["items"])
+router = APIRouter()
 
 
 @router.get("", response_model=list[schemas.Item])

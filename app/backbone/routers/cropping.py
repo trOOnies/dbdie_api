@@ -3,7 +3,7 @@ from fastapi.exceptions import HTTPException
 
 from dbdie_ml.cropper_swarm import CropperSwarm
 
-router = APIRouter(prefix="/crop")
+router = APIRouter()
 
 cps = CropperSwarm.from_types([["surv", "killer"], ["surv_player", "killer_player"]])
 

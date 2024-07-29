@@ -10,7 +10,7 @@ from backbone.config import ST
 from backbone.database import get_db
 from backbone.endpoints import NOT_WS_PATT, req_wrap, filter_with_text
 
-router = APIRouter(prefix="/perks", tags=["perks"])
+router = APIRouter()
 
 
 @router.get("/count", response_model=int)

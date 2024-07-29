@@ -1,11 +1,12 @@
 import os
 import datetime as dt
 from shutil import move
-from fastapi import APIRouter
+from fastapi import APIRouter, status
+from fastapi.exceptions import HTTPException
 from dbdie_ml.paths import absp, CROPPED_IMG_FD
 from backbone.code.cvat_code import load_images, create_cvat_task
 
-router = APIRouter(prefix="/cvat")
+router = APIRouter()
 
 IN_CVAT_FD = "data/img/in_cvat"  # TODO: Add to ml and import
 
@@ -35,13 +36,21 @@ PROJECTS_DICT = {
 }
 
 
-@router.post("/fill_cvat")
+@router.post(
+    "/fill-cvat",
+    status_code=status.HTTP_201_CREATED,
+)
 def fill_cvat(
     project_name: str,
     move_on_finish: bool,  # useful for partial uploads
 ):
     """Fills CVAT with crops that are pending."""
-    project = PROJECTS_DICT[project_name]
+    project = PROJECTS_DICT.get(project_name)
+    if project is None:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            f"Project '{project_name}' doesn't exist"
+        )
     print(project_name)
     print(project)
     print("Move on finish:", move_on_finish)

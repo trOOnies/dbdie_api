@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from dbdie_ml import schemas
 from backbone.endpoints import req_wrap
 
-router = APIRouter(prefix="/players", tags=["players"])
+router = APIRouter()
 
 
 @router.post("/{id}", response_model=schemas.PlayerOut)

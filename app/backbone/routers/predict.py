@@ -4,7 +4,7 @@ from fastapi import APIRouter, UploadFile
 from backbone.ml import process_image
 from dbdie_ml.schemas import MatchOut
 
-router = APIRouter(prefix="/predict", tags=["predict"])
+router = APIRouter()
 
 
 @router.post("", response_model=MatchOut)

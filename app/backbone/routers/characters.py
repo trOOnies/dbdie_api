@@ -12,7 +12,7 @@ from backbone.database import get_db
 from backbone.endpoints import NOT_WS_PATT, filter_with_text, req_wrap
 from backbone.code.characters import prevalidate_new_character, create_perks_and_addons
 
-router = APIRouter(prefix="/characters", tags=["characters"])
+router = APIRouter()
 
 
 @router.get("/count", response_model=int)
