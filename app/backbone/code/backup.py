@@ -2,26 +2,25 @@ import os
 from typing import TYPE_CHECKING
 from functools import partial
 from shutil import move, copy
-from dbdie_ml.paths import absp
+from dbdie_ml.paths import (
+    absp,
+    OLD_VERSIONS_NAME,
+    CROPS_MAIN_FD_RP,
+    CROPS_VERSIONS_FD_RP,
+    IMG_MAIN_FD_RP,
+    LABELS_MAIN_FD_RP,
+    LABELS_FD_RP,
+    LABELS_REF_FD_RP,
+)
 if TYPE_CHECKING:
     from dbdie_ml.classes import PathToFolder
 
-OLD_VERSIONS_NAME = "_old_versions"
-
-CROPS_MAIN_FD = absp("data/crops")
-CROPS_VERSIONS_FD = os.path.join(CROPS_MAIN_FD, OLD_VERSIONS_NAME)
-
-IMG_MAIN_FD = absp("data/img")
-IMG_VERSIONS_FD = os.path.join(IMG_MAIN_FD, OLD_VERSIONS_NAME)
-
-LABELS_MAIN_FD = absp("data/labels")
-LABELS_VERSIONS_FD = os.path.join(LABELS_MAIN_FD, OLD_VERSIONS_NAME)
-LABELS_FD = os.path.join(LABELS_MAIN_FD, "labels")
-LABELS_REF_FD = os.path.join(LABELS_MAIN_FD, "label_ref")
+IMG_VERSIONS_FD = os.path.join(absp(IMG_MAIN_FD_RP), OLD_VERSIONS_NAME)
+LABELS_VERSIONS_FD = os.path.join(absp(LABELS_MAIN_FD_RP), OLD_VERSIONS_NAME)
 
 
 def get_new_version_id() -> int:
-    versions = os.listdir(CROPS_VERSIONS_FD)
+    versions = os.listdir(absp(CROPS_VERSIONS_FD_RP))
     return max(int(fd) for fd in versions) + 1 if versions else 0
 
 
@@ -37,35 +36,39 @@ def process_version(main_fd: "PathToFolder", version_id: int) -> "PathToFolder":
 
 def backup_crops(version_id: int) -> None:
     """Backup DBDIE active crops."""
-    version_fd = process_version(CROPS_VERSIONS_FD, version_id)
+    version_fd = process_version(absp(CROPS_VERSIONS_FD_RP), version_id)
+
+    crops_main_fd = absp(CROPS_MAIN_FD_RP)
 
     all_dsts = [
         fd
-        for fd in os.listdir(CROPS_MAIN_FD)
-        if (not fd.startswith("_")) and os.path.isdir(os.path.join(CROPS_MAIN_FD, fd))
+        for fd in os.listdir(crops_main_fd)
+        if (not fd.startswith("_")) and os.path.isdir(os.path.join(crops_main_fd, fd))
     ]
 
     for dst in all_dsts:
-        from_path = os.path.join(CROPS_MAIN_FD, dst)
+        from_path = os.path.join(crops_main_fd, dst)
         if not os.path.exists(from_path):
             continue
         move(from_path, os.path.join(version_fd, dst))
 
     for dst in all_dsts:
-        os.mkdir(os.path.join(CROPS_MAIN_FD, dst))
+        os.mkdir(os.path.join(crops_main_fd, dst))
 
     copy(
-        os.path.join(CROPS_MAIN_FD, "crop_settings.py"),
+        os.path.join(crops_main_fd, "crop_settings.py"),
         os.path.join(version_fd, "crop_settings.py"),
     )
 
 
 def backup_images(version_id: int) -> None:
     """Backup DBDIE active images."""
+    img_main_fd = absp(IMG_MAIN_FD_RP)
+
     version_fd = process_version(IMG_VERSIONS_FD, version_id)
-    img_fds = [fd for fd in os.listdir(IMG_MAIN_FD) if fd != OLD_VERSIONS_NAME]
+    img_fds = [fd for fd in os.listdir(img_main_fd) if fd != OLD_VERSIONS_NAME]
     for fd in img_fds:
-        src_fd = os.path.join(IMG_MAIN_FD, fd)
+        src_fd = os.path.join(img_main_fd, fd)
         dst_fd = os.path.join(version_fd, fd)
         move(src_fd, dst_fd)
         os.mkdir(src_fd)
@@ -76,12 +79,16 @@ def backup_labels(version_id: int) -> None:
     version_fd = process_version(LABELS_VERSIONS_FD, version_id)
     rp = partial(os.path.join, version_fd)
 
-    move(LABELS_FD, rp("labels"))
-    move(LABELS_REF_FD, rp("label_ref"))
+    labels_main_fd = absp(LABELS_MAIN_FD_RP)
+    labels_fd = absp(LABELS_FD_RP)
+    labels_ref_fd = absp(LABELS_REF_FD_RP)
 
-    label_fds = [fd for fd in os.listdir(LABELS_MAIN_FD) if fd.startswith("project_")]
+    move(labels_fd, rp("labels"))
+    move(labels_ref_fd, rp("label_ref"))
+
+    label_fds = [fd for fd in os.listdir(labels_main_fd) if fd.startswith("project_")]
     for fd in label_fds:
-        move(os.path.join(LABELS_MAIN_FD, fd), rp(fd))
+        move(os.path.join(labels_main_fd, fd), rp(fd))
 
-    os.mkdir(LABELS_FD)
-    os.mkdir(LABELS_REF_FD)
+    os.mkdir(labels_fd)
+    os.mkdir(labels_ref_fd)

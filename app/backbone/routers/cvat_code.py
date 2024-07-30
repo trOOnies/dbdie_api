@@ -3,12 +3,12 @@ import datetime as dt
 from shutil import move
 from fastapi import APIRouter, status
 from fastapi.exceptions import HTTPException
-from dbdie_ml.paths import absp, CROPPED_IMG_FD
+from dbdie_ml.paths import (
+    absp, CROPS_MAIN_FD_RP, CROPPED_IMG_FD_RP, IN_CVAT_FD_RP
+)
 from backbone.code.cvat_code import load_images, create_cvat_task
 
 router = APIRouter()
-
-IN_CVAT_FD = "data/img/in_cvat"  # TODO: Add to ml and import
 
 SCREENSHOT_SL = 6
 PLAYER_SL = 8
@@ -55,15 +55,16 @@ def fill_cvat(
     print(project)
     print("Move on finish:", move_on_finish)
 
+    crops_main_fd = absp(CROPS_MAIN_FD_RP)
+    cropped_img_fd = absp(CROPPED_IMG_FD_RP)
+    in_cvat_fd = absp(IN_CVAT_FD_RP)
+
     imgs, staged_images = load_images(
         project=project,
-        main_images_fd=CROPPED_IMG_FD,
-        dst_fd=IN_CVAT_FD,
+        main_images_fd=cropped_img_fd,
+        dst_fd=in_cvat_fd,
     )
-    imgs_full = [
-        absp(os.path.join(f"data/crops/{project_name}", f))
-        for f in imgs
-    ]
+    imgs_full = [os.path.join(crops_main_fd, project_name, f) for f in imgs]
 
     now_str = dt.datetime.now().strftime("%Y%m%d%H%M%S")
     task_name = f"{project_name}_{now_str}"
@@ -74,7 +75,7 @@ def fill_cvat(
     if move_on_finish:
         for f in staged_images:
             move(
-                absp(os.path.join(CROPPED_IMG_FD, f"{f}.png")),
-                absp(os.path.join(IN_CVAT_FD, f"{f}.png")),
+                os.path.join(cropped_img_fd, f"{f}.png"),
+                os.path.join(in_cvat_fd, f"{f}.png"),
             )
         print("Images moved")
