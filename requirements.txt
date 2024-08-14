@@ -59,7 +59,7 @@ pip==24.1.2
 platformdirs==3.10.0
 prompt-toolkit==3.0.39
 psutil==5.9.0
-psycopg2==2.9.6
+psycopg2-binary==2.9.9
 pure-eval==0.2.2
 pydantic==2.5.3
 pydantic_core==2.14.6
@@ -75,7 +75,6 @@ python-dateutil==2.8.2
 python-dotenv==0.21.1
 python-multipart==0.0.6
 pytz==2023.3
-pywin32==306
 PyYAML==6.0.1
 pyzmq==25.1.0
 requests==2.31.0
@@ -89,10 +88,10 @@ starlette==0.27.0
 sympy==1.12
 tbb==2021.11.0
 tomli==2.0.1
-torch==2.3.1+cu118
-torchaudio==2.3.1+cu118
+torch==2.3.1  # +cu118
+torchaudio==2.3.1  # +cu118
 torchsummary==1.5.1
-torchvision==0.18.1+cu118
+torchvision==0.18.1  # +cu118
 tornado==6.3.2
 tqdm==4.66.1
 traitlets==5.9.0
