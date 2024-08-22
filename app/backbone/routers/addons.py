@@ -2,13 +2,15 @@ import os
 import requests
 from dbdie_ml import schemas
 from sqlalchemy.orm import Session
-from fastapi import Depends, APIRouter, HTTPException, status
+from fastapi import Depends, APIRouter, status
 from fastapi.responses import FileResponse
+
 from constants import ICONS_FOLDER
 from backbone import models
-from backbone.config import ST
+from backbone.config import endp
 from backbone.database import get_db
 from backbone.endpoints import NOT_WS_PATT, filter_with_text, req_wrap
+from backbone.exceptions import ItemNotFoundException
 
 router = APIRouter()
 
@@ -31,10 +33,7 @@ def get_addons(limit: int = 10, skip: int = 0, db: "Session" = Depends(get_db)):
 def get_addon(id: int, db: "Session" = Depends(get_db)):
     addon = db.query(models.Addon).filter(models.Addon.id == id).first()
     if addon is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"addon with id {id} was not found",
-        )
+        raise ItemNotFoundException("Addon", id)
     return addon
 
 
@@ -42,10 +41,7 @@ def get_addon(id: int, db: "Session" = Depends(get_db)):
 def get_addon_image(id: int):
     path = os.path.join(ICONS_FOLDER, f"addons/{id}.png")
     if not os.path.exists(path):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"addon image with id {id} was not found",
-        )
+        raise ItemNotFoundException("Addon image", id)
     return FileResponse(path)
 
 
@@ -58,12 +54,11 @@ def create_addon(addon: schemas.AddonCreate, db: Session = Depends(get_db)):
     # TODO: assert type_id exists
 
     new_addon = addon.model_dump()
-    new_addon["id"] = requests.get(f"{ST.fastapi_host}/addons/count").json()
+    new_addon["id"] = requests.get(endp("/addons/count")).json()
     new_addon = models.Addon(**new_addon)
 
     db.add(new_addon)
     db.commit()
-    # This retrieves the created new_publisher and stores it again (replaces the RETURNING)
-    db.refresh(new_addon)  # need orm_mode to be able to be returned
+    db.refresh(new_addon)
 
     return req_wrap("addons", new_addon.id)

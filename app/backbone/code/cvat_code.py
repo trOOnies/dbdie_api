@@ -4,6 +4,7 @@ from tqdm import tqdm
 from cvat_sdk import make_client
 from cvat_sdk.core.progress import ProgressReporter
 from cvat_sdk.core.proxies.tasks import ResourceType
+
 if TYPE_CHECKING:
     from dbdie_ml.classes import PathToFolder, Filename
 
@@ -47,9 +48,7 @@ class NewProgressReporter(ProgressReporter):
 
 
 def load_images(
-    project: dict,
-    main_images_fd: "PathToFolder",
-    dst_fd: "PathToFolder"
+    project: dict, main_images_fd: "PathToFolder", dst_fd: "PathToFolder"
 ) -> tuple[list["Filename"], set["Filename"]]:
     staged_images = set(f[:-4] for f in os.listdir(main_images_fd))
     assert staged_images
@@ -59,15 +58,15 @@ def load_images(
     assert all(f not in dst_images for f in staged_images)
 
     imgs = [
-        f for f in os.listdir(project["img_folder"])
+        f
+        for f in os.listdir(project["img_folder"])
         if f[: -project["suffix_len"]] in staged_images
     ]
     assert imgs
     print("CROPS TO UPLOAD:", len(imgs))
 
     staged_images = set(
-        f for f in staged_images
-        if f in set(i[: -project["suffix_len"]] for i in imgs)
+        f for f in staged_images if f in set(i[: -project["suffix_len"]] for i in imgs)
     )
 
     return imgs, staged_images

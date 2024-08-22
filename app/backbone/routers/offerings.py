@@ -1,11 +1,13 @@
 import os
 from dbdie_ml import schemas
 from sqlalchemy.orm import Session
-from fastapi import Depends, APIRouter, HTTPException, status
+from fastapi import Depends, APIRouter
 from fastapi.responses import FileResponse
+
 from constants import ICONS_FOLDER
 from backbone import models
 from backbone.database import get_db
+from backbone.exceptions import ItemNotFoundException
 
 router = APIRouter()
 
@@ -43,10 +45,7 @@ def get_offering(id: int, db: "Session" = Depends(get_db)):
         .first()
     )
     if offering is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"offering with id {id} was not found",
-        )
+        raise ItemNotFoundException("Offering", id)
     return offering
 
 
@@ -54,8 +53,5 @@ def get_offering(id: int, db: "Session" = Depends(get_db)):
 def get_offering_image(id: int):
     path = os.path.join(ICONS_FOLDER, f"offerings/{id}.png")
     if not os.path.exists(path):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"offering image with id {id} was not found",
-        )
+        raise ItemNotFoundException("Offering image", id)
     return FileResponse(path)

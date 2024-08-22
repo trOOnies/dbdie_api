@@ -7,6 +7,7 @@ from backbone.routers import (
     characters,
     cropping,
     cvat_code,
+    dbd_version,
     items,
     offerings,
     perks,
@@ -20,9 +21,14 @@ app = FastAPI()
 # TODO
 if True:
     app.include_router(addons.router, prefix="/addons", tags=["classes", "addons"])
-    app.include_router(characters.router, prefix="/characters", tags=["classes", "characters"])
+    app.include_router(
+        characters.router, prefix="/characters", tags=["classes", "characters"]
+    )
+    app.include_router(dbd_version.router, prefix="/dbd-version", tags=["helpers"])
     app.include_router(items.router, prefix="/items", tags=["classes", "items"])
-    app.include_router(offerings.router, prefix="/offerings", tags=["classes", "offerings"])
+    app.include_router(
+        offerings.router, prefix="/offerings", tags=["classes", "offerings"]
+    )
     app.include_router(perks.router, prefix="/perks", tags=["classes", "perks"])
     app.include_router(players.router, prefix="/players", tags=["classes", "players"])
     app.include_router(status.router, prefix="/status", tags=["classes", "status"])

@@ -16,10 +16,6 @@ venv:
 activate:
 	source .venv/bin/activate
 
-.PHONY: fmt
-fmt:
-	black .
-
 .PHONY: install
 install:
 	pip install -r requirements.txt
@@ -27,6 +23,18 @@ install:
 .PHONY: core-install
 core-install:
 	pip install $(core-path)
+
+.PHONY: fmt
+fmt:
+	ruff format
+
+.PHONY: lint
+lint:
+	ruff check --output-format=concise
+
+.PHONY: test
+test:
+	python3 -m pytest --cov=app
 
 .PHONY: api
 api:

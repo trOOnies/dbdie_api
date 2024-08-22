@@ -12,6 +12,7 @@ from dbdie_ml.paths import (
     LABELS_FD_RP,
     LABELS_REF_FD_RP,
 )
+
 if TYPE_CHECKING:
     from dbdie_ml.classes import PathToFolder
 

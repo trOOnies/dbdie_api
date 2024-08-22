@@ -3,9 +3,7 @@ import datetime as dt
 from shutil import move
 from fastapi import APIRouter, status
 from fastapi.exceptions import HTTPException
-from dbdie_ml.paths import (
-    absp, CROPS_MAIN_FD_RP, CROPPED_IMG_FD_RP, IN_CVAT_FD_RP
-)
+from dbdie_ml.paths import absp, CROPS_MAIN_FD_RP, CROPPED_IMG_FD_RP, IN_CVAT_FD_RP
 from backbone.code.cvat_code import load_images, create_cvat_task
 
 router = APIRouter()
@@ -48,8 +46,7 @@ def fill_cvat(
     project = PROJECTS_DICT.get(project_name)
     if project is None:
         raise HTTPException(
-            status.HTTP_404_NOT_FOUND,
-            f"Project '{project_name}' doesn't exist"
+            status.HTTP_404_NOT_FOUND, f"Project '{project_name}' doesn't exist"
         )
     print(project_name)
     print(project)

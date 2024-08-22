@@ -5,9 +5,11 @@ from sqlalchemy.orm import Session
 from fastapi import Depends, APIRouter, HTTPException, status
 from fastapi.responses import FileResponse
 from dbdie_ml import schemas
+from dbdie_ml.classes import DBDVersion
+
 from constants import ICONS_FOLDER
 from backbone import models
-from backbone.config import ST
+from backbone.config import endp
 from backbone.database import get_db
 from backbone.endpoints import NOT_WS_PATT, filter_with_text, req_wrap
 from backbone.code.characters import prevalidate_new_character, create_perks_and_addons
@@ -24,7 +26,11 @@ def count_characters(text: str = "", db: Session = Depends(get_db)):
 
 
 @router.get("", response_model=list[schemas.Character])
-def get_characters(limit: int = 10, skip: int = 0, db: "Session" = Depends(get_db)):
+def get_characters(
+    limit: int = 10,
+    skip: int = 0,
+    db: "Session" = Depends(get_db),
+):
     characters = db.query(models.Character).limit(limit).offset(skip).all()
     return characters
 
@@ -53,19 +59,19 @@ def get_character_image(id: int):
 
 @router.post("", response_model=schemas.Character)
 def create_character(
-    character: schemas.CharacterCreate, db: "Session" = Depends(get_db)
+    character: schemas.CharacterCreate,
+    db: "Session" = Depends(get_db),
 ):
     if NOT_WS_PATT.search(character.name) is None:
         return status.HTTP_400_BAD_REQUEST
 
     new_character = character.model_dump()
-    new_character["id"] = requests.get(f"{ST.fastapi_host}/characters/count").json()
+    new_character["id"] = requests.get(endp("/characters/count")).json()
     new_character = models.Character(**new_character)
 
     db.add(new_character)
     db.commit()
-    # This retrieves the created new_publisher and stores it again (replaces the RETURNING)
-    db.refresh(new_character)  # need orm_mode to be able to be returned
+    db.refresh(new_character)
 
     resp = req_wrap("characters", new_character.id)
     return resp
@@ -76,13 +82,18 @@ def create_character_full(
     name: str,
     is_killer: bool,
     perk_names: list[str],
+    dbd_version: DBDVersion,
     addon_names: Optional[list[str]] = None,
 ):
     prevalidate_new_character(perk_names, addon_names, is_killer)
 
-    character = requests.post(
-        f"{ST.fastapi_host}/characters", json={"name": name, "is_killer": is_killer}
-    )
+    dbd_version_id = requests.get(
+        endp("/dbd-version"),
+        params=dict(dbd_version),
+    ) 
+
+    payload = {"name": name, "is_killer": is_killer, "dbd_version_id": dbd_version_id}
+    character = requests.post(endp("/characters"), json=payload)
     character = character.json()
 
     perks, addons = create_perks_and_addons(character, perk_names, addon_names)

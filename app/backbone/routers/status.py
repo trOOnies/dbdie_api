@@ -1,17 +1,19 @@
 import os
 from dbdie_ml import schemas
 from sqlalchemy.orm import Session
-from fastapi import Depends, APIRouter, HTTPException, status
+from fastapi import Depends, APIRouter
 from fastapi.responses import FileResponse
+
 from constants import ICONS_FOLDER
 from backbone import models
 from backbone.database import get_db
+from backbone.exceptions import ItemNotFoundException
 
 router = APIRouter()
 
 
 @router.get("", response_model=list[schemas.Status])
-def get_status(db: "Session" = Depends(get_db)):
+def get_statuses(db: "Session" = Depends(get_db)):
     perks = (
         db.query(
             models.Status.id,
@@ -41,10 +43,7 @@ def get_status(id: int, db: "Session" = Depends(get_db)):
         .first()
     )
     if status_ is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"status with id {id} was not found",
-        )
+        raise ItemNotFoundException("Status", id)
     return status_
 
 
@@ -52,8 +51,5 @@ def get_status(id: int, db: "Session" = Depends(get_db)):
 def get_status_image(id: int):
     path = os.path.join(ICONS_FOLDER, f"status/{id}.png")
     if not os.path.exists(path):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"status image with id {id} was not found",
-        )
+        raise ItemNotFoundException("Status image", id)
     return FileResponse(path)

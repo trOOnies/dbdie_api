@@ -2,13 +2,15 @@ import os
 import requests
 from dbdie_ml import schemas
 from sqlalchemy.orm import Session
-from fastapi import Depends, APIRouter, HTTPException, status
+from fastapi import Depends, APIRouter, status
 from fastapi.responses import FileResponse
+
 from constants import ICONS_FOLDER
 from backbone import models
-from backbone.config import ST
+from backbone.config import endp
 from backbone.database import get_db
 from backbone.endpoints import NOT_WS_PATT, req_wrap, filter_with_text
+from backbone.exceptions import ItemNotFoundException
 
 router = APIRouter()
 
@@ -53,10 +55,7 @@ def get_perk(id: int, db: "Session" = Depends(get_db)):
         .first()
     )
     if perk is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"perk with id {id} was not found",
-        )
+        raise ItemNotFoundException("Perk", id)
     return perk
 
 
@@ -64,10 +63,7 @@ def get_perk(id: int, db: "Session" = Depends(get_db)):
 def get_perk_image(id: int):
     path = os.path.join(ICONS_FOLDER, f"perks/{id}.png")
     if not os.path.exists(path):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"perk image with id {id} was not found",
-        )
+        raise ItemNotFoundException("Perk image", id)
     return FileResponse(path)
 
 
@@ -79,12 +75,11 @@ def create_perk(perk: schemas.PerkCreate, db: Session = Depends(get_db)):
     req_wrap("characters", perk.character_id)
 
     new_perk = perk.model_dump()
-    new_perk["id"] = requests.get(f"{ST.fastapi_host}/perks/count").json()
+    new_perk["id"] = requests.get(endp("/perks/count")).json()
     new_perk = models.Perk(**new_perk)
 
     db.add(new_perk)
     db.commit()
-    # This retrieves the created new_publisher and stores it again (replaces the RETURNING)
-    db.refresh(new_perk)  # need orm_mode to be able to be returned
+    db.refresh(new_perk)
 
     return req_wrap("perks", new_perk.id)
