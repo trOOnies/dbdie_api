@@ -1,7 +1,8 @@
 from typing import TYPE_CHECKING
-from dbdie_ml.schemas import PlayerOut, MatchOut
-from dbdie_ml.cropper_swarm import CropperSwarm
+
 from backbone.io_requests import get_all_info
+from dbdie_ml.cropper_swarm import CropperSwarm
+from dbdie_ml.schemas.groupings import MatchOut, PlayerOut
 
 if TYPE_CHECKING:
     from PIL import Image

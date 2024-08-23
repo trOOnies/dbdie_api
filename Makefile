@@ -19,6 +19,7 @@ activate:
 .PHONY: install
 install:
 	pip install -r requirements.txt
+	pip install ../dbdie_ml
 
 .PHONY: core-install
 core-install:
@@ -38,4 +39,4 @@ test:
 
 .PHONY: api
 api:
-	uvicorn --app-dir=app --env-file=.env main:app
+	uvicorn --host=127.0.0.1 --port 8000 --app-dir=app --env-file=.env main:app

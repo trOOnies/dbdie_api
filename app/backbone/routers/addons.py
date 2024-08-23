@@ -1,6 +1,6 @@
 import os
 import requests
-from dbdie_ml import schemas
+from dbdie_ml.schemas.predictables import Addon, AddonCreate
 from sqlalchemy.orm import Session
 from fastapi import Depends, APIRouter, status
 from fastapi.responses import FileResponse
@@ -23,13 +23,13 @@ def count_addons(text: str = "", db: Session = Depends(get_db)):
     return query.count()
 
 
-@router.get("", response_model=list[schemas.Addon])
+@router.get("", response_model=list[Addon])
 def get_addons(limit: int = 10, skip: int = 0, db: "Session" = Depends(get_db)):
     addons = db.query(models.Addon).limit(limit).offset(skip).all()
     return addons
 
 
-@router.get("/{id}", response_model=schemas.Addon)
+@router.get("/{id}", response_model=Addon)
 def get_addon(id: int, db: "Session" = Depends(get_db)):
     addon = db.query(models.Addon).filter(models.Addon.id == id).first()
     if addon is None:
@@ -45,8 +45,8 @@ def get_addon_image(id: int):
     return FileResponse(path)
 
 
-@router.post("", response_model=schemas.Addon)
-def create_addon(addon: schemas.AddonCreate, db: Session = Depends(get_db)):
+@router.post("", response_model=Addon)
+def create_addon(addon: AddonCreate, db: Session = Depends(get_db)):
     if NOT_WS_PATT.search(addon.name) is None:
         return status.HTTP_400_BAD_REQUEST
 

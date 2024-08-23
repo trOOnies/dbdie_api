@@ -1,16 +1,16 @@
-from fastapi import APIRouter
-from dbdie_ml import schemas
 from backbone.endpoints import req_wrap
+from dbdie_ml.schemas.groupings import PlayerIn, PlayerOut
+from fastapi import APIRouter
 
 router = APIRouter()
 
 
-@router.post("/{id}", response_model=schemas.PlayerOut)
+@router.post("/{id}", response_model=PlayerOut)
 def form_player(
     id: int,
-    player: schemas.PlayerIn,
+    player: PlayerIn,
 ):
-    player_out = schemas.PlayerOut(
+    player_out = PlayerOut(
         id=id,
         character=req_wrap("characters", player.character_id),
         perks=[req_wrap("perks", perk_id) for perk_id in player.perk_ids],
@@ -23,12 +23,12 @@ def form_player(
 
 
 # @staticmethod
-# def to_players(snippets_info: "AllSnippetInfo") -> list["PlayerOut"]:
+# def to_players(snippets_info: "PlayersInfo") -> list["PlayerOut"]:
 #     return [to_player(i, sn_info) for i, sn_info in snippets_info.items()]
 
 # import requests
 # from dbdie_ml.classes import SnippetInfo, PlayerId
-# from dbdie_ml.schemas import PlayerIn, PlayerOut
+# from dbdie_ml.schemas.groupings import PlayerIn, PlayerOut
 
 # URL = "http://127.0.0.1:8000"
 

@@ -2,7 +2,7 @@ import re
 import requests
 from typing import Literal
 from sqlalchemy import func
-from dbdie_ml.schemas import Perk, Character, Addon
+from dbdie_ml.schemas.predictables import Perk, Character, Addon
 from backbone.config import endp
 
 ENDPOINT_PATT = re.compile("[a-z]+$")

@@ -1,5 +1,5 @@
 import os
-from dbdie_ml import schemas
+from dbdie_ml.schemas.predictables import Status
 from sqlalchemy.orm import Session
 from fastapi import Depends, APIRouter
 from fastapi.responses import FileResponse
@@ -12,7 +12,7 @@ from backbone.exceptions import ItemNotFoundException
 router = APIRouter()
 
 
-@router.get("", response_model=list[schemas.Status])
+@router.get("", response_model=list[Status])
 def get_statuses(db: "Session" = Depends(get_db)):
     perks = (
         db.query(
@@ -28,7 +28,7 @@ def get_statuses(db: "Session" = Depends(get_db)):
     return perks
 
 
-@router.get("/{id}", response_model=schemas.Status)
+@router.get("/{id}", response_model=Status)
 def get_status(id: int, db: "Session" = Depends(get_db)):
     status_ = (
         db.query(

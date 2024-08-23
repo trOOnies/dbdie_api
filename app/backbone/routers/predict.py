@@ -2,7 +2,7 @@ from io import BytesIO
 from PIL import Image
 from fastapi import APIRouter, UploadFile
 from backbone.ml import process_image
-from dbdie_ml.schemas import MatchOut
+from dbdie_ml.schemas.groupings import MatchOut
 
 router = APIRouter()
 

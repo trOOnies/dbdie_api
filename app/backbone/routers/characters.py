@@ -2,9 +2,9 @@ import os
 import requests
 from typing import Optional
 from sqlalchemy.orm import Session
-from fastapi import Depends, APIRouter, HTTPException, status
+from fastapi import Depends, APIRouter, status
 from fastapi.responses import FileResponse
-from dbdie_ml import schemas
+from dbdie_ml.schemas.predictables import Character, CharacterCreate, FullCharacter
 from dbdie_ml.classes import DBDVersion
 
 from constants import ICONS_FOLDER
@@ -12,6 +12,7 @@ from backbone import models
 from backbone.config import endp
 from backbone.database import get_db
 from backbone.endpoints import NOT_WS_PATT, filter_with_text, req_wrap
+from backbone.exceptions import ItemNotFoundException
 from backbone.code.characters import prevalidate_new_character, create_perks_and_addons
 
 router = APIRouter()
@@ -25,7 +26,7 @@ def count_characters(text: str = "", db: Session = Depends(get_db)):
     return query.count()
 
 
-@router.get("", response_model=list[schemas.Character])
+@router.get("", response_model=list[Character])
 def get_characters(
     limit: int = 10,
     skip: int = 0,
@@ -35,31 +36,42 @@ def get_characters(
     return characters
 
 
-@router.get("/{id}", response_model=schemas.Character)
+@router.get("/{id}", response_model=Character)
 def get_character(id: int, db: "Session" = Depends(get_db)):
     character = db.query(models.Character).filter(models.Character.id == id).first()
     if character is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"character with id {id} was not found",
-        )
+        raise ItemNotFoundException("Character", id)
     return character
+
+
+@router.get("/full/{id}", response_model=FullCharacter)
+def get_full_character(id: int, db: "Session" = Depends(get_db)):
+    # TODO: Test out
+    character = db.query(models.Character).filter(models.Character.id == id).first()
+    if character is None:
+        raise ItemNotFoundException("Character", id)
+
+    perks = db.query(models.Perk).filter(models.Perk.character_id == id).limit(3).all()
+    addons = db.query(models.Addon).filter(models.Addon.character_id == id).all()
+
+    return {
+        "character": character,
+        "perks": perks,
+        "addons": addons,
+    }
 
 
 @router.get("/{id}/image")
 def get_character_image(id: int):
     path = os.path.join(ICONS_FOLDER, f"characters/{id}.png")
     if not os.path.exists(path):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"character image with id {id} was not found",
-        )
+        raise ItemNotFoundException("Character image", id)
     return FileResponse(path)
 
 
-@router.post("", response_model=schemas.Character)
+@router.post("", response_model=Character)
 def create_character(
-    character: schemas.CharacterCreate,
+    character: CharacterCreate,
     db: "Session" = Depends(get_db),
 ):
     if NOT_WS_PATT.search(character.name) is None:
@@ -77,7 +89,7 @@ def create_character(
     return resp
 
 
-@router.post("/full", response_model=schemas.FullCharacter)
+@router.post("/full", response_model=FullCharacter)
 def create_character_full(
     name: str,
     is_killer: bool,
@@ -90,7 +102,7 @@ def create_character_full(
     dbd_version_id = requests.get(
         endp("/dbd-version"),
         params=dict(dbd_version),
-    ) 
+    )
 
     payload = {"name": name, "is_killer": is_killer, "dbd_version_id": dbd_version_id}
     character = requests.post(endp("/characters"), json=payload)

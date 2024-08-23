@@ -1,5 +1,5 @@
 import os
-from dbdie_ml import schemas
+from dbdie_ml.schemas.predictables import Offering
 from sqlalchemy.orm import Session
 from fastapi import Depends, APIRouter
 from fastapi.responses import FileResponse
@@ -12,7 +12,7 @@ from backbone.exceptions import ItemNotFoundException
 router = APIRouter()
 
 
-@router.get("", response_model=list[schemas.Offering])
+@router.get("", response_model=list[Offering])
 def get_offerings(limit: int = 10, skip: int = 0, db: "Session" = Depends(get_db)):
     offerings = (
         db.query(
@@ -30,7 +30,7 @@ def get_offerings(limit: int = 10, skip: int = 0, db: "Session" = Depends(get_db
     return offerings
 
 
-@router.get("/{id}", response_model=schemas.Offering)
+@router.get("/{id}", response_model=Offering)
 def get_offering(id: int, db: "Session" = Depends(get_db)):
     offering = (
         db.query(

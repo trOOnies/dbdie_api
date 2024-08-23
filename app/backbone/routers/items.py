@@ -1,5 +1,5 @@
 import os
-from dbdie_ml import schemas
+from dbdie_ml.schemas.predictables import Item
 from fastapi import Depends, APIRouter
 from fastapi.responses import FileResponse
 from typing import TYPE_CHECKING
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 router = APIRouter()
 
 
-@router.get("", response_model=list[schemas.Item])
+@router.get("", response_model=list[Item])
 def get_items(
     limit: int = 10,
     skip: int = 0,
@@ -25,7 +25,7 @@ def get_items(
     return items
 
 
-@router.get("/{id}", response_model=schemas.Item)
+@router.get("/{id}", response_model=Item)
 def get_item(id: int, db: "Session" = Depends(get_db)):
     item = db.query(models.Item).filter(models.Item.id == id).first()
     if item is None:
