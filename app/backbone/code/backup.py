@@ -14,7 +14,7 @@ from dbdie_ml.paths import (
 )
 
 if TYPE_CHECKING:
-    from dbdie_ml.classes import PathToFolder
+    from dbdie_ml.classes.base import PathToFolder
 
 IMG_VERSIONS_FD = os.path.join(absp(IMG_MAIN_FD_RP), OLD_VERSIONS_NAME)
 LABELS_VERSIONS_FD = os.path.join(absp(LABELS_MAIN_FD_RP), OLD_VERSIONS_NAME)

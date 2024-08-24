@@ -1,5 +1,8 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, Boolean, Date
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql.sqltypes import TIMESTAMP
+from sqlalchemy.sql.expression import text
+
 from backbone.database import Base
 
 
@@ -19,6 +22,7 @@ class Character(Base):
     is_killer = Column(Boolean, nullable=True)
     base_char_id = Column(Integer, nullable=True)
     dbd_version_id = Column(Integer, ForeignKey("dbd_version.id"), nullable=True)
+    dbd_version = relationship("DBDVersion")
 
 
 class Perk(Base):
@@ -29,6 +33,7 @@ class Perk(Base):
     character_id = Column(Integer, ForeignKey("character.id"), nullable=False)
     character = relationship("Character")
     dbd_version_id = Column(Integer, ForeignKey("dbd_version.id"), nullable=True)
+    dbd_version = relationship("DBDVersion")
 
 
 class ItemType(Base):
@@ -91,3 +96,27 @@ class Status(Base):
     character_id = Column(Integer, ForeignKey("character.id"), nullable=False)
     character = relationship("Character")
     is_dead = Column(Boolean, nullable=True)
+
+
+class Match(Base):
+    __tablename__ = "matches"
+
+    id = Column(Integer, primary_key=True, nullable=False)
+    filename = Column(String, nullable=False)
+    match_date = Column(Date, nullable=True)
+    dbd_version_id = Column(Integer, ForeignKey("dbd_version.id"), nullable=True)
+    dbd_version = relationship("DBDVersion")
+    special_mode = Column(Boolean, nullable=True)
+    user = Column(String, nullable=True)
+    extractor = Column(String, nullable=True)
+    kills = Column(Integer, nullable=True)
+    date_created = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        server_default=text("now()"),
+    )
+    date_modified = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        server_default=text("now()"),
+    )

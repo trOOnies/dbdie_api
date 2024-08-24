@@ -1,6 +1,6 @@
 import asyncio
 import aiohttp
-from dbdie_ml.classes import EncodedInfo
+from dbdie_ml.classes.base import EncodedInfo
 from dbdie_ml.schemas.predictables import Status
 
 from backbone.config import endp

@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from fastapi import Depends, APIRouter, status
 from fastapi.responses import FileResponse
 from dbdie_ml.schemas.predictables import Character, CharacterCreate, FullCharacter
-from dbdie_ml.classes import DBDVersion
+from dbdie_ml.classes.version import DBDVersion
 
 from constants import ICONS_FOLDER
 from backbone import models
@@ -78,7 +78,7 @@ def create_character(
         return status.HTTP_400_BAD_REQUEST
 
     new_character = character.model_dump()
-    new_character["id"] = requests.get(endp("/characters/count")).json()
+    new_character = {"id": requests.get(endp("/characters/count")).json()} | new_character
     new_character = models.Character(**new_character)
 
     db.add(new_character)

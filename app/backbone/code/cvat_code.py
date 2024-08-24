@@ -6,7 +6,7 @@ from cvat_sdk.core.progress import ProgressReporter
 from cvat_sdk.core.proxies.tasks import ResourceType
 
 if TYPE_CHECKING:
-    from dbdie_ml.classes import PathToFolder, Filename
+    from dbdie_ml.classes.base import PathToFolder, Filename
 
 
 class NewProgressReporter(ProgressReporter):

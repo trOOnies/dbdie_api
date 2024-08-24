@@ -54,7 +54,7 @@ def create_addon(addon: AddonCreate, db: Session = Depends(get_db)):
     # TODO: assert type_id exists
 
     new_addon = addon.model_dump()
-    new_addon["id"] = requests.get(endp("/addons/count")).json()
+    new_addon = {"id": requests.get(endp("/addons/count")).json()} | new_addon
     new_addon = models.Addon(**new_addon)
 
     db.add(new_addon)

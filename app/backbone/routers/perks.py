@@ -77,7 +77,7 @@ def create_perk(perk: PerkCreate, db: Session = Depends(get_db)):
     req_wrap("characters", perk.character_id)
 
     new_perk = perk.model_dump()
-    new_perk["id"] = requests.get(endp("/perks/count")).json()
+    new_perk = {"id": requests.get(endp("/perks/count")).json()} | new_perk
     new_perk = models.Perk(**new_perk)
 
     db.add(new_perk)
@@ -96,7 +96,7 @@ def update_perk(id: int, perk: PerkCreate, db: "Session" = Depends(get_db)):
     if present_perk is None:
         raise ItemNotFoundException("Perk", id)
 
-    new_info["id"] = id
+    new_info = {"id": id} | new_info
     character = requests.get(endp(f"/characters/{new_info['character_id']}"))
     if character.status_code != 200:
         raise ItemNotFoundException("Perk", id)

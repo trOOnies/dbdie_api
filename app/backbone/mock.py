@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING
 
-from dbdie_ml.classes import PlayerInfo
+from dbdie_ml.classes.base import PlayerInfo
 
 if TYPE_CHECKING:
-    from dbdie_ml.classes import SnippetCoords
+    from dbdie_ml.classes.base import CropCoords
     from PIL import Image
 
 MOCK_SNIPPETS_COORDS = [(67 + i * 117, 217, 67 + (i + 1) * 117, 897) for i in range(5)]
@@ -11,13 +11,13 @@ MOCK_SNIPPETS_COORDS = [(67 + i * 117, 217, 67 + (i + 1) * 117, 897) for i in ra
 
 class MockSnippetModel:
     @staticmethod
-    def predict(img: "Image") -> list["SnippetCoords"]:
+    def predict(img: "Image") -> list["CropCoords"]:
         return MOCK_SNIPPETS_COORDS
 
 
 class MockKillerModel:
     @staticmethod
-    def predict(snippet: "SnippetCoords") -> "PlayerInfo":
+    def predict(snippet: "CropCoords") -> "PlayerInfo":
         return PlayerInfo(
             character_id=10,
             perks_ids=(10, 11, 12, 13),
@@ -31,7 +31,7 @@ class MockKillerModel:
 
 class MockPlayerModel:
     @staticmethod
-    def predict(snippet: "SnippetCoords") -> "PlayerInfo":
+    def predict(snippet: "CropCoords") -> "PlayerInfo":
         return PlayerInfo(
             character_id=40,
             perks_ids=(10, 11, 12, 13),
