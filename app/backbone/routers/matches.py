@@ -6,6 +6,7 @@ from fastapi.exceptions import HTTPException
 from dbdie_ml.schemas.groupings import MatchCreate, MatchOut
 from dbdie_ml.classes.version import DBDVersion
 
+from backbone.utils import object_as_dict
 from backbone.database import get_db
 from backbone.endpoints import NOT_WS_PATT, req_wrap, filter_with_text
 from backbone.config import endp
@@ -26,16 +27,40 @@ def count_matches(text: str = "", db: "Session" = Depends(get_db)):
     return query.count()
 
 
+@router.get("", response_model=list[MatchOut])
+def get_matches(
+    limit: int = 10,
+    skip: int = 0,
+    db: "Session" = Depends(get_db),
+):
+    items = db.query(models.Match).limit(limit).offset(skip).all()
+    return items
+
+
 @router.get("/{id}", response_model=MatchOut)
 def get_match(id: int, db: "Session" = Depends(get_db)):
     match = (
         db.query(models.Match)
         .filter(models.Match.id == id)
-        .join(models.DBDVersion)
         .first()
     )
     if match is None:
         raise ItemNotFoundException("Match", id)
+
+    match = object_as_dict(match)
+
+    dbdv_id = match["dbd_version_id"]
+    if dbdv_id is None:
+        match["dbd_version"] = None
+    else:
+        resp = requests.get(endp(f"/dbd-version/{dbdv_id}"))
+        if resp.status_code == status.HTTP_404_NOT_FOUND:
+            raise ItemNotFoundException("DBD version", dbdv_id)
+        match["dbd_version"] = resp.json()
+
+    del match["dbd_version_id"]
+
+    match = MatchOut(**match)
     return match
 
 

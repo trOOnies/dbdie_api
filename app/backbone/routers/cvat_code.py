@@ -46,7 +46,8 @@ def fill_cvat(
     project = PROJECTS_DICT.get(project_name)
     if project is None:
         raise HTTPException(
-            status.HTTP_404_NOT_FOUND, f"Project '{project_name}' doesn't exist"
+            status.HTTP_404_NOT_FOUND,
+            f"Project '{project_name}' doesn't exist",
         )
     print(project_name)
     print(project)
