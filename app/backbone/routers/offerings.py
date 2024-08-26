@@ -1,6 +1,6 @@
 import os
+from typing import TYPE_CHECKING
 from dbdie_ml.schemas.predictables import Offering
-from sqlalchemy.orm import Session
 from fastapi import Depends, APIRouter
 from fastapi.responses import FileResponse
 
@@ -8,6 +8,9 @@ from constants import ICONS_FOLDER
 from backbone import models
 from backbone.database import get_db
 from backbone.exceptions import ItemNotFoundException
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import Session
 
 router = APIRouter()
 

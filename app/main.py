@@ -9,6 +9,7 @@ from backbone.routers import (
     cvat_code,
     dbd_version,
     items,
+    labels,
     matches,
     offerings,
     perks,
@@ -40,6 +41,7 @@ if True:
     )
     app.include_router(dbd_version.router, prefix="/dbd-version", tags=["helpers"])
     app.include_router(matches.router, prefix="/matches", tags=["predictables", "matches"])
+    app.include_router(labels.router, prefix="/labels", tags=["predictables", "labels"])
 
 # TODO
 if True:
