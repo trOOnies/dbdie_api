@@ -1,5 +1,3 @@
-from fastapi import FastAPI
-
 # from fastapi.middleware.cors import CORSMiddleware
 from backbone.routers import (
     addons,
@@ -15,8 +13,9 @@ from backbone.routers import (
     perks,
     players,
     predict,
-    status,
+    statuses,
 )
+from fastapi import FastAPI
 
 app = FastAPI(
     title="DBDIE API",
@@ -35,12 +34,16 @@ if True:
         offerings.router, prefix="/offerings", tags=["predictables", "offerings"]
     )
     app.include_router(perks.router, prefix="/perks", tags=["predictables", "perks"])
-    app.include_router(status.router, prefix="/status", tags=["predictables", "status"])
+    app.include_router(
+        statuses.router, prefix="/statuses", tags=["predictables", "statuses"]
+    )
     app.include_router(
         players.router, prefix="/players", tags=["predictables", "players"]
     )
     app.include_router(dbd_version.router, prefix="/dbd-version", tags=["helpers"])
-    app.include_router(matches.router, prefix="/matches", tags=["predictables", "matches"])
+    app.include_router(
+        matches.router, prefix="/matches", tags=["predictables", "matches"]
+    )
     app.include_router(labels.router, prefix="/labels", tags=["predictables", "labels"])
 
 # TODO

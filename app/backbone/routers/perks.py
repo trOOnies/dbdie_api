@@ -1,39 +1,46 @@
 import os
-import requests
-from dbdie_ml.schemas.predictables import Perk, PerkCreate
-from sqlalchemy.orm import Session
-from fastapi import Depends, APIRouter, status, Response
-from fastapi.responses import FileResponse
+from typing import TYPE_CHECKING
 
-from constants import ICONS_FOLDER
-from backbone import models
+import requests
 from backbone.config import endp
 from backbone.database import get_db
-from backbone.endpoints import NOT_WS_PATT, req_wrap, filter_with_text
-from backbone.exceptions import ItemNotFoundException
+from backbone.endpoints import NOT_WS_PATT, filter_with_text, get_req
+from backbone.exceptions import ItemNotFoundException, ValidationException
+from backbone.models import Character, Perk
+from constants import ICONS_FOLDER
+from dbdie_ml.schemas.predictables import PerkCreate, PerkOut
+from fastapi import APIRouter, Depends, Response, status
+from fastapi.responses import FileResponse
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import Session
 
 router = APIRouter()
 
 
 @router.get("/count", response_model=int)
-def count_perks(text: str = "", db: Session = Depends(get_db)):
-    query = db.query(models.Perk)
+def count_perks(text: str = "", db: "Session" = Depends(get_db)):
+    query = db.query(Perk)
     if text != "":
         query = filter_with_text(query, text, use_model="perk")
     return query.count()
 
 
-@router.get("", response_model=list[Perk])
-def get_perks(limit: int = 10, skip: int = 0, db: "Session" = Depends(get_db)):
+@router.get("", response_model=list[PerkOut])
+def get_perks(
+    limit: int = 10,
+    skip: int = 0,
+    db: "Session" = Depends(get_db),
+):
     perks = (
         db.query(
-            models.Perk.id,
-            models.Perk.name,
-            models.Perk.character_id,
-            models.Perk.dbd_version_id,
-            models.Character.is_killer.label("is_for_killer"),
+            Perk.id,
+            Perk.name,
+            Perk.character_id,
+            Perk.dbd_version_id,
+            Character.is_killer.label("is_for_killer"),
         )
-        .join(models.Character)
+        .join(Character)
         .limit(limit)
     )
     if skip > 0:
@@ -42,18 +49,18 @@ def get_perks(limit: int = 10, skip: int = 0, db: "Session" = Depends(get_db)):
     return perks
 
 
-@router.get("/{id}", response_model=Perk)
+@router.get("/{id}", response_model=PerkOut)
 def get_perk(id: int, db: "Session" = Depends(get_db)):
     perk = (
         db.query(
-            models.Perk.id,
-            models.Perk.name,
-            models.Perk.character_id,
-            models.Perk.dbd_version_id,
-            models.Character.is_killer.label("is_for_killer"),
+            Perk.id,
+            Perk.name,
+            Perk.character_id,
+            Perk.dbd_version_id,
+            Character.is_killer.label("is_for_killer"),
         )
-        .join(models.Character)
-        .filter(models.Perk.id == id)
+        .join(Character)
+        .filter(Perk.id == id)
         .first()
     )
     if perk is None:
@@ -69,40 +76,39 @@ def get_perk_image(id: int):
     return FileResponse(path)
 
 
-@router.post("", response_model=Perk)
-def create_perk(perk: PerkCreate, db: Session = Depends(get_db)):
+@router.post("", response_model=PerkOut)
+def create_perk(perk: PerkCreate, db: "Session" = Depends(get_db)):
     if NOT_WS_PATT.search(perk.name) is None:
-        return status.HTTP_400_BAD_REQUEST
+        raise ValidationException("Perk name can't be empty")
 
-    req_wrap("characters", perk.character_id)
+    assert (
+        requests.get(endp(f"/characters/{perk.character_id}")).status_code
+        == status.HTTP_200_OK
+    )
 
-    new_perk = perk.model_dump()
-    new_perk = {"id": requests.get(endp("/perks/count")).json()} | new_perk
-    new_perk = models.Perk(**new_perk)
+    new_perk = {"id": requests.get(endp("/perks/count")).json()} | perk.model_dump()
+    new_perk = Perk(**new_perk)
 
     db.add(new_perk)
     db.commit()
     db.refresh(new_perk)
 
-    return req_wrap("perks", new_perk.id)
+    return get_req("perks", new_perk.id)
 
 
 @router.put("/{id}", status_code=status.HTTP_200_OK)
 def update_perk(id: int, perk: PerkCreate, db: "Session" = Depends(get_db)):
-    new_info = perk.model_dump()
-
-    perk_query = db.query(models.Perk).filter(models.Perk.id == id)
+    perk_query = db.query(Perk).filter(Perk.id == id)
     present_perk = perk_query.first()
     if present_perk is None:
         raise ItemNotFoundException("Perk", id)
 
-    new_info = {"id": id} | new_info
-    character = requests.get(endp(f"/characters/{new_info['character_id']}"))
-    if character.status_code != 200:
-        raise ItemNotFoundException("Perk", id)
-    character = character.json()
+    new_info = {"id": id} | perk.model_dump()
+    character = get_req("characters", new_info["character_id"])
     character["is_for_killer"] = character["is_killer"]
 
+    new_info = Perk(**new_info)
     perk_query.update(new_info, synchronize_session=False)
     db.commit()
+
     return Response(status_code=status.HTTP_200_OK)

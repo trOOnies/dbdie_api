@@ -8,16 +8,18 @@ from dbdie_ml.paths import (
     CROPS_MAIN_FD_RP,
     CROPS_VERSIONS_FD_RP,
     IMG_MAIN_FD_RP,
+    IMG_VERSIONS_FD_RP,
     LABELS_MAIN_FD_RP,
     LABELS_FD_RP,
     LABELS_REF_FD_RP,
+    LABELS_VERSIONS_FD_RP,
 )
 
 if TYPE_CHECKING:
     from dbdie_ml.classes.base import PathToFolder
 
-IMG_VERSIONS_FD = os.path.join(absp(IMG_MAIN_FD_RP), OLD_VERSIONS_NAME)
-LABELS_VERSIONS_FD = os.path.join(absp(LABELS_MAIN_FD_RP), OLD_VERSIONS_NAME)
+IMG_VERSIONS_FD = absp(IMG_VERSIONS_FD_RP)
+LABELS_VERSIONS_FD = absp(LABELS_VERSIONS_FD_RP)
 
 
 def get_new_version_id() -> int:

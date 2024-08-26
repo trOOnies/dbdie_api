@@ -1,7 +1,6 @@
+from dbdie_ml.cropper_swarm import CropperSwarm
 from fastapi import APIRouter, status
 from fastapi.exceptions import HTTPException
-
-from dbdie_ml.cropper_swarm import CropperSwarm
 
 router = APIRouter()
 
@@ -31,7 +30,7 @@ def batch_crop(
             use_fmts=use_fmts,
         )
     except AssertionError as e:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e)) from e
     except Exception as e:
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, str(e))
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, str(e)) from e
     return status.HTTP_201_CREATED

@@ -1,4 +1,4 @@
-from backbone.endpoints import req_wrap
+from backbone.endpoints import get_req
 from dbdie_ml.schemas.groupings import PlayerIn, PlayerOut
 from fastapi import APIRouter
 
@@ -12,11 +12,11 @@ def form_player(
 ):
     player_out = PlayerOut(
         id=id,
-        character=req_wrap("characters", player.character_id),
-        perks=[req_wrap("perks", perk_id) for perk_id in player.perk_ids],
-        item=req_wrap("items", player.item_id),
-        addons=[req_wrap("addons", addon_id) for addon_id in player.addon_ids],
-        offering=req_wrap("offerings", player.offering_id),
+        character=get_req("characters", player.character_id),
+        perks=[get_req("perks", perk_id) for perk_id in player.perk_ids],
+        item=get_req("items", player.item_id),
+        addons=[get_req("addons", addon_id) for addon_id in player.addon_ids],
+        offering=get_req("offerings", player.offering_id),
     )
     player_out.check_consistency()
     return player_out
