@@ -1,22 +1,28 @@
+import os
 import re
-from typing import Literal
+from typing import TYPE_CHECKING
 
 import requests
 from backbone.config import endp
 from backbone.exceptions import ItemNotFoundException
-from dbdie_ml.schemas.groupings import MatchOut
-from dbdie_ml.schemas.predictables import AddonOut, CharacterOut, PerkOut
-from sqlalchemy import func
+from backbone.options import TABLE_NAMES as TN
+from constants import ICONS_FOLDER
+from fastapi.responses import FileResponse
+from sqlalchemy import func, inspect
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import Session
 
 ENDPOINT_PATT = re.compile("[a-z]+$")
 NOT_WS_PATT = re.compile(r"\S")
-
-ModelAllowed = Literal["perk", "character", "addon", "match"]
-SCHEMAS_DICT = {
-    "perk": PerkOut,
-    "character": CharacterOut,
-    "addon": AddonOut,
-    "match": MatchOut,
+NAME_FILTERED_TABLENAMES = {
+    TN.ADDONS,
+    TN.CHARACTER,
+    TN.DBD_VERSION,
+    TN.ITEM,
+    TN.OFFERING,
+    TN.PERKS,
+    TN.STATUS,
 }
 
 
@@ -29,14 +35,72 @@ def get_req(endpoint: str, id: int) -> dict:
     return resp.json()
 
 
-def filter_with_text(query, search_text: str, use_model: ModelAllowed):
-    if search_text != "":
-        search_text = search_text.lower()
-        model = SCHEMAS_DICT[use_model]
-        if use_model in {"perk", "character", "addon"}:
-            query = query.filter(func.lower(model.name).contains(search_text))
-        elif use_model == "match":
-            query = query.filter(func.lower(model.filename).contains(search_text))
-        else:
-            raise NotImplementedError
-    return query
+def object_as_dict(obj) -> dict:
+    """Converts a sqlalchemy object into a dict."""
+    return {c.key: getattr(obj, c.key) for c in inspect(obj).mapper.column_attrs}
+
+
+def filter_with_text(db: "Session", search_text: str, model):
+    """Adds a filter to a sqlalchemy query based on the filtered column.
+    search_text must already be non-empty.
+    """
+    search_text = search_text.lower()
+
+    if model._tablename_ in NAME_FILTERED_TABLENAMES:
+        query = db.query(model.name)
+        return query.filter(func.lower(model.name).contains(search_text))
+    elif model._tablename_ == TN.MATCHES:
+        query = db.query(model.filename)
+        return query.filter(func.lower(model.filename).contains(search_text))
+    else:
+        raise NotImplementedError
+
+
+# * Base endpoint functions
+
+
+def do_count(model, text: str, db: "Session") -> int:
+    """Base count function.
+    model is the sqlalchemy model.
+    """
+    if text == "":
+        query = db.query(model.id)
+    else:
+        query = filter_with_text(db, text, model)
+    return query.count()
+
+
+def get_one(model, model_str: str, id: int, db: "Session"):
+    """Base get one (item) function.
+    model is the sqlalchemy model, and model_str
+    is its string name (also capitalized).
+    """
+    item = db.query(model).filter(model.id == id).first()
+    if item is None:
+        raise ItemNotFoundException(model_str, id)
+    return item
+
+
+def get_many(
+    model,
+    limit: int,
+    skip: int,
+    db: "Session",
+):
+    """Base get many function.
+    model is the sqlalchemy model.
+    """
+    return db.query(model).limit(limit).offset(skip).all()
+
+
+def get_icon(
+    endpoint: str,
+    id: int,
+    plural_len: int = 1,
+) -> FileResponse:
+    """Base get icon function.
+    Get the icon of the endpoint item with id id."""
+    path = os.path.join(ICONS_FOLDER, f"{endpoint}/{id}.png")
+    if not os.path.exists(path):
+        raise ItemNotFoundException(f"{endpoint[:-plural_len].capitalize()} image", id)
+    return FileResponse(path)

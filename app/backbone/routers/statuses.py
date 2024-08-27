@@ -1,20 +1,22 @@
-import os
 from typing import TYPE_CHECKING
 
 import requests
 from backbone.database import get_db
-from backbone.endpoints import NOT_WS_PATT, endp, get_req
+from backbone.endpoints import NOT_WS_PATT, do_count, endp, get_icon, get_req
 from backbone.exceptions import ItemNotFoundException, ValidationException
 from backbone.models import Character, Status
-from constants import ICONS_FOLDER
 from dbdie_ml.schemas.predictables import StatusCreate, StatusOut
 from fastapi import APIRouter, Depends
-from fastapi.responses import FileResponse
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
 router = APIRouter()
+
+
+@router.get("/count", response_model=int)
+def count_statuses(text: str = "", db: "Session" = Depends(get_db)):
+    return do_count(Status, text, db)
 
 
 @router.get("", response_model=list[StatusOut])
@@ -52,12 +54,9 @@ def get_status(id: int, db: "Session" = Depends(get_db)):
     return status_
 
 
-@router.get("/{id}/image")
-def get_status_image(id: int):
-    path = os.path.join(ICONS_FOLDER, f"status/{id}.png")
-    if not os.path.exists(path):
-        raise ItemNotFoundException("Status image", id)
-    return FileResponse(path)
+@router.get("/{id}/icon")
+def get_status_icon(id: int):
+    return get_icon("statuses", id, plural_len=2)
 
 
 @router.post("", response_model=StatusOut)

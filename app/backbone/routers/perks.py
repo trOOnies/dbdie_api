@@ -1,16 +1,13 @@
-import os
 from typing import TYPE_CHECKING
 
 import requests
 from backbone.config import endp
 from backbone.database import get_db
-from backbone.endpoints import NOT_WS_PATT, filter_with_text, get_req
+from backbone.endpoints import NOT_WS_PATT, do_count, get_icon, get_req
 from backbone.exceptions import ItemNotFoundException, ValidationException
 from backbone.models import Character, Perk
-from constants import ICONS_FOLDER
 from dbdie_ml.schemas.predictables import PerkCreate, PerkOut
 from fastapi import APIRouter, Depends, Response, status
-from fastapi.responses import FileResponse
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -20,10 +17,7 @@ router = APIRouter()
 
 @router.get("/count", response_model=int)
 def count_perks(text: str = "", db: "Session" = Depends(get_db)):
-    query = db.query(Perk)
-    if text != "":
-        query = filter_with_text(query, text, use_model="perk")
-    return query.count()
+    return do_count(Perk, text, db)
 
 
 @router.get("", response_model=list[PerkOut])
@@ -68,12 +62,9 @@ def get_perk(id: int, db: "Session" = Depends(get_db)):
     return perk
 
 
-@router.get("/{id}/image")
-def get_perk_image(id: int):
-    path = os.path.join(ICONS_FOLDER, f"perks/{id}.png")
-    if not os.path.exists(path):
-        raise ItemNotFoundException("Perk image", id)
-    return FileResponse(path)
+@router.get("/{id}/icon")
+def get_perk_icon(id: int):
+    return get_icon("perks", id)
 
 
 @router.post("", response_model=PerkOut)

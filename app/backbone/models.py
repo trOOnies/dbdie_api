@@ -1,21 +1,19 @@
-from sqlalchemy import (
-    Boolean as Bool,
-    Column as C,
-    Date,
-    ForeignKey as FK,
-    Integer as Int,
-    SmallInteger as SmallInt,
-    String as Str,
-)
-from sqlalchemy.orm import relationship as rel
-from sqlalchemy.sql.sqltypes import TIMESTAMP
-from sqlalchemy.sql.expression import text
-
 from backbone.database import Base
+from backbone.options import TABLE_NAMES as TN
+from sqlalchemy import Boolean as Bool
+from sqlalchemy import Column as C
+from sqlalchemy import Date
+from sqlalchemy import ForeignKey as FK
+from sqlalchemy import Integer as Int
+from sqlalchemy import SmallInteger as SmallInt
+from sqlalchemy import String as Str
+from sqlalchemy.orm import relationship as rel
+from sqlalchemy.sql.expression import text
+from sqlalchemy.sql.sqltypes import TIMESTAMP
 
 
 class DBDVersion(Base):
-    __tablename__ = "dbd_version"
+    __tablename__ = TN.DBD_VERSION
 
     id = C(Int, primary_key=True, nullable=False)
     name = C(Str, nullable=False)
@@ -23,104 +21,104 @@ class DBDVersion(Base):
 
 
 class Character(Base):
-    __tablename__ = "character"
+    __tablename__ = TN.CHARACTER
 
     id = C(SmallInt, primary_key=True, nullable=False)
     name = C(Str, nullable=False)
     is_killer = C(Bool, nullable=True)
     base_char_id = C(SmallInt, nullable=True)
-    dbd_version_id = C(Int, FK("dbd_version.id"), nullable=True)
+    dbd_version_id = C(Int, FK(f"{TN.DBD_VERSION}.id"), nullable=True)
     dbd_version = rel("DBDVersion")
 
 
 class Perk(Base):
-    __tablename__ = "perks"
+    __tablename__ = TN.PERKS
 
     id = C(SmallInt, primary_key=True, nullable=False)
     name = C(Str, nullable=False)
-    character_id = C(SmallInt, FK("character.id"), nullable=False)
+    character_id = C(SmallInt, FK(f"{TN.CHARACTER}.id"), nullable=False)
     character = rel("Character")
-    dbd_version_id = C(Int, FK("dbd_version.id"), nullable=True)
+    dbd_version_id = C(Int, FK(f"{TN.DBD_VERSION}.id"), nullable=True)
     dbd_version = rel("DBDVersion")
 
 
 class ItemType(Base):
-    __tablename__ = "item_types"
+    __tablename__ = TN.ITEM_TYPES
 
     id = C(SmallInt, primary_key=True, nullable=False)
     name = C(Str, nullable=False)
 
 
 class Item(Base):
-    __tablename__ = "item"
+    __tablename__ = TN.ITEM
 
     id = C(SmallInt, primary_key=True, nullable=False)
     name = C(Str, nullable=False)
-    type_id = C(SmallInt, FK("item_types.id"), nullable=False)
+    type_id = C(SmallInt, FK(f"{TN.ITEM_TYPES}.id"), nullable=False)
     type = rel("ItemType")
-    dbd_version_id = C(Int, FK("dbd_version.id"), nullable=True)
+    dbd_version_id = C(Int, FK(f"{TN.DBD_VERSION}.id"), nullable=True)
     dbd_version = rel("DBDVersion")
 
 
 class AddonType(Base):
-    __tablename__ = "addons_types"
+    __tablename__ = TN.ADDONS_TYPES
 
     id = C(SmallInt, primary_key=True, nullable=False)
     name = C(Str, nullable=False)
 
 
 class Addon(Base):
-    __tablename__ = "addons"
+    __tablename__ = TN.ADDONS
 
     id = C(SmallInt, primary_key=True, nullable=False)
     name = C(Str, nullable=False)
-    type_id = C(SmallInt, FK("addons_types.id"), nullable=False)
+    type_id = C(SmallInt, FK(f"{TN.ADDONS_TYPES}.id"), nullable=False)
     type = rel("AddonType")
-    user_id = C(SmallInt, FK("character.id"), nullable=False)
+    user_id = C(SmallInt, FK(f"{TN.CHARACTER}.id"), nullable=False)
     user = rel("Character")
-    dbd_version_id = C(Int, FK("dbd_version.id"), nullable=True)
+    dbd_version_id = C(Int, FK(f"{TN.DBD_VERSION}.id"), nullable=True)
     dbd_version = rel("DBDVersion")
 
 
 class OfferingType(Base):
-    __tablename__ = "offering_types"
+    __tablename__ = TN.OFFERING_TYPES
 
     id = C(SmallInt, primary_key=True, nullable=False)
     name = C(Str, nullable=False)
 
 
 class Offering(Base):
-    __tablename__ = "offering"
+    __tablename__ = TN.OFFERING
 
     id = C(SmallInt, primary_key=True, nullable=False)
     name = C(Str, nullable=False)
-    type_id = C(SmallInt, FK("offering_types.id"), nullable=False)
+    type_id = C(SmallInt, FK(f"{TN.OFFERING_TYPES}.id"), nullable=False)
     type = rel("OfferingType")
-    user_id = C(SmallInt, FK("character.id"), nullable=False)
+    user_id = C(SmallInt, FK(f"{TN.CHARACTER}.id"), nullable=False)
     user = rel("Character")
-    dbd_version_id = C(Int, FK("dbd_version.id"), nullable=True)
+    dbd_version_id = C(Int, FK(f"{TN.DBD_VERSION}.id"), nullable=True)
     dbd_version = rel("DBDVersion")
 
 
 class Status(Base):
-    __tablename__ = "status"
+    __tablename__ = TN.STATUS
 
     id = C(SmallInt, primary_key=True, nullable=False)
     name = C(Str, nullable=False)
-    character_id = C(SmallInt, FK("character.id"), nullable=False)
+    character_id = C(SmallInt, FK(f"{TN.CHARACTER}.id"), nullable=False)
     character = rel("Character")
     is_dead = C(Bool, nullable=True)
-    dbd_version_id = C(Int, FK("dbd_version.id"), nullable=True)
+    dbd_version_id = C(Int, FK(f"{TN.DBD_VERSION}.id"), nullable=True)
     dbd_version = rel("DBDVersion")
 
 
 class Match(Base):
-    __tablename__ = "matches"
+    __tablename__ = TN.MATCHES
 
     id = C(Int, primary_key=True, nullable=False)
     filename = C(Str, nullable=False)
     match_date = C(Date, nullable=True)
-    dbd_version_id = C(Int, FK("dbd_version.id"), nullable=True)
+    dbd_version_id = C(Int, FK(f"{TN.DBD_VERSION}.id"), nullable=True)
     dbd_version = rel("DBDVersion")
     special_mode = C(Bool, nullable=True)
     user = C(Str, nullable=True)
@@ -139,11 +137,11 @@ class Match(Base):
 
 
 class Labels(Base):
-    __tablename__ = "labels"
+    __tablename__ = TN.LABELS
 
     match_id = C(
         Int,
-        FK("matches.id"),
+        FK(f"{TN.MATCHES}.id"),
         primary_key=True,
         nullable=False,
     )

@@ -1,16 +1,20 @@
-import os
 from typing import TYPE_CHECKING
 
 import requests
 from backbone.config import endp
 from backbone.database import get_db
-from backbone.endpoints import NOT_WS_PATT, filter_with_text, get_req
-from backbone.exceptions import ItemNotFoundException, ValidationException
+from backbone.endpoints import (
+    NOT_WS_PATT,
+    do_count,
+    get_icon,
+    get_many,
+    get_one,
+    get_req,
+)
+from backbone.exceptions import ValidationException
 from backbone.models import Addon
-from constants import ICONS_FOLDER
 from dbdie_ml.schemas.predictables import AddonCreate, AddonOut
 from fastapi import APIRouter, Depends
-from fastapi.responses import FileResponse
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -20,32 +24,22 @@ router = APIRouter()
 
 @router.get("/count", response_model=int)
 def count_addons(text: str = "", db: "Session" = Depends(get_db)):
-    query = db.query(Addon)
-    if text != "":
-        query = filter_with_text(query, text, use_model="addon")
-    return query.count()
+    return do_count(Addon, text, db)
 
 
 @router.get("", response_model=list[AddonOut])
 def get_addons(limit: int = 10, skip: int = 0, db: "Session" = Depends(get_db)):
-    addons = db.query(Addon).limit(limit).offset(skip).all()
-    return addons
+    return get_many(Addon, limit, skip, db)
 
 
 @router.get("/{id}", response_model=AddonOut)
 def get_addon(id: int, db: "Session" = Depends(get_db)):
-    addon = db.query(Addon).filter(Addon.id == id).first()
-    if addon is None:
-        raise ItemNotFoundException("Addon", id)
-    return addon
+    return get_one(Addon, "Addon", id, db)
 
 
-@router.get("/{id}/image")
-def get_addon_image(id: int):
-    path = os.path.join(ICONS_FOLDER, f"addons/{id}.png")
-    if not os.path.exists(path):
-        raise ItemNotFoundException("Addon image", id)
-    return FileResponse(path)
+@router.get("/{id}/icon")
+def get_addon_icon(id: int):
+    return get_icon("addons", id)
 
 
 @router.post("", response_model=AddonOut)

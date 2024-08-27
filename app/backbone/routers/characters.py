@@ -1,14 +1,19 @@
-import os
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import requests
 from backbone.code.characters import create_perks_and_addons, prevalidate_new_character
 from backbone.config import endp
 from backbone.database import get_db
-from backbone.endpoints import NOT_WS_PATT, filter_with_text, get_req
+from backbone.endpoints import (
+    NOT_WS_PATT,
+    do_count,
+    get_icon,
+    get_many,
+    get_one,
+    get_req,
+)
 from backbone.exceptions import ItemNotFoundException, ValidationException
 from backbone.models import Addon, Character, Perk
-from constants import ICONS_FOLDER
 from dbdie_ml.classes.version import DBDVersion
 from dbdie_ml.schemas.predictables import (
     CharacterCreate,
@@ -16,7 +21,6 @@ from dbdie_ml.schemas.predictables import (
     FullCharacterOut,
 )
 from fastapi import APIRouter, Depends
-from fastapi.responses import FileResponse
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -26,10 +30,7 @@ router = APIRouter()
 
 @router.get("/count", response_model=int)
 def count_characters(text: str = "", db: "Session" = Depends(get_db)):
-    query = db.query(Character)
-    if text != "":
-        query = filter_with_text(query, text, use_model="character")
-    return query.count()
+    return do_count(Character, text, db)
 
 
 @router.get("", response_model=list[CharacterOut])
@@ -38,16 +39,17 @@ def get_characters(
     skip: int = 0,
     db: "Session" = Depends(get_db),
 ):
-    characters = db.query(Character).limit(limit).offset(skip).all()
-    return characters
+    return get_many(Character, limit, skip, db)
 
 
 @router.get("/{id}", response_model=CharacterOut)
 def get_character(id: int, db: "Session" = Depends(get_db)):
-    character = db.query(Character).filter(Character.id == id).first()
-    if character is None:
-        raise ItemNotFoundException("Character", id)
-    return character
+    return get_one(Character, "Character", id, db)
+
+
+@router.get("/{id}/icon")
+def get_character_icon(id: int):
+    return get_icon("characters", id)
 
 
 @router.get("/full/{id}", response_model=FullCharacterOut)
@@ -65,14 +67,6 @@ def get_full_character(id: int, db: "Session" = Depends(get_db)):
         "perks": perks,
         "addons": addons,
     }
-
-
-@router.get("/{id}/image")
-def get_character_image(id: int):
-    path = os.path.join(ICONS_FOLDER, f"characters/{id}.png")
-    if not os.path.exists(path):
-        raise ItemNotFoundException("Character image", id)
-    return FileResponse(path)
 
 
 @router.post("", response_model=CharacterOut)

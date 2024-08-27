@@ -4,10 +4,16 @@ import requests
 from backbone.code.matches import form_match
 from backbone.config import endp
 from backbone.database import get_db
-from backbone.endpoints import NOT_WS_PATT, filter_with_text, get_req
+from backbone.endpoints import (
+    NOT_WS_PATT,
+    do_count,
+    get_many,
+    get_one,
+    get_req,
+    object_as_dict,
+)
 from backbone.exceptions import ItemNotFoundException, ValidationException
 from backbone.models import Match
-from backbone.utils import object_as_dict
 from dbdie_ml.schemas.groupings import MatchCreate, MatchOut
 from fastapi import APIRouter, Depends, status
 from fastapi.exceptions import HTTPException
@@ -20,10 +26,7 @@ router = APIRouter()
 
 @router.get("/count", response_model=int)
 def count_matches(text: str = "", db: "Session" = Depends(get_db)):
-    query = db.query(Match)
-    if text != "":
-        query = filter_with_text(query, text, use_model="match")
-    return query.count()
+    return do_count(Match, text, db)
 
 
 @router.get("", response_model=list[MatchOut])
@@ -32,31 +35,27 @@ def get_matches(
     skip: int = 0,
     db: "Session" = Depends(get_db),
 ):
-    items = db.query(Match).limit(limit).offset(skip).all()
-    return items
+    return get_many(Match, limit, skip, db)
 
 
 @router.get("/{id}", response_model=MatchOut)
 def get_match(id: int, db: "Session" = Depends(get_db)):
-    match = db.query(Match).filter(Match.id == id).first()
-    if match is None:
-        raise ItemNotFoundException("Match", id)
+    m = get_one(Match, "Match", id, db)
+    m = object_as_dict(m)
 
-    match = object_as_dict(match)
-
-    dbdv_id = match["dbd_version_id"]
+    dbdv_id = m["dbd_version_id"]
     if dbdv_id is None:
-        match["dbd_version"] = None
+        m["dbd_version"] = None
     else:
         resp = requests.get(endp(f"/dbd-version/{dbdv_id}"))
         if resp.status_code == status.HTTP_404_NOT_FOUND:
             raise ItemNotFoundException("DBD version", dbdv_id)
-        match["dbd_version"] = resp.json()
+        m["dbd_version"] = resp.json()
 
-    del match["dbd_version_id"]
+    del m["dbd_version_id"]
 
-    match = MatchOut(**match)
-    return match
+    m = MatchOut(**m)
+    return m
 
 
 @router.post("", response_model=MatchOut)

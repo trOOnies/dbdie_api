@@ -1,20 +1,22 @@
-import os
 from typing import TYPE_CHECKING
 
 import requests
 from backbone.database import get_db
-from backbone.endpoints import NOT_WS_PATT, endp, get_req
+from backbone.endpoints import NOT_WS_PATT, do_count, endp, get_icon, get_req
 from backbone.exceptions import ItemNotFoundException, ValidationException
 from backbone.models import Character, Offering
-from constants import ICONS_FOLDER
 from dbdie_ml.schemas.predictables import OfferingCreate, OfferingOut
 from fastapi import APIRouter, Depends
-from fastapi.responses import FileResponse
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
 router = APIRouter()
+
+
+@router.get("/count", response_model=int)
+def count_offerings(text: str = "", db: "Session" = Depends(get_db)):
+    return do_count(Offering, text, db)
 
 
 @router.get("", response_model=list[OfferingOut])
@@ -58,12 +60,9 @@ def get_offering(id: int, db: "Session" = Depends(get_db)):
     return offering
 
 
-@router.get("/{id}/image")
-def get_offering_image(id: int):
-    path = os.path.join(ICONS_FOLDER, f"offerings/{id}.png")
-    if not os.path.exists(path):
-        raise ItemNotFoundException("Offering image", id)
-    return FileResponse(path)
+@router.get("/{id}/icon")
+def get_offering_icon(id: int):
+    return get_icon("offerings", id)
 
 
 @router.post("", response_model=OfferingOut)
