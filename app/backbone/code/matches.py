@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 import requests
-from backbone.endpoints import endp
+from backbone.config import endp
 from dbdie_ml.classes.version import DBDVersion
 from fastapi import HTTPException, status
 

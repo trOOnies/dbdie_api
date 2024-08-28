@@ -1,12 +1,11 @@
 from typing import TYPE_CHECKING
 
 from backbone.database import get_db
-from backbone.endpoints import do_count, get_many, get_one
+from backbone.endpoints import do_count, get_id, get_many, get_one
 from backbone.exceptions import ItemNotFoundException
 from backbone.models import DBDVersion
 from dbdie_ml.schemas.predictables import DBDVersionCreate, DBDVersionOut
 from fastapi import APIRouter, Depends, Response, status
-from fastapi.exceptions import HTTPException
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -26,14 +25,7 @@ def get_dbd_versions(limit: int = 10, skip: int = 0, db: "Session" = Depends(get
 
 @router.get("/id", response_model=int)
 def get_dbd_version_id(dbd_version_str: str, db: "Session" = Depends(get_db)):
-    dbd_version = (
-        db.query(DBDVersion).filter(DBDVersion.name == dbd_version_str).first()
-    )
-    if dbd_version is None:
-        raise HTTPException(
-            status.HTTP_404_NOT_FOUND, f"DBD version '{dbd_version_str}' was not found"
-        )
-    return dbd_version.id
+    return get_id(DBDVersion, dbd_version_str, db)
 
 
 @router.get("/{id}", response_model=DBDVersionOut)

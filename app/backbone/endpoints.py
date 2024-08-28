@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import requests
 from backbone.config import endp
-from backbone.exceptions import ItemNotFoundException
+from backbone.exceptions import ItemNotFoundException, NameNotFoundException
 from backbone.options import TABLE_NAMES as TN
 from constants import ICONS_FOLDER
 from fastapi.responses import FileResponse
@@ -99,8 +99,19 @@ def get_icon(
     plural_len: int = 1,
 ) -> FileResponse:
     """Base get icon function.
-    Get the icon of the endpoint item with id id."""
+    Get the icon of the `endpoint` item with id `id`."""
     path = os.path.join(ICONS_FOLDER, f"{endpoint}/{id}.png")
     if not os.path.exists(path):
         raise ItemNotFoundException(f"{endpoint[:-plural_len].capitalize()} image", id)
     return FileResponse(path)
+
+
+def get_id(model, name: str, db: "Session", name_col: str = "name") -> int:
+    """Base get id function.
+    Get the id of the item whose name is `name`.
+    """
+    assert name_col in {"name", "filename"}
+    item = db.query(model).filter(getattr(model, name_col) == name).first()
+    if item is None:
+        raise NameNotFoundException("DBD version", name)
+    return item.id

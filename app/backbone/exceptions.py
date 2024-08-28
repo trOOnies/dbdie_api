@@ -2,6 +2,19 @@ from typing import Any
 from fastapi import HTTPException, status
 
 
+class ValidationException(HTTPException):
+    def __init__(
+        self,
+        detail: Any,
+        headers: dict[str, str] | None = None,
+    ) -> None:
+        super().__init__(
+            status.HTTP_400_BAD_REQUEST,
+            detail,
+            headers,
+        )
+
+
 class ItemNotFoundException(HTTPException):
     def __init__(
         self,
@@ -16,14 +29,15 @@ class ItemNotFoundException(HTTPException):
         )
 
 
-class ValidationException(HTTPException):
+class NameNotFoundException(HTTPException):
     def __init__(
         self,
-        detail: Any,
+        item_type: str,
+        name: str,
         headers: dict[str, str] | None = None,
     ) -> None:
         super().__init__(
-            status.HTTP_400_BAD_REQUEST,
-            detail,
+            status.HTTP_404_NOT_FOUND,
+            f"{item_type} '{name}' was not found",
             headers,
         )

@@ -1,8 +1,9 @@
 from typing import TYPE_CHECKING
 
 import requests
+from backbone.config import endp
 from backbone.database import get_db
-from backbone.endpoints import NOT_WS_PATT, do_count, endp, get_icon, get_req
+from backbone.endpoints import NOT_WS_PATT, do_count, get_icon, get_req
 from backbone.exceptions import ItemNotFoundException, ValidationException
 from backbone.models import Character, Offering
 from dbdie_ml.schemas.predictables import OfferingCreate, OfferingOut
