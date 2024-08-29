@@ -5,6 +5,7 @@ from backbone.config import endp
 from backbone.database import get_db
 from backbone.endpoints import (
     NOT_WS_PATT,
+    add_commit_refresh,
     do_count,
     get_icon,
     get_many,
@@ -54,8 +55,6 @@ def create_addon(addon: AddonCreate, db: "Session" = Depends(get_db)):
     new_addon = {"id": requests.get(endp("/addons/count")).json()} | new_addon
     new_addon = Addon(**new_addon)
 
-    db.add(new_addon)
-    db.commit()
-    db.refresh(new_addon)
+    add_commit_refresh(new_addon, db)
 
     return get_req("addons", new_addon.id)

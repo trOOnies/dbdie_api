@@ -46,14 +46,20 @@ def filter_with_text(db: "Session", search_text: str, model):
     """
     search_text = search_text.lower()
 
-    if model._tablename_ in NAME_FILTERED_TABLENAMES:
+    if model.__tablename__ in NAME_FILTERED_TABLENAMES:
         query = db.query(model.name)
         return query.filter(func.lower(model.name).contains(search_text))
-    elif model._tablename_ == TN.MATCHES:
+    elif model.__tablename__ == TN.MATCHES:
         query = db.query(model.filename)
         return query.filter(func.lower(model.filename).contains(search_text))
     else:
         raise NotImplementedError
+
+
+def add_commit_refresh(model, db: "Session") -> None:
+    db.add(model)
+    db.commit()
+    db.refresh(model)
 
 
 # * Base endpoint functions
@@ -99,7 +105,8 @@ def get_icon(
     plural_len: int = 1,
 ) -> FileResponse:
     """Base get icon function.
-    Get the icon of the `endpoint` item with id `id`."""
+    Get the icon of the `endpoint` item with id `id`.
+    """
     path = os.path.join(ICONS_FOLDER, f"{endpoint}/{id}.png")
     if not os.path.exists(path):
         raise ItemNotFoundException(f"{endpoint[:-plural_len].capitalize()} image", id)
@@ -114,4 +121,4 @@ def get_id(model, name: str, db: "Session", name_col: str = "name") -> int:
     item = db.query(model).filter(getattr(model, name_col) == name).first()
     if item is None:
         raise NameNotFoundException("DBD version", name)
-    return item.id
+    return item.id 

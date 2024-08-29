@@ -3,7 +3,13 @@ from typing import TYPE_CHECKING
 import requests
 from backbone.config import endp
 from backbone.database import get_db
-from backbone.endpoints import NOT_WS_PATT, do_count, get_icon, get_req
+from backbone.endpoints import (
+    NOT_WS_PATT,
+    add_commit_refresh,
+    do_count,
+    get_icon,
+    get_req,
+)
 from backbone.exceptions import ItemNotFoundException, ValidationException
 from backbone.models import Character, Perk
 from dbdie_ml.schemas.predictables import PerkCreate, PerkOut
@@ -80,9 +86,7 @@ def create_perk(perk: PerkCreate, db: "Session" = Depends(get_db)):
     new_perk = {"id": requests.get(endp("/perks/count")).json()} | perk.model_dump()
     new_perk = Perk(**new_perk)
 
-    db.add(new_perk)
-    db.commit()
-    db.refresh(new_perk)
+    add_commit_refresh(new_perk, db)
 
     return get_req("perks", new_perk.id)
 

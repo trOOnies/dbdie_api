@@ -1,11 +1,12 @@
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import requests
-from backbone.code.characters import create_perks_and_addons, prevalidate_new_character
+from backbone.code.characters import create_perks_and_addons
 from backbone.config import endp
 from backbone.database import get_db
 from backbone.endpoints import (
     NOT_WS_PATT,
+    add_commit_refresh,
     do_count,
     get_icon,
     get_many,
@@ -14,10 +15,10 @@ from backbone.endpoints import (
 )
 from backbone.exceptions import ItemNotFoundException, ValidationException
 from backbone.models import Addon, Character, Perk
-from dbdie_ml.classes.version import DBDVersion
 from dbdie_ml.schemas.predictables import (
     CharacterCreate,
     CharacterOut,
+    FullCharacterCreate,
     FullCharacterOut,
 )
 from fastapi import APIRouter, Depends
@@ -82,33 +83,31 @@ def create_character(
     } | character.model_dump()
     new_character = Character(**new_character)
 
-    db.add(new_character)
-    db.commit()
-    db.refresh(new_character)
+    add_commit_refresh(new_character, db)
 
     resp = get_req("characters", new_character.id)
     return resp
 
 
 @router.post("/full", response_model=FullCharacterOut)
-def create_character_full(
-    name: str,
-    is_killer: bool,
-    perk_names: list[str],
-    dbd_version: DBDVersion,
-    addon_names: Optional[list[str]] = None,
-):
-    prevalidate_new_character(perk_names, addon_names, is_killer)
-
+def create_character_full(character: FullCharacterCreate):
     dbd_version_id = requests.get(
         endp("/dbd-version"),
-        params=dict(dbd_version),
+        params=dict(character.dbd_version),
     )
 
-    payload = {"name": name, "is_killer": is_killer, "dbd_version_id": dbd_version_id}
-    character = requests.post(endp("/characters"), json=payload)
-    character = character.json()
+    payload = {
+        "name": character.is_killer,
+        "is_killer": character.is_killer,
+        "dbd_version_id": dbd_version_id,
+    }
+    character_only = requests.post(endp("/characters"), json=payload)
+    character_only = character_only.json()
 
-    perks, addons = create_perks_and_addons(character, perk_names, addon_names)
+    perks, addons = create_perks_and_addons(
+        character_only,
+        character.perk_names,
+        character.addon_names,
+    )
 
-    return {"character": character, "perks": perks, "addons": addons}
+    return {"character": character_only, "perks": perks, "addons": addons}

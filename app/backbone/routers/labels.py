@@ -1,17 +1,26 @@
+import os
 from typing import TYPE_CHECKING
 
-import requests
 import pandas as pd
-from dbdie_ml.classes.base import FullModelType
-from backbone.code.labels import concat_player_types, player_to_labels
+import requests
+from backbone.code.labels import (
+    concat_player_types,
+    handle_mpp_crops,
+    handle_opp_crops,
+    join_dfs,
+    player_to_labels,
+)
 from backbone.config import endp
 from backbone.database import get_db
+from backbone.endpoints import add_commit_refresh
 from backbone.models import Labels
+from dbdie_ml.classes.base import FullModelType
 from dbdie_ml.options import COMMON_FMT, KILLER_FMT, SURV_FMT
 from dbdie_ml.paths import LABELS_FD_RP, absp
 from dbdie_ml.schemas.groupings import LabelsCreate, LabelsOut, PlayerIn
-from fastapi import APIRouter, Depends, status, Response
+from fastapi import APIRouter, Depends, Response, status
 from fastapi.exceptions import HTTPException
+
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -33,7 +42,6 @@ def get_labels(
     player_id: int,
     db: "Session" = Depends(get_db),
 ):
-    print("HEY")
     labels = (
         db.query(Labels)
         .filter(Labels.match_id == match_id)
@@ -63,9 +71,7 @@ def create_labels(
     del new_labels["player"]
     new_labels = Labels(**new_labels)
 
-    db.add(new_labels)
-    db.commit()
-    db.refresh(new_labels)
+    add_commit_refresh(new_labels, db)
 
     resp = requests.get(
         endp("/labels"),
@@ -75,11 +81,11 @@ def create_labels(
         },
     )
     if resp.status_code != status.HTTP_200_OK:
-        raise HTTPException(resp.status_code, resp.json()["detail"])
+        raise HTTPException(resp.status_code, resp.reason)
     return resp.json()
 
 
-@router.post("", status_code=status.HTTP_200_OK)
+@router.post("/batch", status_code=status.HTTP_200_OK)
 def batch_create_labels(fmts: list[FullModelType], filename: str):
     """Create labels from label CSVs."""
     # TODO: Fix
@@ -89,29 +95,20 @@ def batch_create_labels(fmts: list[FullModelType], filename: str):
     # TODO
     # * Additional temporary filter
     assert all(
-        fmt in {KILLER_FMT.PERKS, SURV_FMT.PERKS, KILLER_FMT.CHARACTER, SURV_FMT.CHARACTER}
+        fmt
+        in {KILLER_FMT.PERKS, SURV_FMT.PERKS, KILLER_FMT.CHARACTER, SURV_FMT.CHARACTER}
         for fmt in fmts
     )
 
     dfs = {
         fmt: pd.read_csv(
-            absp(LABELS_FD_RP, f"{fmt}/{filename}"),
+            os.path.join(absp(LABELS_FD_RP), f"{fmt}/{filename}"),
             usecols=["name", "label_id"],
         )
         for fmt in fmts
     }
 
-    # One per player crop -> (name, player_id, <obj>)
-    for c in [SURV_FMT.CHARACTER, KILLER_FMT.CHARACTER]:
-        if c in dfs:
-            dfs[c]["player_id"] = dfs[c]["name"].str[-7]
-            dfs[c] = dfs[c].astype({"player_id": int})
-            dfs[c]["name"] = (
-                dfs[c]["name"].str[:-7]
-                + dfs[c]["name"].str[-4:]
-            )
-            dfs[c] = dfs[c].rename({"label_id": "character"}, axis=1)
-
+    handle_opp_crops(dfs)
     concat_player_types(
         dfs,
         SURV_FMT.CHARACTER,
@@ -119,22 +116,7 @@ def batch_create_labels(fmts: list[FullModelType], filename: str):
         new_fmt="character",
     )
 
-    # Many per player crop -> (name, player_id, <obj>_i)
-    for c in [SURV_FMT.PERKS, KILLER_FMT.PERKS]:
-        if c in dfs:
-            dfs[c]["player_id"] = dfs[c]["name"].str[-7]
-            dfs[c]["perk_id"] = dfs[c]["name"].str[-5]
-            dfs[c]["name"] = (
-                dfs[c]["name"].str[:-7]
-                + dfs[c]["name"].str[-4:]
-            )
-
-            dfs[c] = dfs[c].rename({"perk_id": "perk"}, axis=1)
-            dfs[c] = dfs[c].astype({"player_id": int, "perk": int})
-
-            dfs[c] = pd.get_dummies(dfs[c], columns=["perk"])
-            assert "perk" not in dfs[c].columns
-
+    handle_mpp_crops(dfs)
     concat_player_types(
         dfs,
         SURV_FMT.PERKS,
@@ -142,19 +124,12 @@ def batch_create_labels(fmts: list[FullModelType], filename: str):
         new_fmt="perks",
     )
 
-    dfs = {fmt: df.set_index("name", drop=True) for fmt, df in dfs.items()}
+    dfs = {fmt: df.set_index(["name", "player_id"], drop=True) for fmt, df in dfs.items()}
 
-    is_first = True
-    for fmt in dfs:
-        if is_first:
-            joined_df = dfs[fmt].copy()
-            is_first = False
-        else:
-            joined_df = joined_df.join(dfs[fmt])
-        dfs[fmt] = None
-    del dfs
+    joined_df = join_dfs(dfs)
+    joined_df = joined_df.reset_index(drop=False)
 
-    joined_df["match_id"] = joined_df.index.map(
+    joined_df["match_id"] = joined_df["name"].map(
         lambda f: requests.get(
             endp("/matches/id"),
             params={"filename": f},
@@ -166,11 +141,11 @@ def batch_create_labels(fmts: list[FullModelType], filename: str):
         requests.post(
             endp("/labels"),
             json={
-                "match_id": row["match_id"],
+                "match_id": int(row["match_id"]),
                 "player": {
-                    "id": row["player_id"],
-                    "character_id": row["character"],
-                    "perk_ids": [row[f"perk_{i}"] for i in range(4)],
+                    "id": int(row["player_id"]),
+                    "character_id": int(row["character"]),
+                    "perk_ids": [int(row[f"perk_{i}"]) for i in range(4)],
                     "item_id": None,
                     "addon_ids": None,
                     "offering_id": None,

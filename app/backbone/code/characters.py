@@ -1,26 +1,9 @@
-import requests
 from typing import Optional
 
+import requests
 from backbone.config import endp
-from backbone.exceptions import ValidationException
 
 ADDON_TYPE_ID = 1
-
-
-def prevalidate_new_character(
-    perk_names: list[str],
-    addon_names: Optional[list[str]],
-    is_killer: bool,
-) -> None:
-    if len(perk_names) != 3:
-        raise ValidationException("You must provide exactly 3 perk names")
-
-    if is_killer:
-        if len(addon_names) != 20:
-            raise ValidationException("You must provide exactly 20 addon names")
-    else:
-        if addon_names is not None:
-            raise ValidationException("Survivors can't have addon names")
 
 
 def create_perks_and_addons(

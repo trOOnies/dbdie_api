@@ -3,7 +3,13 @@ from typing import TYPE_CHECKING
 import requests
 from backbone.config import endp
 from backbone.database import get_db
-from backbone.endpoints import NOT_WS_PATT, do_count, get_icon, get_req
+from backbone.endpoints import (
+    NOT_WS_PATT,
+    add_commit_refresh,
+    do_count,
+    get_icon,
+    get_req,
+)
 from backbone.exceptions import ItemNotFoundException, ValidationException
 from backbone.models import Character, Offering
 from dbdie_ml.schemas.predictables import OfferingCreate, OfferingOut
@@ -78,8 +84,6 @@ def create_offering(offering: OfferingCreate, db: "Session" = Depends(get_db)):
     } | offering.model_dump()
     new_offering = Offering(**new_offering)
 
-    db.add(new_offering)
-    db.commit()
-    db.refresh(new_offering)
+    add_commit_refresh(new_offering, db)
 
     return get_req("offerings", new_offering.id)

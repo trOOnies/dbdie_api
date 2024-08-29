@@ -39,6 +39,11 @@ def get_matches(
     return get_many(Match, limit, skip, db)
 
 
+@router.get("/id", response_model=int)
+def get_match_id(filename: str, db: "Session" = Depends(get_db)):
+    return get_id(Match, filename, db, name_col="filename")
+
+
 @router.get("/{id}", response_model=MatchOut)
 def get_match(id: int, db: "Session" = Depends(get_db)):
     m = get_one(Match, "Match", id, db)
@@ -57,11 +62,6 @@ def get_match(id: int, db: "Session" = Depends(get_db)):
 
     m = MatchOut(**m)
     return m
-
-
-@router.get("/id", response_model=int)
-def get_match_id(filename: str, db: "Session" = Depends(get_db)):
-    return get_id(Match, filename, db, name_col="filename")
 
 
 @router.post("", response_model=MatchOut)

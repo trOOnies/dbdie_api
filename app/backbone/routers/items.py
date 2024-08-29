@@ -4,6 +4,7 @@ import requests
 from backbone.database import get_db
 from backbone.endpoints import (
     NOT_WS_PATT,
+    add_commit_refresh,
     do_count,
     endp,
     get_icon,
@@ -56,8 +57,6 @@ def create_item(item: ItemCreate, db: "Session" = Depends(get_db)):
     new_item = {"id": requests.get(endp("/items/count")).json()} | item.model_dump()
     new_item = Item(**new_item)
 
-    db.add(new_item)
-    db.commit()
-    db.refresh(new_item)
+    add_commit_refresh(new_item, db)
 
     return get_req("items", new_item.id)

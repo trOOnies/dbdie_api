@@ -3,7 +3,13 @@ from typing import TYPE_CHECKING
 import requests
 from backbone.config import endp
 from backbone.database import get_db
-from backbone.endpoints import NOT_WS_PATT, do_count, get_icon, get_req
+from backbone.endpoints import (
+    NOT_WS_PATT,
+    add_commit_refresh,
+    do_count,
+    get_icon,
+    get_req,
+)
 from backbone.exceptions import ItemNotFoundException, ValidationException
 from backbone.models import Character, Status
 from dbdie_ml.schemas.predictables import StatusCreate, StatusOut
@@ -72,8 +78,6 @@ def create_status(status: StatusCreate, db: "Session" = Depends(get_db)):
     } | status.model_dump()
     new_status = Status(**new_status)
 
-    db.add(new_status)
-    db.commit()
-    db.refresh(new_status)
+    add_commit_refresh(new_status, db)
 
     return get_req("status", new_status.id)
