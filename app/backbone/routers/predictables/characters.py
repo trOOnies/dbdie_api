@@ -21,7 +21,7 @@ from dbdie_ml.schemas.predictables import (
     FullCharacterCreate,
     FullCharacterOut,
 )
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -81,8 +81,18 @@ def create_character(
     new_character = {
         "id": requests.get(endp("/characters/count")).json()
     } | character.model_dump()
-    new_character = Character(**new_character)
 
+    if new_character["dbd_version_str"] is not None:
+        dbd_version_id = requests.get(
+            endp("/dbd-version/id"),
+            params={"dbd_version_str": new_character["dbd_version_str"]},
+        )
+        if dbd_version_id.status_code != 200:
+            raise ItemNotFoundException("DBD version", new_character["dbd_version_str"])  # TODO: Is not id
+        new_character["dbd_version_id"] = dbd_version_id.json()
+    del new_character["dbd_version_str"]
+
+    new_character = Character(**new_character)
     add_commit_refresh(new_character, db)
 
     resp = get_req("characters", new_character.id)
@@ -91,17 +101,19 @@ def create_character(
 
 @router.post("/full", response_model=FullCharacterOut)
 def create_character_full(character: FullCharacterCreate):
-    dbd_version_id = requests.get(
-        endp("/dbd-version"),
-        params=dict(character.dbd_version),
-    )
-
     payload = {
-        "name": character.is_killer,
+        "name": character.name,
         "is_killer": character.is_killer,
-        "dbd_version_id": dbd_version_id,
+        "dbd_version_str": str(character.dbd_version),
+        "base_char_id": None,
     }
     character_only = requests.post(endp("/characters"), json=payload)
+
+    if character_only.status_code != 200:
+        raise HTTPException(
+            status_code=character_only.status_code,
+            detail=character_only.reason,
+        )
     character_only = character_only.json()
 
     perks, addons = create_perks_and_addons(

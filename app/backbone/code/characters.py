@@ -15,7 +15,11 @@ def create_perks_and_addons(
     for perk_name in perk_names:
         p = requests.post(
             endp("/perks"),
-            json={"name": perk_name, "character_id": character["id"]},
+            json={
+                "name": perk_name,
+                "character_id": character["id"],
+                "dbd_version_id": character["dbd_version_id"],
+            },
         )
         perks.append(p.json())
 
@@ -28,6 +32,7 @@ def create_perks_and_addons(
                     "name": addon_name,
                     "type_id": ADDON_TYPE_ID,
                     "user_id": character["id"],
+                    "dbd_version_id": character["dbd_version_id"],
                 },
             )
             addons.append(a.json())

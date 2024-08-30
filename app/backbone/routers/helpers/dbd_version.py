@@ -30,6 +30,7 @@ def get_dbd_version_id(dbd_version_str: str, db: "Session" = Depends(get_db)):
 
 @router.get("/{id}", response_model=DBDVersionOut)
 def get_dbd_version(id: int, db: "Session" = Depends(get_db)):
+    # TODO: Make another wrapper function that has a try catch
     return get_one(DBDVersion, "DBD version", id, db)
 
 
