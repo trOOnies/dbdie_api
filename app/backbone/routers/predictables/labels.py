@@ -11,7 +11,7 @@ from backbone.code.labels import (
     player_to_labels,
 )
 from backbone.database import get_db
-from backbone.endpoints import add_commit_refresh, endp
+from backbone.endpoints import add_commit_refresh, endp, parse_or_raise
 from backbone.models import Labels
 from dbdie_ml.classes.base import FullModelType
 from dbdie_ml.options import COMMON_FMT, KILLER_FMT, SURV_FMT
@@ -78,9 +78,7 @@ def create_labels(
             "player_id": new_labels.player_id,
         },
     )
-    if resp.status_code != status.HTTP_200_OK:
-        raise HTTPException(resp.status_code, resp.reason)
-    return resp.json()
+    return parse_or_raise(resp)
 
 
 @router.post("/batch", status_code=status.HTTP_200_OK)

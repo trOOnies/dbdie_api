@@ -9,6 +9,8 @@ from backbone.config import ST
 from backbone.exceptions import ItemNotFoundException, NameNotFoundException
 from backbone.options import TABLE_NAMES as TN
 from constants import ICONS_FOLDER
+from fastapi import status
+from fastapi.exceptions import HTTPException
 from fastapi.responses import FileResponse
 from sqlalchemy import func, inspect
 
@@ -37,18 +39,28 @@ def get_req(endpoint: str, id: int) -> dict:
     """Request wrapper for a GET request for a type 'endpoint' with an id 'id'."""
     assert ENDPOINT_PATT.match(endpoint)
     resp = requests.get(endp(f"/{endpoint}/{id}"))
-    if resp.status_code != 200:
+    if resp.status_code != status.HTTP_200_OK:
         raise ItemNotFoundException(endpoint.capitalize()[:-1], id)
     return resp.json()
 
 
+def parse_or_raise(resp):
+    """Parse Response as JSON or raise error as exception, depending on status code."""
+    if resp.status_code != status.HTTP_200_OK:
+        raise HTTPException(
+            status_code=resp.status_code,
+            detail=resp.reason,
+        )
+    return resp.json()
+
+
 def object_as_dict(obj) -> dict:
-    """Converts a sqlalchemy object into a dict."""
+    """Convert a sqlalchemy object into a dict."""
     return {c.key: getattr(obj, c.key) for c in inspect(obj).mapper.column_attrs}
 
 
 def filter_with_text(db: "Session", search_text: str, model):
-    """Adds a filter to a sqlalchemy query based on the filtered column.
+    """Add a filter to a sqlalchemy query based on the filtered column.
     search_text must already be non-empty.
     """
     search_text = search_text.lower()
@@ -64,6 +76,7 @@ def filter_with_text(db: "Session", search_text: str, model):
 
 
 def add_commit_refresh(model, db: "Session") -> None:
+    """Add and commit a sqlalchemy change, and then refresh."""
     db.add(model)
     db.commit()
     db.refresh(model)
@@ -74,7 +87,7 @@ def add_commit_refresh(model, db: "Session") -> None:
 
 def do_count(model, text: str, db: "Session") -> int:
     """Base count function.
-    model is the sqlalchemy model.
+    'model' is the sqlalchemy model.
     """
     if text == "":
         query = db.query(model.id)
@@ -85,7 +98,7 @@ def do_count(model, text: str, db: "Session") -> int:
 
 def get_one(model, model_str: str, id: int, db: "Session"):
     """Base get one (item) function.
-    model is the sqlalchemy model, and model_str
+    'model' is the sqlalchemy model, and model_str
     is its string name (also capitalized).
     """
     item = db.query(model).filter(model.id == id).first()
@@ -101,7 +114,7 @@ def get_many(
     db: "Session",
 ):
     """Base get many function.
-    model is the sqlalchemy model.
+    'model' is the sqlalchemy model.
     """
     return db.query(model).limit(limit).offset(skip).all()
 
@@ -112,7 +125,7 @@ def get_icon(
     plural_len: int = 1,
 ) -> FileResponse:
     """Base get icon function.
-    Get the icon of the `endpoint` item with id `id`.
+    Get the icon of the 'endpoint' item with id 'id'.
     """
     path = os.path.join(ICONS_FOLDER, f"{endpoint}/{id}.png")
     if not os.path.exists(path):
@@ -122,10 +135,24 @@ def get_icon(
 
 def get_id(model, name: str, db: "Session", name_col: str = "name") -> int:
     """Base get id function.
-    Get the id of the item whose name is `name`.
+    Get the id of the item whose name is 'name'.
     """
     assert name_col in {"name", "filename"}
     item = db.query(model).filter(getattr(model, name_col) == name).first()
     if item is None:
         raise NameNotFoundException("DBD version", name)
     return item.id
+
+
+def dbd_version_str_to_id(s: str) -> int:
+    """Converts a DBDVersion string to a DBDVersion id."""
+    dbd_version_id = requests.get(
+        endp("/dbd-version/id"),
+        params={"dbd_version_str": s},
+    )
+    if dbd_version_id.status_code != status.HTTP_200_OK:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            f"DBD version '{s}' was not found",
+        )
+    return dbd_version_id.json()

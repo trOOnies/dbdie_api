@@ -6,12 +6,14 @@ from backbone.database import get_db
 from backbone.endpoints import (
     NOT_WS_PATT,
     add_commit_refresh,
+    dbd_version_str_to_id,
     do_count,
     endp,
     get_icon,
     get_many,
     get_one,
     get_req,
+    parse_or_raise,
 )
 from backbone.exceptions import ItemNotFoundException, ValidationException
 from backbone.models import Addon, Character, Perk
@@ -21,7 +23,7 @@ from dbdie_ml.schemas.predictables import (
     FullCharacterCreate,
     FullCharacterOut,
 )
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -83,13 +85,9 @@ def create_character(
     } | character.model_dump()
 
     if new_character["dbd_version_str"] is not None:
-        dbd_version_id = requests.get(
-            endp("/dbd-version/id"),
-            params={"dbd_version_str": new_character["dbd_version_str"]},
+        new_character["dbd_version_id"] = dbd_version_str_to_id(
+            new_character["dbd_version_str"]
         )
-        if dbd_version_id.status_code != 200:
-            raise ItemNotFoundException("DBD version", new_character["dbd_version_str"])  # TODO: Is not id
-        new_character["dbd_version_id"] = dbd_version_id.json()
     del new_character["dbd_version_str"]
 
     new_character = Character(**new_character)
@@ -109,12 +107,7 @@ def create_character_full(character: FullCharacterCreate):
     }
     character_only = requests.post(endp("/characters"), json=payload)
 
-    if character_only.status_code != 200:
-        raise HTTPException(
-            status_code=character_only.status_code,
-            detail=character_only.reason,
-        )
-    character_only = character_only.json()
+    character_only = parse_or_raise(character_only)
 
     perks, addons = create_perks_and_addons(
         character_only,
