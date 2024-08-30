@@ -1,3 +1,5 @@
+"""SQLAlchemy model definitions"""
+
 from backbone.database import Base
 from backbone.options import TABLE_NAMES as TN
 from sqlalchemy import Boolean as Bool

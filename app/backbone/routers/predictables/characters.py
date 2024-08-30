@@ -2,12 +2,12 @@ from typing import TYPE_CHECKING
 
 import requests
 from backbone.code.characters import create_perks_and_addons
-from backbone.config import endp
 from backbone.database import get_db
 from backbone.endpoints import (
     NOT_WS_PATT,
     add_commit_refresh,
     do_count,
+    endp,
     get_icon,
     get_many,
     get_one,

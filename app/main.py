@@ -1,20 +1,20 @@
 # from fastapi.middleware.cors import CORSMiddleware
-from backbone.routers import (
+from backbone.routers.helpers import dbd_version
+from backbone.routers.predictables import (
     addons,
-    backup,
     characters,
-    cropping,
-    cvat_code,
-    dbd_version,
     items,
     labels,
     matches,
     offerings,
     perks,
     players,
-    predict,
     statuses,
 )
+from backbone.routers.processes import backup, cropping, cvat_code, predict
+from backbone.routers.tags import HELPERS as HELP
+from backbone.routers.tags import PREDICTABLES as PRED
+from backbone.routers.tags import PROCESSES as PROC
 from fastapi import FastAPI
 
 app = FastAPI(
@@ -25,33 +25,25 @@ app = FastAPI(
 
 # TODO
 if True:
-    app.include_router(addons.router, prefix="/addons", tags=["predictables", "addons"])
+    app.include_router(addons.router, prefix="/addons", tags=[PRED, "addons"])
     app.include_router(
-        characters.router, prefix="/characters", tags=["predictables", "characters"]
+        characters.router, prefix="/characters", tags=[PRED, "characters"]
     )
-    app.include_router(items.router, prefix="/items", tags=["predictables", "items"])
-    app.include_router(
-        offerings.router, prefix="/offerings", tags=["predictables", "offerings"]
-    )
-    app.include_router(perks.router, prefix="/perks", tags=["predictables", "perks"])
-    app.include_router(
-        statuses.router, prefix="/statuses", tags=["predictables", "statuses"]
-    )
-    app.include_router(
-        players.router, prefix="/players", tags=["predictables", "players"]
-    )
-    app.include_router(dbd_version.router, prefix="/dbd-version", tags=["helpers"])
-    app.include_router(
-        matches.router, prefix="/matches", tags=["predictables", "matches"]
-    )
-    app.include_router(labels.router, prefix="/labels", tags=["predictables", "labels"])
+    app.include_router(items.router, prefix="/items", tags=[PRED, "items"])
+    app.include_router(offerings.router, prefix="/offerings", tags=[PRED, "offerings"])
+    app.include_router(perks.router, prefix="/perks", tags=[PRED, "perks"])
+    app.include_router(statuses.router, prefix="/statuses", tags=[PRED, "statuses"])
+    app.include_router(players.router, prefix="/players", tags=[PRED, "players"])
+    app.include_router(dbd_version.router, prefix="/dbd-version", tags=[HELP])
+    app.include_router(matches.router, prefix="/matches", tags=[PRED, "matches"])
+    app.include_router(labels.router, prefix="/labels", tags=[PRED, "labels"])
 
 # TODO
 if True:
-    app.include_router(cropping.router, prefix="/crop", tags=["processes"])
-    app.include_router(cvat_code.router, prefix="/cvat", tags=["processes"])
-    app.include_router(predict.router, prefix="/predict", tags=["processes"])
-    app.include_router(backup.router, prefix="/backup", tags=["processes"])
+    app.include_router(cropping.router, prefix="/crop", tags=[PROC])
+    app.include_router(cvat_code.router, prefix="/cvat", tags=[PROC])
+    app.include_router(predict.router, prefix="/predict", tags=[PROC])
+    app.include_router(backup.router, prefix="/backup", tags=[PROC])
 
 
 # origins = ["*"]  # ! PLEASE DO NOT LEAVE THIS LIKE THIS IN A PRODUCTION ENV!
@@ -69,6 +61,6 @@ if True:
 # * everything else: 0 Killer, 1 Surv
 
 
-@app.get("/health")
+@app.get("/health", summary="Health check")
 def health():
     return {"status": "OK"}

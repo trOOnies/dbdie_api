@@ -1,3 +1,5 @@
+"""Settings for the project."""
+
 from pydantic_settings import BaseSettings
 
 
@@ -18,8 +20,3 @@ class Settings(BaseSettings):
 
 
 ST = Settings()
-
-
-def endp(endpoint: str) -> str:
-    """Get full URL of the endpoint"""
-    return ST.fastapi_host + endpoint

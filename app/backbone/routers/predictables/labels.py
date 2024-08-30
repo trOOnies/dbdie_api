@@ -10,9 +10,8 @@ from backbone.code.labels import (
     join_dfs,
     player_to_labels,
 )
-from backbone.config import endp
 from backbone.database import get_db
-from backbone.endpoints import add_commit_refresh
+from backbone.endpoints import add_commit_refresh, endp
 from backbone.models import Labels
 from dbdie_ml.classes.base import FullModelType
 from dbdie_ml.options import COMMON_FMT, KILLER_FMT, SURV_FMT
@@ -20,7 +19,6 @@ from dbdie_ml.paths import LABELS_FD_RP, absp
 from dbdie_ml.schemas.groupings import LabelsCreate, LabelsOut, PlayerIn
 from fastapi import APIRouter, Depends, Response, status
 from fastapi.exceptions import HTTPException
-
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -124,7 +122,9 @@ def batch_create_labels(fmts: list[FullModelType], filename: str):
         new_fmt="perks",
     )
 
-    dfs = {fmt: df.set_index(["name", "player_id"], drop=True) for fmt, df in dfs.items()}
+    dfs = {
+        fmt: df.set_index(["name", "player_id"], drop=True) for fmt, df in dfs.items()
+    }
 
     joined_df = join_dfs(dfs)
     joined_df = joined_df.reset_index(drop=False)

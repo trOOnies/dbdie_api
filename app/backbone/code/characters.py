@@ -1,7 +1,7 @@
 from typing import Optional
 
 import requests
-from backbone.config import endp
+from backbone.endpoints import endp
 
 ADDON_TYPE_ID = 1
 

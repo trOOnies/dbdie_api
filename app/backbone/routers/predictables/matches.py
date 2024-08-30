@@ -2,11 +2,11 @@ from typing import TYPE_CHECKING
 
 import requests
 from backbone.code.matches import form_match
-from backbone.config import endp
 from backbone.database import get_db
 from backbone.endpoints import (
     NOT_WS_PATT,
     do_count,
+    endp,
     get_id,
     get_many,
     get_one,
