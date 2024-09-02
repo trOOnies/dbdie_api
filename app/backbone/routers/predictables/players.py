@@ -1,3 +1,5 @@
+"""Router code for player"""
+
 from backbone.endpoints import get_req
 from dbdie_ml.schemas.groupings import PlayerIn, PlayerOut
 from fastapi import APIRouter

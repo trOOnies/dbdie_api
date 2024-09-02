@@ -1,3 +1,5 @@
+"""Router code for game item used"""
+
 from typing import TYPE_CHECKING
 
 import requests
@@ -7,9 +9,9 @@ from backbone.endpoints import (
     add_commit_refresh,
     do_count,
     endp,
+    filter_one,
     get_icon,
     get_many,
-    get_one,
     get_req,
 )
 from backbone.exceptions import ValidationException
@@ -34,12 +36,12 @@ def get_items(
     skip: int = 0,
     db: "Session" = Depends(get_db),
 ):
-    return get_many(Item, limit, skip, db)
+    return get_many(db, limit, Item, skip)
 
 
 @router.get("/{id}", response_model=ItemOut)
 def get_item(id: int, db: "Session" = Depends(get_db)):
-    return get_one(Item, "Item", id, db)
+    return filter_one(Item, "Item", id, db)[0]
 
 
 @router.get("/{id}/icon")

@@ -1,18 +1,19 @@
 import os
-from typing import TYPE_CHECKING
 from functools import partial
-from shutil import move, copy
+from shutil import copy, move
+from typing import TYPE_CHECKING
+
 from dbdie_ml.paths import (
-    absp,
-    OLD_VERSIONS_NAME,
     CROPS_MAIN_FD_RP,
     CROPS_VERSIONS_FD_RP,
     IMG_MAIN_FD_RP,
     IMG_VERSIONS_FD_RP,
-    LABELS_MAIN_FD_RP,
     LABELS_FD_RP,
+    LABELS_MAIN_FD_RP,
     LABELS_REF_FD_RP,
     LABELS_VERSIONS_FD_RP,
+    OLD_VS,
+    absp,
 )
 
 if TYPE_CHECKING:
@@ -69,7 +70,7 @@ def backup_images(version_id: int) -> None:
     img_main_fd = absp(IMG_MAIN_FD_RP)
 
     version_fd = process_version(IMG_VERSIONS_FD, version_id)
-    img_fds = [fd for fd in os.listdir(img_main_fd) if fd != OLD_VERSIONS_NAME]
+    img_fds = [fd for fd in os.listdir(img_main_fd) if fd != OLD_VS]
     for fd in img_fds:
         src_fd = os.path.join(img_main_fd, fd)
         dst_fd = os.path.join(version_fd, fd)

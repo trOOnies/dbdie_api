@@ -1,7 +1,8 @@
+"""Router code for character"""
+
 from typing import TYPE_CHECKING
 
 import requests
-from backbone.code.characters import create_perks_and_addons
 from backbone.database import get_db
 from backbone.endpoints import (
     NOT_WS_PATT,
@@ -9,9 +10,9 @@ from backbone.endpoints import (
     dbd_version_str_to_id,
     do_count,
     endp,
+    filter_one,
     get_icon,
     get_many,
-    get_one,
     get_req,
     parse_or_raise,
 )
@@ -24,6 +25,8 @@ from dbdie_ml.schemas.predictables import (
     FullCharacterOut,
 )
 from fastapi import APIRouter, Depends
+
+from app.backbone.code.characters import create_addons, create_perks
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -42,12 +45,12 @@ def get_characters(
     skip: int = 0,
     db: "Session" = Depends(get_db),
 ):
-    return get_many(Character, limit, skip, db)
+    return get_many(db, limit, Character, skip)
 
 
 @router.get("/{id}", response_model=CharacterOut)
 def get_character(id: int, db: "Session" = Depends(get_db)):
-    return get_one(Character, "Character", id, db)
+    return filter_one(Character, "Character", id, db)[0]
 
 
 @router.get("/{id}/icon")
@@ -63,7 +66,11 @@ def get_full_character(id: int, db: "Session" = Depends(get_db)):
         raise ItemNotFoundException("Character", id)
 
     perks = db.query(Perk).filter(Perk.character_id == id).limit(3).all()
-    addons = db.query(Addon).filter(Addon.character_id == id).all()
+    addons = (
+        db.query(Addon).filter(Addon.character_id == id).all()
+        if character.is_killer.value
+        else []
+    )
 
     return {
         "character": character,
@@ -109,10 +116,7 @@ def create_character_full(character: FullCharacterCreate):
 
     character_only = parse_or_raise(character_only)
 
-    perks, addons = create_perks_and_addons(
-        character_only,
-        character.perk_names,
-        character.addon_names,
-    )
+    perks = create_perks(character_only, character.perk_names)
+    addons = create_addons(character_only, character.addon_names)
 
     return {"character": character_only, "perks": perks, "addons": addons}

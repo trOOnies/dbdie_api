@@ -1,3 +1,5 @@
+"""Router code for player end status"""
+
 from typing import TYPE_CHECKING
 
 import requests

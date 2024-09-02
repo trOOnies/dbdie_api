@@ -1,3 +1,5 @@
+"""Router code for offering"""
+
 from typing import TYPE_CHECKING
 
 import requests

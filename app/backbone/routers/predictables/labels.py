@@ -1,3 +1,5 @@
+"""Router code for match labels"""
+
 import os
 from typing import TYPE_CHECKING
 
@@ -9,6 +11,8 @@ from backbone.code.labels import (
     handle_opp_crops,
     join_dfs,
     player_to_labels,
+    post_labels,
+    process_joined_df,
 )
 from backbone.database import get_db
 from backbone.endpoints import add_commit_refresh, endp, parse_or_raise
@@ -84,7 +88,6 @@ def create_labels(
 @router.post("/batch", status_code=status.HTTP_200_OK)
 def batch_create_labels(fmts: list[FullModelType], filename: str):
     """Create labels from label CSVs."""
-    # TODO: Fix
     assert fmts, "Full model types can't be empty"
     assert all(fmt in ALL_FMT for fmt in fmts)
 
@@ -104,7 +107,9 @@ def batch_create_labels(fmts: list[FullModelType], filename: str):
         for fmt in fmts
     }
 
-    handle_opp_crops(dfs)
+    for c in [SURV_FMT.CHARACTER, KILLER_FMT.CHARACTER]:
+        if c in dfs:
+            handle_opp_crops(dfs[c])
     concat_player_types(
         dfs,
         SURV_FMT.CHARACTER,
@@ -112,7 +117,9 @@ def batch_create_labels(fmts: list[FullModelType], filename: str):
         new_fmt="character",
     )
 
-    handle_mpp_crops(dfs)
+    for c in [SURV_FMT.PERKS, KILLER_FMT.PERKS]:
+        if c in dfs:
+            handle_mpp_crops(dfs[c])
     concat_player_types(
         dfs,
         SURV_FMT.PERKS,
@@ -125,32 +132,8 @@ def batch_create_labels(fmts: list[FullModelType], filename: str):
     }
 
     joined_df = join_dfs(dfs)
-    joined_df = joined_df.reset_index(drop=False)
+    process_joined_df(joined_df)
 
-    joined_df["match_id"] = joined_df["name"].map(
-        lambda f: requests.get(
-            endp("/matches/id"),
-            params={"filename": f},
-        ).json(),
-    )
-    joined_df = joined_df.drop("name", axis=1)
-
-    for _, row in joined_df.iterrows():
-        requests.post(
-            endp("/labels"),
-            json={
-                "match_id": int(row["match_id"]),
-                "player": {
-                    "id": int(row["player_id"]),
-                    "character_id": int(row["character"]),
-                    "perk_ids": [int(row[f"perk_{i}"]) for i in range(4)],
-                    "item_id": None,
-                    "addon_ids": None,
-                    "offering_id": None,
-                    "status_id": None,
-                    "points": None,
-                },
-            },
-        )
+    post_labels(joined_df)
 
     return Response(status_code=status.HTTP_200_OK)

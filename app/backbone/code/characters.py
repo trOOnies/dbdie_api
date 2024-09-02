@@ -1,16 +1,10 @@
-from typing import Optional
-
 import requests
-from backbone.endpoints import endp
+from backbone.endpoints import endp, parse_or_raise
 
 ADDON_TYPE_ID = 1
 
 
-def create_perks_and_addons(
-    character: dict,
-    perk_names: list[str],
-    addon_names: Optional[list[str]],
-) -> tuple[list[dict], list[dict]]:
+def create_perks(character: dict, perk_names: list[str]) -> list[dict]:
     perks = []
     for perk_name in perk_names:
         p = requests.post(
@@ -21,8 +15,12 @@ def create_perks_and_addons(
                 "dbd_version_id": character["dbd_version_id"],
             },
         )
-        perks.append(p.json())
+        perks.append(parse_or_raise(p))
 
+    return perks
+
+
+def create_addons(character: dict, addon_names: list[str] | None) -> list[dict]:
     addons = []
     if addon_names is not None:
         for addon_name in addon_names:
@@ -35,6 +33,6 @@ def create_perks_and_addons(
                     "dbd_version_id": character["dbd_version_id"],
                 },
             )
-            addons.append(a.json())
+            addons.append(parse_or_raise(a))
 
-    return perks, addons
+    return addons

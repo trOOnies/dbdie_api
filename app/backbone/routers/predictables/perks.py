@@ -1,3 +1,5 @@
+"""Router code for perks"""
+
 from typing import TYPE_CHECKING
 
 import requests
@@ -5,8 +7,10 @@ from backbone.database import get_db
 from backbone.endpoints import (
     NOT_WS_PATT,
     add_commit_refresh,
+    dbd_version_str_to_id,
     do_count,
     endp,
+    filter_one,
     get_icon,
     get_req,
 )
@@ -84,6 +88,12 @@ def create_perk(perk: PerkCreate, db: "Session" = Depends(get_db)):
     )
 
     new_perk = {"id": requests.get(endp("/perks/count")).json()} | perk.model_dump()
+    new_perk["dbd_version_id"] = (
+        dbd_version_str_to_id(new_perk["dbd_version_str"])
+        if new_perk["dbd_version_str"] is not None
+        else None
+    )
+    del new_perk["dbd_version_str"]
     new_perk = Perk(**new_perk)
 
     add_commit_refresh(new_perk, db)
@@ -93,10 +103,7 @@ def create_perk(perk: PerkCreate, db: "Session" = Depends(get_db)):
 
 @router.put("/{id}", status_code=status.HTTP_200_OK)
 def update_perk(id: int, perk: PerkCreate, db: "Session" = Depends(get_db)):
-    perk_query = db.query(Perk).filter(Perk.id == id)
-    present_perk = perk_query.first()
-    if present_perk is None:
-        raise ItemNotFoundException("Perk", id)
+    _, perk_query = filter_one(Perk, "Perk", id, db)
 
     new_info = {"id": id} | perk.model_dump()
     character = get_req("characters", new_info["character_id"])

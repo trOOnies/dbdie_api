@@ -1,3 +1,5 @@
+"""Router code for the match"""
+
 from typing import TYPE_CHECKING
 
 import requests
@@ -7,13 +9,14 @@ from backbone.endpoints import (
     NOT_WS_PATT,
     do_count,
     endp,
+    filter_one,
     get_id,
     get_many,
-    get_one,
     get_req,
     object_as_dict,
+    parse_or_raise,
 )
-from backbone.exceptions import ItemNotFoundException, ValidationException
+from backbone.exceptions import ValidationException
 from backbone.models import Match
 from dbdie_ml.schemas.groupings import MatchCreate, MatchOut
 from fastapi import APIRouter, Depends, status
@@ -36,17 +39,17 @@ def get_matches(
     skip: int = 0,
     db: "Session" = Depends(get_db),
 ):
-    return get_many(Match, limit, skip, db)
+    return get_many(db, limit, Match, skip)
 
 
 @router.get("/id", response_model=int)
 def get_match_id(filename: str, db: "Session" = Depends(get_db)):
-    return get_id(Match, filename, db, name_col="filename")
+    return get_id(Match, "Match", filename, db, name_col="filename")
 
 
 @router.get("/{id}", response_model=MatchOut)
 def get_match(id: int, db: "Session" = Depends(get_db)):
-    m = get_one(Match, "Match", id, db)
+    m = filter_one(Match, "Match", id, db)[0]
     m = object_as_dict(m)
 
     dbdv_id = m["dbd_version_id"]
@@ -54,9 +57,7 @@ def get_match(id: int, db: "Session" = Depends(get_db)):
         m["dbd_version"] = None
     else:
         resp = requests.get(endp(f"/dbd-version/{dbdv_id}"))
-        if resp.status_code == status.HTTP_404_NOT_FOUND:
-            raise ItemNotFoundException("DBD version", dbdv_id)
-        m["dbd_version"] = resp.json()
+        m["dbd_version"] = parse_or_raise(resp)
 
     del m["dbd_version_id"]
 

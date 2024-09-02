@@ -96,27 +96,32 @@ def do_count(model, text: str, db: "Session") -> int:
     return query.count()
 
 
-def get_one(model, model_str: str, id: int, db: "Session"):
+def filter_one(model, model_str: str, id: int, db: "Session"):
     """Base get one (item) function.
     'model' is the sqlalchemy model, and model_str
     is its string name (also capitalized).
     """
-    item = db.query(model).filter(model.id == id).first()
+    filter_query = db.query(model).filter(model.id == id)
+    item = filter_query.first()
     if item is None:
         raise ItemNotFoundException(model_str, id)
-    return item
+    return item, filter_query
 
 
 def get_many(
-    model,
-    limit: int,
-    skip: int,
     db: "Session",
+    limit: int,
+    model,
+    skip: int = 0,
 ):
     """Base get many function.
     'model' is the sqlalchemy model.
     """
-    return db.query(model).limit(limit).offset(skip).all()
+    assert limit > 0
+    if skip == 0:
+        return db.query(model).limit(limit).all()
+    else:
+        return db.query(model).limit(limit).offset(skip).all()
 
 
 def get_icon(
@@ -129,19 +134,30 @@ def get_icon(
     """
     path = os.path.join(ICONS_FOLDER, f"{endpoint}/{id}.png")
     if not os.path.exists(path):
-        raise ItemNotFoundException(f"{endpoint[:-plural_len].capitalize()} image", id)
+        assert plural_len >= 0
+        model_str = endpoint[:-plural_len] if plural_len > 0 else endpoint
+        raise ItemNotFoundException(f"{model_str.capitalize()} image", id)
     return FileResponse(path)
 
 
-def get_id(model, name: str, db: "Session", name_col: str = "name") -> int:
+def get_id(
+    model,
+    model_str: str,
+    name: str,
+    db: "Session",
+    name_col: str = "name",
+) -> int:
     """Base get id function.
     Get the id of the item whose name is 'name'.
     """
     assert name_col in {"name", "filename"}
     item = db.query(model).filter(getattr(model, name_col) == name).first()
     if item is None:
-        raise NameNotFoundException("DBD version", name)
+        raise NameNotFoundException(model_str, name)
     return item.id
+
+
+# * Specific endpoint functions
 
 
 def dbd_version_str_to_id(s: str) -> int:
@@ -150,9 +166,5 @@ def dbd_version_str_to_id(s: str) -> int:
         endp("/dbd-version/id"),
         params={"dbd_version_str": s},
     )
-    if dbd_version_id.status_code != status.HTTP_200_OK:
-        raise HTTPException(
-            status.HTTP_404_NOT_FOUND,
-            f"DBD version '{s}' was not found",
-        )
-    return dbd_version_id.json()
+    dbd_version_id = parse_or_raise(dbd_version_id)
+    return dbd_version_id

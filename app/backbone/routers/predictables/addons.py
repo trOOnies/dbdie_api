@@ -1,3 +1,5 @@
+"""Router code for addons"""
+
 from typing import TYPE_CHECKING
 
 import requests
@@ -5,11 +7,12 @@ from backbone.database import get_db
 from backbone.endpoints import (
     NOT_WS_PATT,
     add_commit_refresh,
+    dbd_version_str_to_id,
     do_count,
     endp,
+    filter_one,
     get_icon,
     get_many,
-    get_one,
     get_req,
 )
 from backbone.exceptions import ValidationException
@@ -30,12 +33,12 @@ def count_addons(text: str = "", db: "Session" = Depends(get_db)):
 
 @router.get("", response_model=list[AddonOut])
 def get_addons(limit: int = 10, skip: int = 0, db: "Session" = Depends(get_db)):
-    return get_many(Addon, limit, skip, db)
+    return get_many(db, limit, Addon, skip)
 
 
 @router.get("/{id}", response_model=AddonOut)
 def get_addon(id: int, db: "Session" = Depends(get_db)):
-    return get_one(Addon, "Addon", id, db)
+    return filter_one(Addon, "Addon", id, db)[0]
 
 
 @router.get("/{id}/icon")
@@ -53,6 +56,12 @@ def create_addon(addon: AddonCreate, db: "Session" = Depends(get_db)):
 
     new_addon = addon.model_dump()
     new_addon = {"id": requests.get(endp("/addons/count")).json()} | new_addon
+    new_addon["dbd_version_id"] = (
+        dbd_version_str_to_id(new_addon["dbd_version_str"])
+        if new_addon["dbd_version_str"] is not None
+        else None
+    )
+    del new_addon["dbd_version_str"]
     new_addon = Addon(**new_addon)
 
     add_commit_refresh(new_addon, db)
