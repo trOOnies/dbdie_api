@@ -20,6 +20,7 @@ class DBDVersion(Base):
     id = C(Int, primary_key=True, nullable=False)
     name = C(Str, nullable=False)
     release_date = C(Date, nullable=True)
+    common_name = C(Str, nullable=True)
 
 
 class Character(Base):
@@ -31,6 +32,7 @@ class Character(Base):
     base_char_id = C(SmallInt, nullable=True)
     dbd_version_id = C(Int, FK(f"{TN.DBD_VERSION}.id"), nullable=True)
     dbd_version = rel("DBDVersion")
+    common_name = C(Str, nullable=True)
 
 
 class Perk(Base):

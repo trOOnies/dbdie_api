@@ -1,4 +1,4 @@
-from dbdie_ml.cropper_swarm import CropperSwarm
+from dbdie_ml.cropping.cropper_swarm import CropperSwarm
 from fastapi import APIRouter, status
 from fastapi.exceptions import HTTPException
 

@@ -26,7 +26,7 @@ from dbdie_ml.schemas.predictables import (
 )
 from fastapi import APIRouter, Depends
 
-from app.backbone.code.characters import create_addons, create_perks
+from backbone.code.characters import create_addons, create_perks
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session

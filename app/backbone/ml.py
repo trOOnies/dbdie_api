@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from backbone.io_requests import get_all_info
-from dbdie_ml.cropper_swarm import CropperSwarm
+from dbdie_ml.cropping.cropper_swarm import CropperSwarm
 from dbdie_ml.schemas.groupings import MatchOut, PlayerOut
 
 if TYPE_CHECKING:
