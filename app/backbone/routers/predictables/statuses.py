@@ -36,6 +36,7 @@ def get_statuses(db: "Session" = Depends(get_db)):
             Status.name,
             Status.character_id,
             Status.is_dead,
+            Status.emoji,
             Character.is_killer.label("is_for_killer"),
         )
         .join(Character)
@@ -52,6 +53,7 @@ def get_status(id: int, db: "Session" = Depends(get_db)):
             Status.name,
             Status.character_id,
             Status.is_dead,
+            Status.emoji,
             Character.is_killer.label("is_for_killer"),
         )
         .join(Character)

@@ -42,6 +42,7 @@ def get_perks(
             Perk.name,
             Perk.character_id,
             Perk.dbd_version_id,
+            Perk.emoji,
             Character.is_killer.label("is_for_killer"),
         )
         .join(Character)
@@ -61,6 +62,7 @@ def get_perk(id: int, db: "Session" = Depends(get_db)):
             Perk.name,
             Perk.character_id,
             Perk.dbd_version_id,
+            Perk.emoji,
             Character.is_killer.label("is_for_killer"),
         )
         .join(Character)

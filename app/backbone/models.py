@@ -33,6 +33,7 @@ class Character(Base):
     dbd_version_id = C(Int, FK(f"{TN.DBD_VERSION}.id"), nullable=True)
     dbd_version = rel("DBDVersion")
     common_name = C(Str, nullable=True)
+    emoji = C(Str, nullable=True)
 
 
 class Perk(Base):
@@ -44,6 +45,7 @@ class Perk(Base):
     character = rel("Character")
     dbd_version_id = C(Int, FK(f"{TN.DBD_VERSION}.id"), nullable=True)
     dbd_version = rel("DBDVersion")
+    emoji = C(Str, nullable=True)
 
 
 class ItemType(Base):
@@ -51,6 +53,7 @@ class ItemType(Base):
 
     id = C(SmallInt, primary_key=True, nullable=False)
     name = C(Str, nullable=False)
+    emoji = C(Str, nullable=True)
 
 
 class Item(Base):
@@ -69,6 +72,7 @@ class AddonType(Base):
 
     id = C(SmallInt, primary_key=True, nullable=False)
     name = C(Str, nullable=False)
+    emoji = C(Str, nullable=True)
 
 
 class Addon(Base):
@@ -89,6 +93,7 @@ class OfferingType(Base):
 
     id = C(SmallInt, primary_key=True, nullable=False)
     name = C(Str, nullable=False)
+    emoji = C(Str, nullable=True)
 
 
 class Offering(Base):
@@ -114,6 +119,7 @@ class Status(Base):
     is_dead = C(Bool, nullable=True)
     dbd_version_id = C(Int, FK(f"{TN.DBD_VERSION}.id"), nullable=True)
     dbd_version = rel("DBDVersion")
+    emoji = C(Str, nullable=True)
 
 
 class Match(Base):
