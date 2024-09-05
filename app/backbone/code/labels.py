@@ -32,7 +32,7 @@ def player_to_labels(player: dict) -> dict:
 # * Batch create labels
 
 
-def handle_opp_crops(df: pd.DataFrame) -> None:
+def handle_opp_crops(df: pd.DataFrame) -> pd.DataFrame:
     """Handle one-per-player crops, that is,
     the ones that can be encoded as (name, player_id, <obj>).
     """
@@ -40,9 +40,10 @@ def handle_opp_crops(df: pd.DataFrame) -> None:
     df = df.astype({"player_id": int})
     df["name"] = df["name"].str[:-8] + ".png"
     df = df.rename({"label_id": "character"}, axis=1)
+    return df
 
 
-def handle_mpp_crops(df: pd.DataFrame) -> None:
+def handle_mpp_crops(df: pd.DataFrame) -> pd.DataFrame:
     """Handle many-per-player crops, that is,
     the ones that can be encoded as (name, player_id, <obj>_i).
     """
@@ -63,6 +64,7 @@ def handle_mpp_crops(df: pd.DataFrame) -> None:
 
     df = df.groupby(["name", "player_id"]).sum()
     df = df.reset_index(drop=False)
+    return df
 
 
 def concat_player_types(
@@ -126,11 +128,11 @@ def post_labels(joined_df: pd.DataFrame) -> None:
         requests.post(
             endp("/labels"),
             json={
-                "match_id": row["match_id"],
+                "match_id": int(row["match_id"]),
                 "player": {
-                    "id": row["player_id"],
-                    "character_id": row["character"],
-                    "perk_ids": [row[f"perk_{i}"] for i in range(4)],
+                    "id": int(row["player_id"]),
+                    "character_id": int(row["character"]),
+                    "perk_ids": [int(row[f"perk_{i}"]) for i in range(4)],
                     "item_id": None,
                     "addon_ids": None,
                     "offering_id": None,

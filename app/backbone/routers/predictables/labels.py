@@ -15,7 +15,7 @@ from backbone.code.labels import (
     process_joined_df,
 )
 from backbone.database import get_db
-from backbone.endpoints import add_commit_refresh, endp, parse_or_raise
+from backbone.endpoints import add_commit_refresh, endp, get_many, parse_or_raise
 from backbone.models import Labels
 from dbdie_ml.classes.base import FullModelType
 from dbdie_ml.options import COMMON_FMT, KILLER_FMT, SURV_FMT
@@ -38,8 +38,25 @@ def count_labels(db: "Session" = Depends(get_db)):
     return query.count()
 
 
-@router.get("", response_model=LabelsOut)
+@router.get("", response_model=list[LabelsOut])
 def get_labels(
+    limit: int = 10,
+    skip: int = 0,
+    db: "Session" = Depends(get_db),
+):
+    labels = get_many(db, limit, Labels, skip)
+    labels = [
+        LabelsOut(
+            match_id=lbl.match_id,
+            player=PlayerIn.from_labels(lbl),
+            date_modified=lbl.date_modified,
+        ) for lbl in labels
+    ]
+    return labels
+
+
+@router.get("/filter", response_model=LabelsOut)
+def get_label(
     match_id: int,
     player_id: int,
     db: "Session" = Depends(get_db),
@@ -76,7 +93,7 @@ def create_labels(
     add_commit_refresh(new_labels, db)
 
     resp = requests.get(
-        endp("/labels"),
+        endp("/labels/filter"),
         params={
             "match_id": new_labels.match_id,
             "player_id": new_labels.player_id,
@@ -85,7 +102,7 @@ def create_labels(
     return parse_or_raise(resp)
 
 
-@router.post("/batch", status_code=status.HTTP_200_OK)
+@router.post("/batch", status_code=status.HTTP_201_CREATED)
 def batch_create_labels(fmts: list[FullModelType], filename: str):
     """Create labels from label CSVs."""
     assert fmts, "Full model types can't be empty"
@@ -109,7 +126,7 @@ def batch_create_labels(fmts: list[FullModelType], filename: str):
 
     for c in [SURV_FMT.CHARACTER, KILLER_FMT.CHARACTER]:
         if c in dfs:
-            handle_opp_crops(dfs[c])
+            dfs[c] = handle_opp_crops(dfs[c])
     concat_player_types(
         dfs,
         SURV_FMT.CHARACTER,
@@ -119,7 +136,7 @@ def batch_create_labels(fmts: list[FullModelType], filename: str):
 
     for c in [SURV_FMT.PERKS, KILLER_FMT.PERKS]:
         if c in dfs:
-            handle_mpp_crops(dfs[c])
+            dfs[c] = handle_mpp_crops(dfs[c])
     concat_player_types(
         dfs,
         SURV_FMT.PERKS,
@@ -132,8 +149,8 @@ def batch_create_labels(fmts: list[FullModelType], filename: str):
     }
 
     joined_df = join_dfs(dfs)
-    process_joined_df(joined_df)
+    joined_df = process_joined_df(joined_df)
 
     post_labels(joined_df)
 
-    return Response(status_code=status.HTTP_200_OK)
+    return Response(status_code=status.HTTP_201_CREATED)
