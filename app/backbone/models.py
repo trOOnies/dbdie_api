@@ -15,6 +15,7 @@ from sqlalchemy.sql.sqltypes import TIMESTAMP
 
 
 class DBDVersion(Base):
+    """SQLAlchemy DBD version model"""
     __tablename__ = TN.DBD_VERSION
 
     id = C(Int, primary_key=True, nullable=False)
@@ -24,6 +25,7 @@ class DBDVersion(Base):
 
 
 class Character(Base):
+    """SQLAlchemy character model"""
     __tablename__ = TN.CHARACTER
 
     id = C(SmallInt, primary_key=True, nullable=False)
@@ -37,6 +39,7 @@ class Character(Base):
 
 
 class Perk(Base):
+    """SQLAlchemy perk model"""
     __tablename__ = TN.PERKS
 
     id = C(SmallInt, primary_key=True, nullable=False)
@@ -49,6 +52,7 @@ class Perk(Base):
 
 
 class ItemType(Base):
+    """SQLAlchemy item type model"""
     __tablename__ = TN.ITEM_TYPES
 
     id = C(SmallInt, primary_key=True, nullable=False)
@@ -57,6 +61,7 @@ class ItemType(Base):
 
 
 class Item(Base):
+    """SQLAlchemy item model"""
     __tablename__ = TN.ITEM
 
     id = C(SmallInt, primary_key=True, nullable=False)
@@ -68,6 +73,7 @@ class Item(Base):
 
 
 class AddonType(Base):
+    """SQLAlchemy addon type model"""
     __tablename__ = TN.ADDONS_TYPES
 
     id = C(SmallInt, primary_key=True, nullable=False)
@@ -76,6 +82,7 @@ class AddonType(Base):
 
 
 class Addon(Base):
+    """SQLAlchemy addon model"""
     __tablename__ = TN.ADDONS
 
     id = C(SmallInt, primary_key=True, nullable=False)
@@ -89,6 +96,7 @@ class Addon(Base):
 
 
 class OfferingType(Base):
+    """SQLAlchemy offering type model"""
     __tablename__ = TN.OFFERING_TYPES
 
     id = C(SmallInt, primary_key=True, nullable=False)
@@ -97,6 +105,7 @@ class OfferingType(Base):
 
 
 class Offering(Base):
+    """SQLAlchemy offering model"""
     __tablename__ = TN.OFFERING
 
     id = C(SmallInt, primary_key=True, nullable=False)
@@ -110,6 +119,7 @@ class Offering(Base):
 
 
 class Status(Base):
+    """SQLAlchemy end player status model"""
     __tablename__ = TN.STATUS
 
     id = C(SmallInt, primary_key=True, nullable=False)
@@ -123,6 +133,7 @@ class Status(Base):
 
 
 class Match(Base):
+    """SQLAlchemy match model"""
     __tablename__ = TN.MATCHES
 
     id = C(Int, primary_key=True, nullable=False)
@@ -147,6 +158,7 @@ class Match(Base):
 
 
 class Labels(Base):
+    """SQLAlchemy labels model"""
     __tablename__ = TN.LABELS
 
     match_id = C(

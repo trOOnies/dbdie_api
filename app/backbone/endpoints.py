@@ -101,6 +101,7 @@ def filter_one(model, model_str: str, id: int, db: "Session"):
     'model' is the sqlalchemy model, and model_str
     is its string name (also capitalized).
     """
+    assert id >= 0, "ID can't be negative"
     filter_query = db.query(model).filter(model.id == id)
     item = filter_query.first()
     if item is None:
@@ -132,6 +133,8 @@ def get_icon(
     """Base get icon function.
     Get the icon of the 'endpoint' item with id 'id'.
     """
+    assert isinstance(id, int), "ID must be an integer"
+    assert id >= 0, "ID can't be negative"
     path = os.path.join(ICONS_FOLDER, f"{endpoint}/{id}.png")
     if not os.path.exists(path):
         assert plural_len >= 0
