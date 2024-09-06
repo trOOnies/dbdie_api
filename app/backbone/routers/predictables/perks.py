@@ -32,6 +32,7 @@ def count_perks(text: str = "", db: "Session" = Depends(get_db)):
 
 @router.get("", response_model=list[PerkOut])
 def get_perks(
+    is_for_killer: bool | None = None,
     limit: int = 10,
     skip: int = 0,
     db: "Session" = Depends(get_db),
@@ -48,8 +49,12 @@ def get_perks(
         .join(Character)
         .limit(limit)
     )
+    if is_for_killer is not None:
+        perks = perks.filter(Character.is_killer == is_for_killer)
+    perks = perks.limit(limit)
     if skip > 0:
         perks = perks.offset(skip)
+
     perks = perks.all()
     return perks
 
