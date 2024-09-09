@@ -15,7 +15,7 @@ from sqlalchemy.sql.sqltypes import TIMESTAMP
 
 
 class DBDVersion(Base):
-    """SQLAlchemy DBD version model"""
+    """SQLAlchemy DBD version model."""
     __tablename__ = TN.DBD_VERSION
 
     id = C(Int, primary_key=True, nullable=False)
@@ -25,7 +25,7 @@ class DBDVersion(Base):
 
 
 class Character(Base):
-    """SQLAlchemy character model"""
+    """SQLAlchemy character model."""
     __tablename__ = TN.CHARACTER
 
     id = C(SmallInt, primary_key=True, nullable=False)
@@ -39,7 +39,7 @@ class Character(Base):
 
 
 class Perk(Base):
-    """SQLAlchemy perk model"""
+    """SQLAlchemy perk model."""
     __tablename__ = TN.PERKS
 
     id = C(SmallInt, primary_key=True, nullable=False)
@@ -52,7 +52,7 @@ class Perk(Base):
 
 
 class ItemType(Base):
-    """SQLAlchemy item type model"""
+    """SQLAlchemy item type model."""
     __tablename__ = TN.ITEM_TYPES
 
     id = C(SmallInt, primary_key=True, nullable=False)
@@ -61,7 +61,7 @@ class ItemType(Base):
 
 
 class Item(Base):
-    """SQLAlchemy item model"""
+    """SQLAlchemy item model."""
     __tablename__ = TN.ITEM
 
     id = C(SmallInt, primary_key=True, nullable=False)
@@ -73,7 +73,7 @@ class Item(Base):
 
 
 class AddonType(Base):
-    """SQLAlchemy addon type model"""
+    """SQLAlchemy addon type model."""
     __tablename__ = TN.ADDONS_TYPES
 
     id = C(SmallInt, primary_key=True, nullable=False)
@@ -82,7 +82,7 @@ class AddonType(Base):
 
 
 class Addon(Base):
-    """SQLAlchemy addon model"""
+    """SQLAlchemy addon model."""
     __tablename__ = TN.ADDONS
 
     id = C(SmallInt, primary_key=True, nullable=False)
@@ -96,7 +96,7 @@ class Addon(Base):
 
 
 class OfferingType(Base):
-    """SQLAlchemy offering type model"""
+    """SQLAlchemy offering type model."""
     __tablename__ = TN.OFFERING_TYPES
 
     id = C(SmallInt, primary_key=True, nullable=False)
@@ -105,7 +105,7 @@ class OfferingType(Base):
 
 
 class Offering(Base):
-    """SQLAlchemy offering model"""
+    """SQLAlchemy offering model."""
     __tablename__ = TN.OFFERING
 
     id = C(SmallInt, primary_key=True, nullable=False)
@@ -119,7 +119,7 @@ class Offering(Base):
 
 
 class Status(Base):
-    """SQLAlchemy end player status model"""
+    """SQLAlchemy end player status model."""
     __tablename__ = TN.STATUS
 
     id = C(SmallInt, primary_key=True, nullable=False)
@@ -133,7 +133,7 @@ class Status(Base):
 
 
 class Match(Base):
-    """SQLAlchemy match model"""
+    """SQLAlchemy DBD match model."""
     __tablename__ = TN.MATCHES
 
     id = C(Int, primary_key=True, nullable=False)
@@ -142,8 +142,6 @@ class Match(Base):
     dbd_version_id = C(Int, FK(f"{TN.DBD_VERSION}.id"), nullable=True)
     dbd_version = rel("DBDVersion")
     special_mode = C(Bool, nullable=True)
-    user = C(Str, nullable=True)
-    extractor = C(Str, nullable=True)
     kills = C(SmallInt, nullable=True)
     date_created = C(
         TIMESTAMP(timezone=True),
@@ -155,10 +153,14 @@ class Match(Base):
         nullable=False,
         server_default=text("now()"),
     )
+    user_id = C(SmallInt, FK(f"{TN.USER}.id"), nullable=True)
+    user = rel("User")
+    extractor_id = C(SmallInt, FK(f"{TN.EXTRACTOR}.id"), nullable=True)
+    extractor = rel("Extractor")
 
 
 class Labels(Base):
-    """SQLAlchemy labels model"""
+    """SQLAlchemy predictables labels model."""
     __tablename__ = TN.LABELS
 
     match_id = C(
@@ -185,3 +187,117 @@ class Labels(Base):
         nullable=False,
         server_default=text("now()"),
     )
+    user_id = C(SmallInt, FK(f"{TN.USER}.id"), nullable=True)
+    user = rel("User")
+    extractor_id = C(SmallInt, FK(f"{TN.EXTRACTOR}.id"), nullable=True)
+    extractor = rel("Extractor")
+    manually_checked = C(Bool, nullable=True)
+
+
+class User(Base):
+    """SQLAlchemy DBDIE user model."""
+    __tablename__ = TN.USER
+
+    id = C(SmallInt, primary_key=True, nullable=False)
+    name = C(Str, nullable=False, unique=True)
+
+
+class CropperSwarm(Base):
+    """SQLAlchemy CropperSwarm model."""
+    __tablename__ = TN.CROPPER_SWARM
+
+    id = C(SmallInt, primary_key=True, nullable=False)
+    name = C(Str, nullable=False)
+    user_id = C(SmallInt, FK(f"{TN.USER}.id"), nullable=False)
+    user = rel("User")
+    img_width = C(SmallInt, nullable=False)
+    img_height = C(SmallInt, nullable=False)
+    dbdv_min_id = C(Int, FK(f"{TN.DBD_VERSION}.id"), nullable=False)
+    dbdv_min = rel("DBDVersion", foreign_keys=[dbdv_min_id])
+    dbdv_max_id = C(Int, FK(f"{TN.DBD_VERSION}.id"), nullable=True)
+    dbdv_max = rel("DBDVersion", foreign_keys=[dbdv_max_id])
+    is_for_killer = C(Bool, nullable=True)
+
+
+class FullModelType(Base):
+    """SQLAlchemy full model type model."""
+    __tablename__ = TN.FULL_MODEL_TYPES
+
+    id = C(SmallInt, primary_key=True, nullable=False)
+    name = C(Str, nullable=False)
+    model_type = C(Str, nullable=False)
+    is_for_killer = C(Bool, nullable=False)
+
+
+class Model(Base):
+    """SQLAlchemy IEModel model."""
+    __tablename__ = TN.MODEL
+
+    id = C(SmallInt, primary_key=True, nullable=False)
+    name = C(Str, nullable=False)
+    user_id = C(SmallInt, FK(f"{TN.USER}.id"), nullable=False)
+    user = rel("User")
+    fmt_id = C(SmallInt, FK(f"{TN.FULL_MODEL_TYPES}.id"), nullable=False)
+    fmt = rel("FullModelType")
+    cropper_swarm_id = C(SmallInt, FK(f"{TN.CROPPER_SWARM}.id"), nullable=False)
+    cropper_swarm = rel("CropperSwarm")
+    dbdv_min_id = C(Int, FK(f"{TN.DBD_VERSION}.id"), nullable=False)
+    dbdv_min = rel("DBDVersion", foreign_keys=[dbdv_min_id])
+    dbdv_max_id = C(Int, FK(f"{TN.DBD_VERSION}.id"), nullable=True)
+    dbdv_max = rel("DBDVersion", foreign_keys=[dbdv_max_id])
+    special_mode = C(Bool, nullable=True)
+    date_created = C(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        server_default=text("now()"),
+    )
+    date_modified = C(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        server_default=text("now()"),
+    )
+    date_last_retrained = C(Date, nullable=False)
+
+
+class Extractor(Base):
+    """SQLAlchemy InfoExtractor model."""
+    __tablename__ = TN.EXTRACTOR
+
+    id = C(SmallInt, primary_key=True, nullable=False)
+    name = C(Str, nullable=False)
+    user_id = C(SmallInt, FK(f"{TN.USER}.id"), nullable=False)
+    user = rel("User")
+    dbdv_min_id = C(Int, FK(f"{TN.DBD_VERSION}.id"), nullable=False)
+    dbdv_min = rel("DBDVersion", foreign_keys=[dbdv_min_id])
+    dbdv_max_id = C(Int, FK(f"{TN.DBD_VERSION}.id"), nullable=True)
+    dbdv_max = rel("DBDVersion", foreign_keys=[dbdv_max_id])
+    special_mode = C(Bool, nullable=True)
+    cropper_swarm_id = C(SmallInt, FK(f"{TN.CROPPER_SWARM}.id"), nullable=False)
+    cropper_swarm = rel("CropperSwarm")
+
+    mid_addons = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
+    addons_model = rel("Model", foreign_keys=[mid_addons])
+    mid_character = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
+    character_model = rel("Model", foreign_keys=[mid_character])
+    mid_item = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
+    item_model = rel("Model", foreign_keys=[mid_item])
+    mid_offering = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
+    offering_model = rel("Model", foreign_keys=[mid_offering])
+    mid_perks = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
+    perks_model = rel("Model", foreign_keys=[mid_perks])
+    mid_points = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
+    points_model = rel("Model", foreign_keys=[mid_points])
+    mid_status = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
+    status_model = rel("Model", foreign_keys=[mid_status])
+
+    date_created = C(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        server_default=text("now()"),
+    )
+    date_modified = C(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        server_default=text("now()"),
+    )
+    date_last_retrained = C(Date, nullable=False)

@@ -1,18 +1,18 @@
-"""Router code for character"""
+"""Router code for DBD characters."""
 
 from typing import TYPE_CHECKING
 
 import requests
+from backbone.code.characters import create_addons, create_perks
 from backbone.database import get_db
 from backbone.endpoints import (
     NOT_WS_PATT,
     add_commit_refresh,
     dbd_version_str_to_id,
-    do_count,
     endp,
     filter_one,
+    filter_with_text,
     get_icon,
-    get_many,
     get_req,
     parse_or_raise,
 )
@@ -26,8 +26,6 @@ from dbdie_ml.schemas.predictables import (
 )
 from fastapi import APIRouter, Depends
 
-from backbone.code.characters import create_addons, create_perks
-
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
@@ -35,31 +33,68 @@ router = APIRouter()
 
 
 @router.get("/count", response_model=int)
-def count_characters(text: str = "", db: "Session" = Depends(get_db)):
-    return do_count(Character, text, db)
+def count_characters(
+    is_killer: bool | None = None,
+    text: str = "",
+    db: "Session" = Depends(get_db),
+):
+    """Count DBD characters."""
+    cols = []
+
+    if is_killer is not None:
+        cols.append(Character.is_killer)
+    if text != "":
+        cols.append(Character.name)
+
+    if not cols:
+        cols = [Character.id]
+
+    query = db.query(*cols)
+
+    if is_killer is not None:
+        query = query.filter(Character.is_killer == is_killer)
+    if text != "":
+        query = filter_with_text(query, Character, text)
+
+    return query.count()
 
 
 @router.get("", response_model=list[CharacterOut])
 def get_characters(
+    is_killer: bool | None = None,
     limit: int = 10,
     skip: int = 0,
     db: "Session" = Depends(get_db),
 ):
-    return get_many(db, limit, Character, skip)
+    """Query many DBD characters."""
+    assert limit > 0
+
+    characters = db.query(Character)
+    if is_killer is not None:
+        characters = characters.filter(Character.is_killer == is_killer)
+
+    characters = characters.limit(limit)
+    if skip == 0:
+        return characters.all()
+    else:
+        return characters.offset(skip).all()
 
 
 @router.get("/{id}", response_model=CharacterOut)
 def get_character(id: int, db: "Session" = Depends(get_db)):
+    """Get a DBD character with an ID."""
     return filter_one(Character, "Character", id, db)[0]
 
 
 @router.get("/{id}/icon")
 def get_character_icon(id: int):
+    """Get a DBD character icon."""
     return get_icon("characters", id)
 
 
 @router.get("/full/{id}", response_model=FullCharacterOut)
 def get_full_character(id: int, db: "Session" = Depends(get_db)):
+    """Get a DBD character with an ID, with his/her full information."""
     # TODO: Test out
     character = db.query(Character).filter(Character.id == id).first()
     if character is None:
@@ -84,6 +119,7 @@ def create_character(
     character: CharacterCreate,
     db: "Session" = Depends(get_db),
 ):
+    """Create a DBD character."""
     if NOT_WS_PATT.search(character.name) is None:
         raise ValidationException("Character name can't be empty")
 
@@ -106,6 +142,7 @@ def create_character(
 
 @router.post("/full", response_model=FullCharacterOut)
 def create_character_full(character: FullCharacterCreate):
+    """Create a DBD character in full (with its perks and addons, if applies)."""
     payload = {
         "name": character.name,
         "is_killer": character.is_killer,

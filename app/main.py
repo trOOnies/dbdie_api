@@ -11,7 +11,7 @@ from backbone.routers.predictables import (
     players,
     statuses,
 )
-from backbone.routers.processes import backup, cropping, cvat_code, predict
+from backbone.routers.processes import backup, cropping, predict
 from backbone.routers.tags import HELPERS as HELP
 from backbone.routers.tags import PREDICTABLES as PRED
 from backbone.routers.tags import PROCESSES as PROC
@@ -41,7 +41,6 @@ if True:
 # TODO
 if True:
     app.include_router(cropping.router, prefix="/crop", tags=[PROC])
-    app.include_router(cvat_code.router, prefix="/cvat", tags=[PROC])
     app.include_router(predict.router, prefix="/predict", tags=[PROC])
     app.include_router(backup.router, prefix="/backup", tags=[PROC])
 

@@ -1,4 +1,4 @@
-"""Router code for addons"""
+"""Router code for DBD addons."""
 
 from typing import TYPE_CHECKING
 
@@ -27,8 +27,12 @@ router = APIRouter()
 
 
 @router.get("/count", response_model=int)
-def count_addons(text: str = "", db: "Session" = Depends(get_db)):
-    return do_count(Addon, text, db)
+def count_addons(
+    is_for_killer: bool | None = None,
+    text: str = "",
+    db: "Session" = Depends(get_db),
+):
+    return do_count(Addon, text, db, is_for_killer)
 
 
 @router.get("", response_model=list[AddonOut])

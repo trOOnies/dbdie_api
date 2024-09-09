@@ -1,4 +1,4 @@
-"""Router code for offering"""
+"""Router code for DBD offerings."""
 
 from typing import TYPE_CHECKING
 
@@ -24,8 +24,13 @@ router = APIRouter()
 
 
 @router.get("/count", response_model=int)
-def count_offerings(text: str = "", db: "Session" = Depends(get_db)):
-    return do_count(Offering, text, db)
+def count_offerings(
+    is_for_killer: bool | None = None,
+    text: str = "",
+    db: "Session" = Depends(get_db),
+):
+    """Count DBD offerings."""
+    return do_count(Offering, text, db, is_for_killer)
 
 
 @router.get("", response_model=list[OfferingOut])
@@ -34,6 +39,7 @@ def get_offerings(
     skip: int = 0,
     db: "Session" = Depends(get_db),
 ):
+    """Get many DBD offerings."""
     offerings = (
         db.query(
             Offering.id,
@@ -52,6 +58,7 @@ def get_offerings(
 
 @router.get("/{id}", response_model=OfferingOut)
 def get_offering(id: int, db: "Session" = Depends(get_db)):
+    """Get a DBD offering with a certain ID."""
     offering = (
         db.query(
             Offering.id,
@@ -71,11 +78,13 @@ def get_offering(id: int, db: "Session" = Depends(get_db)):
 
 @router.get("/{id}/icon")
 def get_offering_icon(id: int):
+    """Get a DBD offering icon."""
     return get_icon("offerings", id)
 
 
 @router.post("", response_model=OfferingOut)
 def create_offering(offering: OfferingCreate, db: "Session" = Depends(get_db)):
+    """Create a DBD offering."""
     if NOT_WS_PATT.search(offering.name) is None:
         raise ValidationException("Offering name can't be empty")
 

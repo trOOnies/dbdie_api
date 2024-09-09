@@ -1,4 +1,4 @@
-"""Router code for perks"""
+"""Router code for DBD perks."""
 
 from typing import TYPE_CHECKING
 
@@ -26,8 +26,13 @@ router = APIRouter()
 
 
 @router.get("/count", response_model=int)
-def count_perks(text: str = "", db: "Session" = Depends(get_db)):
-    return do_count(Perk, text, db)
+def count_perks(
+    is_for_killer: bool | None = None,
+    text: str = "",
+    db: "Session" = Depends(get_db),
+):
+    """Count DBD perks."""
+    return do_count(Perk, text, db, is_for_killer)
 
 
 @router.get("", response_model=list[PerkOut])
@@ -37,18 +42,15 @@ def get_perks(
     skip: int = 0,
     db: "Session" = Depends(get_db),
 ):
-    perks = (
-        db.query(
-            Perk.id,
-            Perk.name,
-            Perk.character_id,
-            Perk.dbd_version_id,
-            Perk.emoji,
-            Character.is_killer.label("is_for_killer"),
-        )
-        .join(Character)
-        .limit(limit)
-    )
+    """Get many DBD perks."""
+    perks = db.query(
+        Perk.id,
+        Perk.name,
+        Perk.character_id,
+        Perk.dbd_version_id,
+        Perk.emoji,
+        Character.is_killer.label("is_for_killer"),
+    ).join(Character)
     if is_for_killer is not None:
         perks = perks.filter(Character.is_killer == is_for_killer)
     perks = perks.limit(limit)
@@ -61,6 +63,7 @@ def get_perks(
 
 @router.get("/{id}", response_model=PerkOut)
 def get_perk(id: int, db: "Session" = Depends(get_db)):
+    """Get a specific DBD perk with an ID."""
     perk = (
         db.query(
             Perk.id,
@@ -81,11 +84,13 @@ def get_perk(id: int, db: "Session" = Depends(get_db)):
 
 @router.get("/{id}/icon")
 def get_perk_icon(id: int):
+    """Get a DBD perk icon."""
     return get_icon("perks", id)
 
 
 @router.post("", response_model=PerkOut)
 def create_perk(perk: PerkCreate, db: "Session" = Depends(get_db)):
+    """Create a DBD perk."""
     if NOT_WS_PATT.search(perk.name) is None:
         raise ValidationException("Perk name can't be empty")
 
@@ -110,13 +115,13 @@ def create_perk(perk: PerkCreate, db: "Session" = Depends(get_db)):
 
 @router.put("/{id}", status_code=status.HTTP_200_OK)
 def update_perk(id: int, perk: PerkCreate, db: "Session" = Depends(get_db)):
+    """Update the information of a DBD perk."""
     _, perk_query = filter_one(Perk, "Perk", id, db)
 
     new_info = {"id": id} | perk.model_dump()
     character = get_req("characters", new_info["character_id"])
     character["is_for_killer"] = character["is_killer"]
 
-    new_info = Perk(**new_info)
     perk_query.update(new_info, synchronize_session=False)
     db.commit()
 

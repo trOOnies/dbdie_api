@@ -44,9 +44,9 @@ def get_req(endpoint: str, id: int) -> dict:
     return resp.json()
 
 
-def parse_or_raise(resp):
+def parse_or_raise(resp, exp_status_code: int = status.HTTP_200_OK):
     """Parse Response as JSON or raise error as exception, depending on status code."""
-    if resp.status_code != status.HTTP_200_OK:
+    if resp.status_code != exp_status_code:
         raise HTTPException(
             status_code=resp.status_code,
             detail=resp.reason,
@@ -59,17 +59,15 @@ def object_as_dict(obj) -> dict:
     return {c.key: getattr(obj, c.key) for c in inspect(obj).mapper.column_attrs}
 
 
-def filter_with_text(db: "Session", search_text: str, model):
+def filter_with_text(query, model, search_text: str):
     """Add a filter to a sqlalchemy query based on the filtered column.
     search_text must already be non-empty.
     """
     search_text = search_text.lower()
 
     if model.__tablename__ in NAME_FILTERED_TABLENAMES:
-        query = db.query(model.name)
         return query.filter(func.lower(model.name).contains(search_text))
     elif model.__tablename__ == TN.MATCHES:
-        query = db.query(model.filename)
         return query.filter(func.lower(model.filename).contains(search_text))
     else:
         raise NotImplementedError
@@ -85,14 +83,43 @@ def add_commit_refresh(model, db: "Session") -> None:
 # * Base endpoint functions
 
 
-def do_count(model, text: str, db: "Session") -> int:
+def fill_cols(model, text: str, is_for_killer: bool | None):
+    """Efficient filling of columns in the SQLAlchemy SELECT statement."""
+    cols = []
+
+    if is_for_killer is not None:
+        cols.append(model.is_for_killer)
+    if text != "":
+        if model.__tablename__ in NAME_FILTERED_TABLENAMES:
+            cols.append(model.name)
+        elif model.__tablename__ == TN.MATCHES:
+            cols.append(model.filename)
+        else:
+            raise NotImplementedError
+
+    if not cols:
+        cols = [model.id]
+
+    return cols
+
+
+def do_count(
+    model,
+    text: str,
+    db: "Session",
+    is_for_killer: bool | None = None,
+) -> int:
     """Base count function.
     'model' is the sqlalchemy model.
     """
-    if text == "":
-        query = db.query(model.id)
-    else:
-        query = filter_with_text(db, text, model)
+    cols = fill_cols(model, text, is_for_killer)
+    query = db.query(*cols)
+
+    if is_for_killer is not None:
+        query = query.filter(model.is_for_killer == is_for_killer)
+    if text != "":
+        query = filter_with_text(query, model, text)
+
     return query.count()
 
 

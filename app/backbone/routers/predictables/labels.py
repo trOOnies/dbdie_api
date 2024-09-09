@@ -1,4 +1,4 @@
-"""Router code for match labels"""
+"""Router code for DBD match labels."""
 
 import os
 from typing import TYPE_CHECKING
@@ -33,8 +33,17 @@ ALL_FMT = list(set(COMMON_FMT.ALL) | set(KILLER_FMT.ALL) | set(SURV_FMT.ALL))
 
 
 @router.get("/count", response_model=int)
-def count_labels(db: "Session" = Depends(get_db)):
-    query = db.query(Labels.match_id)
+def count_labels(is_killer: bool | None = None, db: "Session" = Depends(get_db)):
+    """Count player-centered labels."""
+    if is_killer is None:
+        query = db.query(Labels.match_id)
+    else:
+        query = db.query(Labels.player_id)
+        query = (
+            query.filter(Labels.player_id == 4)
+            if is_killer
+            else query.filter(Labels.player_id < 4)
+        )
     return query.count()
 
 
@@ -44,14 +53,9 @@ def get_labels(
     skip: int = 0,
     db: "Session" = Depends(get_db),
 ):
+    """Get many player-centered labels."""
     labels = get_many(db, limit, Labels, skip)
-    labels = [
-        LabelsOut(
-            match_id=lbl.match_id,
-            player=PlayerIn.from_labels(lbl),
-            date_modified=lbl.date_modified,
-        ) for lbl in labels
-    ]
+    labels = [LabelsOut.from_labels(lbl) for lbl in labels]
     return labels
 
 
@@ -61,6 +65,7 @@ def get_label(
     player_id: int,
     db: "Session" = Depends(get_db),
 ):
+    """Get player-centered labels with (match_id, player_id)."""
     labels = (
         db.query(Labels)
         .filter(Labels.match_id == match_id)
@@ -72,11 +77,7 @@ def get_label(
             status.HTTP_404_NOT_FOUND,
             f"Labels with the id ({match_id}, {player_id}) were not found",
         )
-    labels = LabelsOut(
-        match_id=labels.match_id,
-        player=PlayerIn.from_labels(labels),
-        date_modified=labels.date_modified,
-    )
+    labels = LabelsOut.from_labels(labels)
     return labels
 
 
@@ -85,6 +86,7 @@ def create_labels(
     labels: LabelsCreate,
     db: "Session" = Depends(get_db),
 ):
+    """Create player-centered labels."""
     new_labels = labels.model_dump()
     new_labels = new_labels | player_to_labels(new_labels["player"])
     del new_labels["player"]
@@ -104,7 +106,7 @@ def create_labels(
 
 @router.post("/batch", status_code=status.HTTP_201_CREATED)
 def batch_create_labels(fmts: list[FullModelType], filename: str):
-    """Create labels from label CSVs."""
+    """Create player-centered labels from label CSVs."""
     assert fmts, "Full model types can't be empty"
     assert all(fmt in ALL_FMT for fmt in fmts)
 
@@ -154,3 +156,43 @@ def batch_create_labels(fmts: list[FullModelType], filename: str):
     post_labels(joined_df)
 
     return Response(status_code=status.HTTP_201_CREATED)
+
+
+@router.put("/filter", status_code=status.HTTP_200_OK)
+def update_labels(
+    match_id: int,
+    player_id: int,
+    perk_ids: list[int],  # TODO: Expand beyond perks
+    db: "Session" = Depends(get_db),
+):
+    """Update the information of a DBD perk."""
+    assert len(perk_ids) == 4, "There must be 4 perk IDs"
+
+    filter_query = (
+        db.query(Labels)
+        .filter(Labels.match_id == match_id)
+        .filter(Labels.player_id == player_id)
+    )
+    new_info = filter_query.first()
+    if new_info is None:
+        print("NOT FOUND")
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            f"Labels with the id ({match_id}, {player_id}) were not found",
+        )
+
+    new_info = LabelsOut.from_labels(new_info)
+    player = new_info.player
+    new_info = new_info.model_dump()
+
+    new_info = new_info | player.to_sqla()
+    del new_info["player"]
+
+    new_info["user_id"] = 1  # TODO: dynamic
+    new_info["extractor_id"] = 1  # TODO: dynamic
+    new_info["manually_checked"] = True
+
+    filter_query.update(new_info, synchronize_session=False)
+    db.commit()
+
+    return Response(status_code=status.HTTP_200_OK)

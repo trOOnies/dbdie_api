@@ -1,4 +1,4 @@
-"""Router code for game item used"""
+"""Router code for DBD game item."""
 
 from typing import TYPE_CHECKING
 
@@ -26,8 +26,12 @@ router = APIRouter()
 
 
 @router.get("/count", response_model=int)
-def count_items(text: str = "", db: "Session" = Depends(get_db)):
-    return do_count(Item, text, db)
+def count_items(
+    is_for_killer: bool | None = None,
+    text: str = "",
+    db: "Session" = Depends(get_db),
+):
+    return do_count(Item, text, db, is_for_killer)
 
 
 @router.get("", response_model=list[ItemOut])
