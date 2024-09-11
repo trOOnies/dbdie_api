@@ -10,14 +10,14 @@ from backbone.endpoints import (
     dbd_version_str_to_id,
     do_count,
     endp,
-    filter_one,
     get_icon,
     get_req,
+    update_one,
 )
 from backbone.exceptions import ItemNotFoundException, ValidationException
 from backbone.models import Character, Perk
 from dbdie_ml.schemas.predictables import PerkCreate, PerkOut
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, status
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -116,13 +116,4 @@ def create_perk(perk: PerkCreate, db: "Session" = Depends(get_db)):
 @router.put("/{id}", status_code=status.HTTP_200_OK)
 def update_perk(id: int, perk: PerkCreate, db: "Session" = Depends(get_db)):
     """Update the information of a DBD perk."""
-    _, perk_query = filter_one(Perk, "Perk", id, db)
-
-    new_info = {"id": id} | perk.model_dump()
-    character = get_req("characters", new_info["character_id"])
-    character["is_for_killer"] = character["is_killer"]
-
-    perk_query.update(new_info, synchronize_session=False)
-    db.commit()
-
-    return Response(status_code=status.HTTP_200_OK)
+    return update_one(perk, Perk, "Perk", id, db)

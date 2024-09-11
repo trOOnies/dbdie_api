@@ -3,6 +3,7 @@
 import os
 from typing import TYPE_CHECKING
 
+from datetime import datetime
 import pandas as pd
 import requests
 from backbone.code.labels import (
@@ -15,12 +16,12 @@ from backbone.code.labels import (
     process_joined_df,
 )
 from backbone.database import get_db
-from backbone.endpoints import add_commit_refresh, endp, get_many, parse_or_raise
+from backbone.endpoints import add_commit_refresh, endp, fill_cols_custom, get_many, parse_or_raise
 from backbone.models import Labels
 from dbdie_ml.classes.base import FullModelType
 from dbdie_ml.options import COMMON_FMT, KILLER_FMT, SURV_FMT
 from dbdie_ml.paths import LABELS_FD_RP, absp
-from dbdie_ml.schemas.groupings import LabelsCreate, LabelsOut, PlayerIn
+from dbdie_ml.schemas.groupings import LabelsCreate, LabelsOut
 from fastapi import APIRouter, Depends, Response, status
 from fastapi.exceptions import HTTPException
 
@@ -33,17 +34,27 @@ ALL_FMT = list(set(COMMON_FMT.ALL) | set(KILLER_FMT.ALL) | set(SURV_FMT.ALL))
 
 
 @router.get("/count", response_model=int)
-def count_labels(is_killer: bool | None = None, db: "Session" = Depends(get_db)):
+def count_labels(
+    is_killer: bool | None = None,
+    manually_checked: bool | None = None,
+    db: "Session" = Depends(get_db),
+):
     """Count player-centered labels."""
-    if is_killer is None:
-        query = db.query(Labels.match_id)
-    else:
-        query = db.query(Labels.player_id)
+    cols = fill_cols_custom(
+        [(Labels.player_id, is_killer), (Labels.manually_checked, manually_checked)],
+        default_col=Labels.match_id,
+    )
+    query = db.query(*cols)
+
+    if is_killer is not None:
         query = (
             query.filter(Labels.player_id == 4)
             if is_killer
             else query.filter(Labels.player_id < 4)
         )
+    if manually_checked is not None:
+        query = query.filter(Labels.manually_checked == manually_checked)
+
     return query.count()
 
 
@@ -188,6 +199,7 @@ def update_labels(
     new_info = new_info | player.to_sqla()
     del new_info["player"]
 
+    new_info["date_modified"] = datetime.now()
     new_info["user_id"] = 1  # TODO: dynamic
     new_info["extractor_id"] = 1  # TODO: dynamic
     new_info["manually_checked"] = True

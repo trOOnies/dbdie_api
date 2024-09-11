@@ -9,13 +9,14 @@ from backbone.config import ST
 from backbone.exceptions import ItemNotFoundException, NameNotFoundException
 from backbone.options import TABLE_NAMES as TN
 from constants import ICONS_FOLDER
-from fastapi import status
+from fastapi import Response, status
 from fastapi.exceptions import HTTPException
 from fastapi.responses import FileResponse
 from sqlalchemy import func, inspect
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
+    from sqlalchemy import Column
 
 ENDPOINT_PATT = re.compile("[a-z]+$")
 NOT_WS_PATT = re.compile(r"\S")
@@ -103,6 +104,17 @@ def fill_cols(model, text: str, is_for_killer: bool | None):
     return cols
 
 
+def fill_cols_custom(
+    options: list[tuple["Column", bool | None]],
+    default_col: "Column",
+):
+    """Efficient custom filling of columns in the SQLAlchemy SELECT statement."""
+    cols = [c for c, v in options if v is not None]
+    if not cols:
+        cols = [default_col]
+    return cols
+
+
 def do_count(
     model,
     text: str,
@@ -185,6 +197,25 @@ def get_id(
     if item is None:
         raise NameNotFoundException(model_str, name)
     return item.id
+
+
+def update_one(
+    schema_create,
+    model,
+    model_str: str,
+    id: int,
+    db: "Session",
+):
+    """Base update one (item) function."""
+    _, select_query = filter_one(model, model_str, id, db)
+
+    new_info = {"id": id} | schema_create.model_dump()
+    print(new_info)
+
+    select_query.update(new_info, synchronize_session=False)
+    db.commit()
+
+    return Response(status_code=status.HTTP_200_OK)
 
 
 # * Specific endpoint functions

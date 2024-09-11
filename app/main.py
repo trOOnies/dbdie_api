@@ -1,4 +1,5 @@
 # from fastapi.middleware.cors import CORSMiddleware
+from backbone.options import ENDPOINTS as EP
 from backbone.routers.helpers import dbd_version
 from backbone.routers.predictables import (
     addons,
@@ -25,24 +26,24 @@ app = FastAPI(
 
 # TODO
 if True:
-    app.include_router(addons.router, prefix="/addons", tags=[PRED, "addons"])
+    app.include_router(addons.router, prefix=EP.ADDONS, tags=[PRED, "addons"])
     app.include_router(
-        characters.router, prefix="/characters", tags=[PRED, "characters"]
+        characters.router, prefix=EP.CHARACTERS, tags=[PRED, "characters"]
     )
-    app.include_router(items.router, prefix="/items", tags=[PRED, "items"])
-    app.include_router(offerings.router, prefix="/offerings", tags=[PRED, "offerings"])
-    app.include_router(perks.router, prefix="/perks", tags=[PRED, "perks"])
-    app.include_router(statuses.router, prefix="/statuses", tags=[PRED, "statuses"])
-    app.include_router(players.router, prefix="/players", tags=[PRED, "players"])
-    app.include_router(dbd_version.router, prefix="/dbd-version", tags=[HELP])
-    app.include_router(matches.router, prefix="/matches", tags=[PRED, "matches"])
-    app.include_router(labels.router, prefix="/labels", tags=[PRED, "labels"])
+    app.include_router(items.router, prefix=EP.ITEMS, tags=[PRED, "items"])
+    app.include_router(offerings.router, prefix=EP.OFFERINGS, tags=[PRED, "offerings"])
+    app.include_router(perks.router, prefix=EP.PERKS, tags=[PRED, "perks"])
+    app.include_router(statuses.router, prefix=EP.STATUSES, tags=[PRED, "statuses"])
+    app.include_router(players.router, prefix=EP.PLAYERS, tags=[PRED, "players"])
+    app.include_router(dbd_version.router, prefix=EP.DBD_VERSION, tags=[HELP])
+    app.include_router(matches.router, prefix=EP.MATCHES, tags=[PRED, "matches"])
+    app.include_router(labels.router, prefix=EP.LABELS, tags=[PRED, "labels"])
 
 # TODO
 if True:
-    app.include_router(cropping.router, prefix="/crop", tags=[PROC])
-    app.include_router(predict.router, prefix="/predict", tags=[PROC])
-    app.include_router(backup.router, prefix="/backup", tags=[PROC])
+    app.include_router(cropping.router, prefix=EP.CROP, tags=[PROC])
+    app.include_router(predict.router, prefix=EP.PREDICT, tags=[PROC])
+    app.include_router(backup.router, prefix=EP.BACKUP, tags=[PROC])
 
 
 # origins = ["*"]  # ! PLEASE DO NOT LEAVE THIS LIKE THIS IN A PRODUCTION ENV!

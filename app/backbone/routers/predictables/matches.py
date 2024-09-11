@@ -6,6 +6,7 @@ import os
 import re
 import requests
 import shutil
+from datetime import datetime
 from backbone.code.matches import form_match
 from backbone.database import get_db
 from backbone.endpoints import (
@@ -21,6 +22,7 @@ from backbone.endpoints import (
 )
 from backbone.exceptions import ValidationException
 from backbone.models import Match
+from backbone.options.ENDPOINTS import DBD_VERSION as DBDV_ENDP
 from dbdie_ml.schemas.groupings import (
     MatchCreate,
     MatchOut,
@@ -28,7 +30,7 @@ from dbdie_ml.schemas.groupings import (
     VersionedMatchOut,
 )
 from dbdie_ml.paths import absp, IMG_MAIN_FD_RP
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Response, status
 from fastapi.exceptions import HTTPException
 
 if TYPE_CHECKING:
@@ -67,7 +69,7 @@ def get_match(id: int, db: "Session" = Depends(get_db)):
     if dbdv_id is None:
         m["dbd_version"] = None
     else:
-        resp = requests.get(endp(f"/dbd-version/{dbdv_id}"))
+        resp = requests.get(endp(f"{DBDV_ENDP}/{dbdv_id}"))
         m["dbd_version"] = parse_or_raise(resp)
 
     del m["dbd_version_id"]
@@ -77,11 +79,11 @@ def get_match(id: int, db: "Session" = Depends(get_db)):
 
 
 @router.post("", response_model=MatchOut)
-def create_match(match: MatchCreate, db: "Session" = Depends(get_db)):
-    if NOT_WS_PATT.search(match.filename) is None:
+def create_match(match_create: MatchCreate, db: "Session" = Depends(get_db)):
+    if NOT_WS_PATT.search(match_create.filename) is None:
         raise ValidationException("Match filename can't be empty")
 
-    new_match = form_match(match)
+    new_match = form_match(match_create)
     new_match = Match(**new_match)
 
     db.add(new_match)
@@ -118,7 +120,7 @@ def upload_versioned_folder(v_folder: VersionedFolderUpload):
 
     parse_or_raise(
         requests.get(
-            endp("/dbd-version/id"),
+            endp(f"{DBDV_ENDP}/id"),
             params={"dbd_version_str": str(v_folder.dbd_version)},
         )
     )
@@ -142,3 +144,29 @@ def upload_versioned_folder(v_folder: VersionedFolderUpload):
 
     os.rmdir(src_fd)
     return matches
+
+
+@router.put("/{id}", status_code=status.HTTP_200_OK)
+def update_match(id: int, match_create: MatchCreate, db: "Session" = Depends(get_db)):
+    """Update the information of a DBD match."""
+    _, select_query = filter_one(Match, "Match", id, db)
+
+    new_info = {"id": id} | match_create.model_dump()
+
+    del new_info["dbd_version"]
+    new_info["dbd_version_id"] = (
+        None if match_create.dbd_version is None
+        else parse_or_raise(
+            requests.get(
+                endp(f"{DBDV_ENDP}/id"),
+                params={"dbd_version_str": str(match_create.dbd_version)},
+            )
+        )
+    )
+
+    new_info["date_modified"] = datetime.now()
+
+    select_query.update(new_info, synchronize_session=False)
+    db.commit()
+
+    return Response(status_code=status.HTTP_200_OK)
