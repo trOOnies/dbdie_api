@@ -200,7 +200,15 @@ class Labels(Base):
     user             = rel("User")
     extractor_id     = C(SmallInt, FK(f"{TN.EXTRACTOR}.id"), nullable=True)
     extractor        = rel("Extractor")
-    manually_checked = C(Bool, nullable=True)
+    perks_mckd       = C(Bool, nullable=True)
+    character_mckd   = C(Bool, nullable=True)
+    item_mckd        = C(Bool, nullable=True)
+    addons_mckd      = C(Bool, nullable=True)
+    offering_mckd    = C(Bool, nullable=True)
+    status_mckd      = C(Bool, nullable=True)
+    points_mckd      = C(Bool, nullable=True)
+    prestige         = C(SmallInt, nullable=True)
+    prestige_mckd    = C(Bool, nullable=True)
 
 
 class User(Base):

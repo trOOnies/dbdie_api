@@ -21,7 +21,12 @@ from backbone.models import Labels
 from dbdie_ml.classes.base import FullModelType
 from dbdie_ml.options import COMMON_FMT, KILLER_FMT, SURV_FMT
 from dbdie_ml.paths import LABELS_FD_RP, absp
-from dbdie_ml.schemas.groupings import LabelsCreate, LabelsOut
+from dbdie_ml.schemas.groupings import (
+    LabelsCreate,
+    LabelsOut,
+    ManualChecksIn,
+    PlayerIn,
+)
 from fastapi import APIRouter, Depends, Response, status
 from fastapi.exceptions import HTTPException
 
@@ -36,14 +41,21 @@ ALL_FMT = list(set(COMMON_FMT.ALL) | set(KILLER_FMT.ALL) | set(SURV_FMT.ALL))
 @router.get("/count", response_model=int)
 def count_labels(
     is_killer: bool | None = None,
-    manually_checked: bool | None = None,
+    manual_checks: ManualChecksIn | None = None,
     db: "Session" = Depends(get_db),
 ):
     """Count player-centered labels."""
-    cols = fill_cols_custom(
-        [(Labels.player_id, is_killer), (Labels.manually_checked, manually_checked)],
-        default_col=Labels.match_id,
-    )
+    options = [(Labels.player_id, is_killer)]
+    if manual_checks is not None and manual_checks.is_init:
+        options += [
+            (col, chk)
+            for chk, col in zip(
+                manual_checks.checks,
+                manual_checks.model_to_cols(Labels),
+            )
+        ]
+
+    cols = fill_cols_custom(options, default_col=Labels.match_id)
     query = db.query(*cols)
 
     if is_killer is not None:
@@ -52,8 +64,9 @@ def count_labels(
             if is_killer
             else query.filter(Labels.player_id < 4)
         )
-    if manually_checked is not None:
-        query = query.filter(Labels.manually_checked == manually_checked)
+    if manual_checks is not None and manual_checks.is_init:
+        for lbl_filter in manual_checks.to_labels_filters(Labels):
+            query = query.filter(lbl_filter)
 
     return query.count()
 
@@ -169,40 +182,41 @@ def batch_create_labels(fmts: list[FullModelType], filename: str):
     return Response(status_code=status.HTTP_201_CREATED)
 
 
-@router.put("/filter", status_code=status.HTTP_200_OK)
+@router.put("/predictable", status_code=status.HTTP_200_OK)
 def update_labels(
     match_id: int,
-    player_id: int,
-    perk_ids: list[int],  # TODO: Expand beyond perks
+    player: PlayerIn,
+    strict: bool = True,
     db: "Session" = Depends(get_db),
 ):
-    """Update the information of a DBD perk."""
-    assert len(perk_ids) == 4, "There must be 4 perk IDs"
+    """Update the information of predictables."""
+    fps = player.filled_predictables()
+    if strict:
+        assert len(fps) == 1
 
     filter_query = (
         db.query(Labels)
         .filter(Labels.match_id == match_id)
-        .filter(Labels.player_id == player_id)
+        .filter(Labels.player_id == player.id)
     )
     new_info = filter_query.first()
     if new_info is None:
         print("NOT FOUND")
         raise HTTPException(
             status.HTTP_404_NOT_FOUND,
-            f"Labels with the id ({match_id}, {player_id}) were not found",
+            f"Labels with the id ({match_id}, {player.id}) were not found",
         )
 
     new_info = LabelsOut.from_labels(new_info)
     player = new_info.player
     new_info = new_info.model_dump()
-
-    new_info = new_info | player.to_sqla()
     del new_info["player"]
+
+    new_info = new_info | player.to_sqla(fps)
 
     new_info["date_modified"] = datetime.now()
     new_info["user_id"] = 1  # TODO: dynamic
     new_info["extractor_id"] = 1  # TODO: dynamic
-    new_info["manually_checked"] = True
 
     filter_query.update(new_info, synchronize_session=False)
     db.commit()
