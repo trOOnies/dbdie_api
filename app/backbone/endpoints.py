@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 import requests
 from backbone.config import ST
 from backbone.exceptions import ItemNotFoundException, NameNotFoundException
+from backbone.options import ENDPOINTS as EP
 from backbone.options import TABLE_NAMES as TN
 from constants import ICONS_FOLDER
 from fastapi import Response, status
@@ -18,7 +19,7 @@ if TYPE_CHECKING:
     from sqlalchemy.orm import Session
     from sqlalchemy import Column
 
-ENDPOINT_PATT = re.compile("[a-z]+$")
+ENDPOINT_PATT = re.compile(r"\/[a-z\-]+$")
 NOT_WS_PATT = re.compile(r"\S")
 NAME_FILTERED_TABLENAMES = {
     TN.ADDONS,
@@ -39,9 +40,9 @@ def endp(endpoint: str) -> str:
 def get_req(endpoint: str, id: int) -> dict:
     """Request wrapper for a GET request for a type 'endpoint' with an id 'id'."""
     assert ENDPOINT_PATT.match(endpoint)
-    resp = requests.get(endp(f"/{endpoint}/{id}"))
+    resp = requests.get(endp(f"{endpoint}/{id}"))
     if resp.status_code != status.HTTP_200_OK:
-        raise ItemNotFoundException(endpoint.capitalize()[:-1], id)
+        raise ItemNotFoundException(endpoint[1:].capitalize()[:-1], id)
     return resp.json()
 
 
@@ -210,7 +211,6 @@ def update_one(
     _, select_query = filter_one(model, model_str, id, db)
 
     new_info = {"id": id} | schema_create.model_dump()
-    print(new_info)
 
     select_query.update(new_info, synchronize_session=False)
     db.commit()
@@ -224,7 +224,7 @@ def update_one(
 def dbd_version_str_to_id(s: str) -> int:
     """Converts a DBDVersion string to a DBDVersion id."""
     dbd_version_id = requests.get(
-        endp("/dbd-version/id"),
+        endp(f"{EP.DBD_VERSION}/id"),
         params={"dbd_version_str": s},
     )
     dbd_version_id = parse_or_raise(dbd_version_id)

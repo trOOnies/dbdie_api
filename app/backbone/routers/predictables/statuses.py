@@ -3,6 +3,9 @@
 from typing import TYPE_CHECKING
 
 import requests
+from dbdie_ml.schemas.predictables import StatusCreate, StatusOut
+from fastapi import APIRouter, Depends
+
 from backbone.database import get_db
 from backbone.endpoints import (
     NOT_WS_PATT,
@@ -14,8 +17,7 @@ from backbone.endpoints import (
 )
 from backbone.exceptions import ItemNotFoundException, ValidationException
 from backbone.models import Character, Status
-from dbdie_ml.schemas.predictables import StatusCreate, StatusOut
-from fastapi import APIRouter, Depends
+from backbone.options import ENDPOINTS as EP
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -75,13 +77,13 @@ def create_status(status: StatusCreate, db: "Session" = Depends(get_db)):
     if NOT_WS_PATT.search(status.name) is None:
         raise ValidationException("Status name can't be empty")
 
-    assert requests.get(endp(f"/characters/{status.character_id}")).status_code == 200
+    assert requests.get(endp(f"{EP.CHARACTERS}/{status.character_id}")).status_code == 200
 
     new_status = {
-        "id": requests.get(endp("/statuses/count")).json()
+        "id": requests.get(endp(f"{EP.STATUSES}/count")).json()
     } | status.model_dump()
     new_status = Status(**new_status)
 
     add_commit_refresh(new_status, db)
 
-    return get_req("status", new_status.id)
+    return get_req(EP.STATUSES, new_status.id)

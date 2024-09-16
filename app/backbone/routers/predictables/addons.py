@@ -1,8 +1,10 @@
 """Router code for DBD addons."""
 
-from typing import TYPE_CHECKING
-
 import requests
+from typing import TYPE_CHECKING
+from dbdie_ml.schemas.predictables import AddonCreate, AddonOut
+from fastapi import APIRouter, Depends
+
 from backbone.database import get_db
 from backbone.endpoints import (
     NOT_WS_PATT,
@@ -17,8 +19,7 @@ from backbone.endpoints import (
 )
 from backbone.exceptions import ValidationException
 from backbone.models import Addon
-from dbdie_ml.schemas.predictables import AddonCreate, AddonOut
-from fastapi import APIRouter, Depends
+from backbone.options import ENDPOINTS as EP
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -55,11 +56,11 @@ def create_addon(addon: AddonCreate, db: "Session" = Depends(get_db)):
     if NOT_WS_PATT.search(addon.name) is None:
         raise ValidationException("Addon name can't be empty")
 
-    get_req("characters", addon.user_id)
+    get_req(EP.CHARACTERS, addon.user_id)
     # TODO: assert type_id exists
 
     new_addon = addon.model_dump()
-    new_addon = {"id": requests.get(endp("/addons/count")).json()} | new_addon
+    new_addon = {"id": requests.get(endp(f"{EP.ADDONS}/count")).json()} | new_addon
     new_addon["dbd_version_id"] = (
         dbd_version_str_to_id(new_addon["dbd_version_str"])
         if new_addon["dbd_version_str"] is not None
@@ -70,4 +71,4 @@ def create_addon(addon: AddonCreate, db: "Session" = Depends(get_db)):
 
     add_commit_refresh(new_addon, db)
 
-    return get_req("addons", new_addon.id)
+    return get_req(EP.ADDONS, new_addon.id)

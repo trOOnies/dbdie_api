@@ -3,6 +3,9 @@
 from typing import TYPE_CHECKING
 
 import requests
+from dbdie_ml.schemas.predictables import PerkCreate, PerkOut
+from fastapi import APIRouter, Depends, status
+
 from backbone.database import get_db
 from backbone.endpoints import (
     NOT_WS_PATT,
@@ -16,8 +19,7 @@ from backbone.endpoints import (
 )
 from backbone.exceptions import ItemNotFoundException, ValidationException
 from backbone.models import Character, Perk
-from dbdie_ml.schemas.predictables import PerkCreate, PerkOut
-from fastapi import APIRouter, Depends, status
+from backbone.options import ENDPOINTS as EP
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -95,11 +97,11 @@ def create_perk(perk: PerkCreate, db: "Session" = Depends(get_db)):
         raise ValidationException("Perk name can't be empty")
 
     assert (
-        requests.get(endp(f"/characters/{perk.character_id}")).status_code
+        requests.get(endp(f"{EP.CHARACTERS}/{perk.character_id}")).status_code
         == status.HTTP_200_OK
     )
 
-    new_perk = {"id": requests.get(endp("/perks/count")).json()} | perk.model_dump()
+    new_perk = {"id": requests.get(endp(f"{EP.PERKS}/count")).json()} | perk.model_dump()
     new_perk["dbd_version_id"] = (
         dbd_version_str_to_id(new_perk["dbd_version_str"])
         if new_perk["dbd_version_str"] is not None
@@ -110,7 +112,7 @@ def create_perk(perk: PerkCreate, db: "Session" = Depends(get_db)):
 
     add_commit_refresh(new_perk, db)
 
-    return get_req("perks", new_perk.id)
+    return get_req(EP.PERKS, new_perk.id)
 
 
 @router.put("/{id}", status_code=status.HTTP_200_OK)

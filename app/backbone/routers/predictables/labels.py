@@ -6,6 +6,19 @@ from typing import TYPE_CHECKING
 from datetime import datetime
 import pandas as pd
 import requests
+from sqlalchemy import or_
+from dbdie_ml.classes.base import FullModelType
+from dbdie_ml.options import COMMON_FMT, KILLER_FMT, SURV_FMT
+from dbdie_ml.paths import LABELS_FD_RP, absp
+from dbdie_ml.schemas.groupings import (
+    LabelsCreate,
+    LabelsOut,
+    ManualChecksIn,
+    PlayerIn,
+)
+from fastapi import APIRouter, Depends, Response, status
+from fastapi.exceptions import HTTPException
+
 from backbone.code.labels import (
     concat_player_types,
     handle_mpp_crops,
@@ -18,17 +31,7 @@ from backbone.code.labels import (
 from backbone.database import get_db
 from backbone.endpoints import add_commit_refresh, endp, fill_cols_custom, get_many, parse_or_raise
 from backbone.models import Labels
-from dbdie_ml.classes.base import FullModelType
-from dbdie_ml.options import COMMON_FMT, KILLER_FMT, SURV_FMT
-from dbdie_ml.paths import LABELS_FD_RP, absp
-from dbdie_ml.schemas.groupings import (
-    LabelsCreate,
-    LabelsOut,
-    ManualChecksIn,
-    PlayerIn,
-)
-from fastapi import APIRouter, Depends, Response, status
-from fastapi.exceptions import HTTPException
+from backbone.options import ENDPOINTS as EP
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -65,8 +68,13 @@ def count_labels(
             else query.filter(Labels.player_id < 4)
         )
     if manual_checks is not None and manual_checks.is_init:
-        for lbl_filter in manual_checks.to_labels_filters(Labels):
-            query = query.filter(lbl_filter)
+        for col, chk in manual_checks.get_filters_conds(Labels):
+            if chk:
+                query = query.filter(col.is_(True))
+            else:
+                query = query.filter(
+                    or_(col.is_(False), col.is_(None))
+                )
 
     return query.count()
 
@@ -119,7 +127,7 @@ def create_labels(
     add_commit_refresh(new_labels, db)
 
     resp = requests.get(
-        endp("/labels/filter"),
+        endp(f"{EP.LABELS}/filter"),
         params={
             "match_id": new_labels.match_id,
             "player_id": new_labels.player_id,
@@ -208,10 +216,11 @@ def update_labels(
         )
 
     new_info = LabelsOut.from_labels(new_info)
-    player = new_info.player
+    sql_player = new_info.player
     new_info = new_info.model_dump()
     del new_info["player"]
 
+    new_info = sql_player.flatten_predictables(new_info)
     new_info = new_info | player.to_sqla(fps)
 
     new_info["date_modified"] = datetime.now()

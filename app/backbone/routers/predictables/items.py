@@ -1,8 +1,10 @@
 """Router code for DBD game item."""
 
-from typing import TYPE_CHECKING
-
 import requests
+from typing import TYPE_CHECKING
+from dbdie_ml.schemas.predictables import ItemCreate, ItemOut
+from fastapi import APIRouter, Depends
+
 from backbone.database import get_db
 from backbone.endpoints import (
     NOT_WS_PATT,
@@ -16,8 +18,7 @@ from backbone.endpoints import (
 )
 from backbone.exceptions import ValidationException
 from backbone.models import Item
-from dbdie_ml.schemas.predictables import ItemCreate, ItemOut
-from fastapi import APIRouter, Depends
+from backbone.options import ENDPOINTS as EP
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -60,9 +61,9 @@ def create_item(item: ItemCreate, db: "Session" = Depends(get_db)):
 
     # TODO: assert type_id exists
 
-    new_item = {"id": requests.get(endp("/items/count")).json()} | item.model_dump()
+    new_item = {"id": requests.get(endp(f"{EP.ITEMS}/count")).json()} | item.model_dump()
     new_item = Item(**new_item)
 
     add_commit_refresh(new_item, db)
 
-    return get_req("items", new_item.id)
+    return get_req(EP.ITEMS, new_item.id)

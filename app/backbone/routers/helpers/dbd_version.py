@@ -2,6 +2,8 @@
 
 import requests
 from typing import TYPE_CHECKING
+from dbdie_ml.schemas.predictables import DBDVersionCreate, DBDVersionOut
+from fastapi import APIRouter, Depends, Response, status
 
 from backbone.database import get_db
 from backbone.endpoints import (
@@ -10,8 +12,7 @@ from backbone.endpoints import (
 )
 from backbone.exceptions import ValidationException
 from backbone.models import DBDVersion
-from dbdie_ml.schemas.predictables import DBDVersionCreate, DBDVersionOut
-from fastapi import APIRouter, Depends, Response, status
+from backbone.options import ENDPOINTS as EP
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -49,12 +50,12 @@ def create_dbd_version(dbdv: DBDVersionCreate, db: "Session" = Depends(get_db)):
     if NOT_WS_PATT.search(dbdv.name) is None:
         raise ValidationException("DBD version name can't be empty")
 
-    new_dbdv = {"id": requests.get(endp("/dbd-version/count")).json()} | dbdv.model_dump()
+    new_dbdv = {"id": requests.get(endp(f"{EP.DBD_VERSION}/count")).json()} | dbdv.model_dump()
     new_dbdv = DBDVersion(**new_dbdv)
 
     add_commit_refresh(new_dbdv, db)
 
-    return get_req("dbd-version", new_dbdv.id)
+    return get_req(EP.DBD_VERSION, new_dbdv.id)
 
 
 @router.put("/{id}", status_code=status.HTTP_200_OK)

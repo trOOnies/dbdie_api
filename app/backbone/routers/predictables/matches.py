@@ -7,6 +7,16 @@ import re
 import requests
 import shutil
 from datetime import datetime
+from dbdie_ml.schemas.groupings import (
+    MatchCreate,
+    MatchOut,
+    VersionedFolderUpload,
+    VersionedMatchOut,
+)
+from dbdie_ml.paths import absp, IMG_MAIN_FD_RP
+from fastapi import APIRouter, Depends, Response, status
+from fastapi.exceptions import HTTPException
+
 from backbone.code.matches import form_match
 from backbone.database import get_db
 from backbone.endpoints import (
@@ -22,16 +32,7 @@ from backbone.endpoints import (
 )
 from backbone.exceptions import ValidationException
 from backbone.models import Match
-from backbone.options.ENDPOINTS import DBD_VERSION as DBDV_ENDP
-from dbdie_ml.schemas.groupings import (
-    MatchCreate,
-    MatchOut,
-    VersionedFolderUpload,
-    VersionedMatchOut,
-)
-from dbdie_ml.paths import absp, IMG_MAIN_FD_RP
-from fastapi import APIRouter, Depends, Response, status
-from fastapi.exceptions import HTTPException
+from backbone.options import ENDPOINTS as EP
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -69,7 +70,7 @@ def get_match(id: int, db: "Session" = Depends(get_db)):
     if dbdv_id is None:
         m["dbd_version"] = None
     else:
-        resp = requests.get(endp(f"{DBDV_ENDP}/{dbdv_id}"))
+        resp = requests.get(endp(f"{EP.DBD_VERSION}/{dbdv_id}"))
         m["dbd_version"] = parse_or_raise(resp)
 
     del m["dbd_version_id"]
@@ -99,7 +100,7 @@ def create_match(match_create: MatchCreate, db: "Session" = Depends(get_db)):
         ) from e
     db.refresh(new_match)
 
-    resp = get_req("matches", new_match.id)
+    resp = get_req(EP.MATCHES, new_match.id)
     return resp
 
 
@@ -120,7 +121,7 @@ def upload_versioned_folder(v_folder: VersionedFolderUpload):
 
     parse_or_raise(
         requests.get(
-            endp(f"{DBDV_ENDP}/id"),
+            endp(f"{EP.DBD_VERSION}/id"),
             params={"dbd_version_str": str(v_folder.dbd_version)},
         )
     )
@@ -130,7 +131,7 @@ def upload_versioned_folder(v_folder: VersionedFolderUpload):
         matches.append(
             parse_or_raise(
                 requests.post(
-                    endp("/matches"),
+                    endp(EP.MATCHES),
                     json={
                         "filename": f,
                         "match_date": d,
@@ -158,7 +159,7 @@ def update_match(id: int, match_create: MatchCreate, db: "Session" = Depends(get
         None if match_create.dbd_version is None
         else parse_or_raise(
             requests.get(
-                endp(f"{DBDV_ENDP}/id"),
+                endp(f"{EP.DBD_VERSION}/id"),
                 params={"dbd_version_str": str(match_create.dbd_version)},
             )
         )

@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 import pandas as pd
 import requests
 from backbone.endpoints import endp
+from backbone.options import ENDPOINTS as EP
 
 if TYPE_CHECKING:
     from dbdie_ml.classes.base import FullModelType
@@ -101,7 +102,7 @@ def process_joined_df(joined_df: pd.DataFrame) -> pd.DataFrame:
     joined_df = joined_df.reset_index(drop=False)
     joined_df["match_id"] = joined_df["name"].map(
         lambda f: requests.get(
-            endp("/matches/id"),
+            endp(f"{EP.MATCHES}/id"),
             params={"filename": f},
         ).json(),
     )
@@ -126,7 +127,7 @@ def post_labels(joined_df: pd.DataFrame) -> None:
     )
     for _, row in joined_df.iterrows():
         requests.post(
-            endp("/labels"),
+            endp(EP.LABELS),
             json={
                 "match_id": int(row["match_id"]),
                 "player": {

@@ -1,15 +1,17 @@
-from typing import TYPE_CHECKING
 
 import requests
-from backbone.endpoints import dbd_version_str_to_id, endp
+from typing import TYPE_CHECKING
 from dbdie_ml.classes.version import DBDVersion
+
+from backbone.endpoints import dbd_version_str_to_id, endp
+from backbone.options import ENDPOINTS as EP
 
 if TYPE_CHECKING:
     from dbdie_ml.schemas.groupings import MatchCreate
 
 
 def form_match(match: "MatchCreate") -> dict:
-    new_match = {"id": requests.get(endp("/matches/count")).json()} | match.model_dump()
+    new_match = {"id": requests.get(endp(f"{EP.MATCHES}/count")).json()} | match.model_dump()
 
     if new_match["dbd_version"] is None:
         new_match["dbd_version_id"] = None

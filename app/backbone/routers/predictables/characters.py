@@ -3,6 +3,7 @@
 from typing import TYPE_CHECKING
 
 import requests
+
 from backbone.code.characters import create_addons, create_perks
 from backbone.database import get_db
 from backbone.endpoints import (
@@ -18,6 +19,7 @@ from backbone.endpoints import (
 )
 from backbone.exceptions import ItemNotFoundException, ValidationException
 from backbone.models import Addon, Character, Perk
+from backbone.options import ENDPOINTS as EP
 from dbdie_ml.schemas.predictables import (
     CharacterCreate,
     CharacterOut,
@@ -124,7 +126,7 @@ def create_character(
         raise ValidationException("Character name can't be empty")
 
     new_character = {
-        "id": requests.get(endp("/characters/count")).json()
+        "id": requests.get(endp(f"{EP.CHARACTERS}/count")).json()
     } | character.model_dump()
 
     if new_character["dbd_version_str"] is not None:
@@ -136,7 +138,7 @@ def create_character(
     new_character = Character(**new_character)
     add_commit_refresh(new_character, db)
 
-    resp = get_req("characters", new_character.id)
+    resp = get_req(EP.CHARACTERS, new_character.id)
     return resp
 
 
@@ -149,7 +151,7 @@ def create_character_full(character: FullCharacterCreate):
         "dbd_version_str": str(character.dbd_version),
         "base_char_id": None,
     }
-    character_only = requests.post(endp("/characters"), json=payload)
+    character_only = requests.post(endp(EP.CHARACTERS), json=payload)
 
     character_only = parse_or_raise(character_only)
 

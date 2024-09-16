@@ -3,6 +3,9 @@
 from typing import TYPE_CHECKING
 
 import requests
+from dbdie_ml.schemas.predictables import OfferingCreate, OfferingOut
+from fastapi import APIRouter, Depends
+
 from backbone.database import get_db
 from backbone.endpoints import (
     NOT_WS_PATT,
@@ -14,8 +17,7 @@ from backbone.endpoints import (
 )
 from backbone.exceptions import ItemNotFoundException, ValidationException
 from backbone.models import Character, Offering
-from dbdie_ml.schemas.predictables import OfferingCreate, OfferingOut
-from fastapi import APIRouter, Depends
+from backbone.options import ENDPOINTS as EP
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -91,10 +93,10 @@ def create_offering(offering: OfferingCreate, db: "Session" = Depends(get_db)):
     # TODO: assert type_id and user_id exists
 
     new_offering = {
-        "id": requests.get(endp("/offerings/count")).json()
+        "id": requests.get(endp(f"{EP.OFFERINGS}/count")).json()
     } | offering.model_dump()
     new_offering = Offering(**new_offering)
 
     add_commit_refresh(new_offering, db)
 
-    return get_req("offerings", new_offering.id)
+    return get_req(EP.OFFERINGS, new_offering.id)
