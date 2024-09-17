@@ -2,7 +2,7 @@
 
 import requests
 from typing import TYPE_CHECKING
-from dbdie_ml.schemas.predictables import AddonCreate, AddonOut
+from dbdie_ml.schemas.predictables import AddonCreate, AddonOut, AddonTypeOut
 from fastapi import APIRouter, Depends
 
 from backbone.database import get_db
@@ -16,9 +16,10 @@ from backbone.endpoints import (
     get_icon,
     get_many,
     get_req,
+    get_types,
 )
 from backbone.exceptions import ValidationException
-from backbone.models import Addon
+from backbone.models import Addon, AddonType
 from backbone.options import ENDPOINTS as EP
 
 if TYPE_CHECKING:
@@ -39,6 +40,11 @@ def count_addons(
 @router.get("", response_model=list[AddonOut])
 def get_addons(limit: int = 10, skip: int = 0, db: "Session" = Depends(get_db)):
     return get_many(db, limit, Addon, skip)
+
+
+@router.get("/types", response_model=list[AddonTypeOut])
+def get_addons_types(db: "Session" = Depends(get_db)):
+    return get_types(db, AddonType)
 
 
 @router.get("/{id}", response_model=AddonOut)

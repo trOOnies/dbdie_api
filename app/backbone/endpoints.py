@@ -1,19 +1,20 @@
-"""Endpoints-related helper functions"""
+"""Endpoints-related helper functions."""
 
 import os
 import re
 from typing import TYPE_CHECKING
 
 import requests
+from fastapi import Response, status
+from fastapi.exceptions import HTTPException
+from fastapi.responses import FileResponse
+from sqlalchemy import func, inspect
+
 from backbone.config import ST
 from backbone.exceptions import ItemNotFoundException, NameNotFoundException
 from backbone.options import ENDPOINTS as EP
 from backbone.options import TABLE_NAMES as TN
 from constants import ICONS_FOLDER
-from fastapi import Response, status
-from fastapi.exceptions import HTTPException
-from fastapi.responses import FileResponse
-from sqlalchemy import func, inspect
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -33,7 +34,7 @@ NAME_FILTERED_TABLENAMES = {
 
 
 def endp(endpoint: str) -> str:
-    """Get full URL of the endpoint"""
+    """Get full URL of the endpoint."""
     return ST.fastapi_host + endpoint
 
 
@@ -229,3 +230,9 @@ def dbd_version_str_to_id(s: str) -> int:
     )
     dbd_version_id = parse_or_raise(dbd_version_id)
     return dbd_version_id
+
+
+def get_types(db: "Session", type_sqla_model):
+    """Base get item types function."""
+    assert type_sqla_model.__tablename__ in TN.PREDICTABLE_TYPES
+    return get_many(db, 10_000, type_sqla_model)

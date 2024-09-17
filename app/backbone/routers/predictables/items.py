@@ -2,7 +2,7 @@
 
 import requests
 from typing import TYPE_CHECKING
-from dbdie_ml.schemas.predictables import ItemCreate, ItemOut
+from dbdie_ml.schemas.predictables import ItemCreate, ItemOut, ItemTypeOut
 from fastapi import APIRouter, Depends
 
 from backbone.database import get_db
@@ -15,9 +15,10 @@ from backbone.endpoints import (
     get_icon,
     get_many,
     get_req,
+    get_types,
 )
 from backbone.exceptions import ValidationException
-from backbone.models import Item
+from backbone.models import Item, ItemType
 from backbone.options import ENDPOINTS as EP
 
 if TYPE_CHECKING:
@@ -42,6 +43,11 @@ def get_items(
     db: "Session" = Depends(get_db),
 ):
     return get_many(db, limit, Item, skip)
+
+
+@router.get("/types", response_model=list[ItemTypeOut])
+def get_item_types(db: "Session" = Depends(get_db)):
+    return get_types(db, ItemType)
 
 
 @router.get("/{id}", response_model=ItemOut)

@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING
 
 import requests
-from dbdie_ml.schemas.predictables import OfferingCreate, OfferingOut
+from dbdie_ml.schemas.predictables import OfferingCreate, OfferingOut, OfferingTypeOut
 from fastapi import APIRouter, Depends
 
 from backbone.database import get_db
@@ -14,9 +14,10 @@ from backbone.endpoints import (
     endp,
     get_icon,
     get_req,
+    get_types,
 )
 from backbone.exceptions import ItemNotFoundException, ValidationException
-from backbone.models import Character, Offering
+from backbone.models import Character, Offering, OfferingType
 from backbone.options import ENDPOINTS as EP
 
 if TYPE_CHECKING:
@@ -56,6 +57,11 @@ def get_offerings(
         .all()
     )
     return offerings
+
+
+@router.get("/types", response_model=list[OfferingTypeOut])
+def get_offering_types(db: "Session" = Depends(get_db)):
+    return get_types(db, OfferingType)
 
 
 @router.get("/{id}", response_model=OfferingOut)

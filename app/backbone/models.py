@@ -58,9 +58,10 @@ class ItemType(Base):
     """SQLAlchemy item type model."""
     __tablename__ = TN.ITEM_TYPES
 
-    id    = C(SmallInt, primary_key=True, nullable=False)
-    name  = C(Str, nullable=False)
-    emoji = C(Str, nullable=True)
+    id            = C(SmallInt, primary_key=True, nullable=False)
+    name          = C(Str, nullable=False)
+    emoji         = C(Str, nullable=True)
+    is_for_killer = C(Bool, nullable=True)
 
 
 class Item(Base):
@@ -80,9 +81,10 @@ class AddonType(Base):
     """SQLAlchemy addon type model."""
     __tablename__ = TN.ADDONS_TYPES
 
-    id    = C(SmallInt, primary_key=True, nullable=False)
-    name  = C(Str, nullable=False)
-    emoji = C(Str, nullable=True)
+    id            = C(SmallInt, primary_key=True, nullable=False)
+    name          = C(Str, nullable=False)
+    emoji         = C(Str, nullable=True)
+    is_for_killer = C(Bool, nullable=True)
 
 
 class Addon(Base):
@@ -104,9 +106,10 @@ class OfferingType(Base):
     """SQLAlchemy offering type model."""
     __tablename__ = TN.OFFERING_TYPES
 
-    id    = C(SmallInt, primary_key=True, nullable=False)
-    name  = C(Str, nullable=False)
-    emoji = C(Str, nullable=True)
+    id            = C(SmallInt, primary_key=True, nullable=False)
+    name          = C(Str, nullable=False)
+    emoji         = C(Str, nullable=True)
+    is_for_killer = C(Bool, nullable=True)
 
 
 class Offering(Base):

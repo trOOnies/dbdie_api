@@ -15,3 +15,25 @@ OFFERING_TYPES = "offering_types"
 PERKS = "perks"
 STATUS = "status"
 USER = "user"
+
+PREDICTABLES = [
+    ADDONS,
+    CHARACTER,
+    ITEM,
+    OFFERING,
+    PERKS,
+    STATUS,
+]
+
+PREDICTABLE_TYPES = [
+    ADDONS_TYPES,
+    ITEM_TYPES,
+    OFFERING_TYPES,
+]
+
+DBDIE_OBJECTS = [
+    CROPPER_SWARM,
+    EXTRACTOR,
+    MODEL,
+    USER,
+]
