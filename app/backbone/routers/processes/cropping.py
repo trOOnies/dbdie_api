@@ -1,11 +1,12 @@
 from dbdie_ml.cropping.cropper_swarm import CropperSwarm
+from dbdie_ml.options.PLAYER_TYPE import SURV, KILLER
 from fastapi import APIRouter, status
 from fastapi.exceptions import HTTPException
 from traceback import print_exc
 
 router = APIRouter()
 
-cps = CropperSwarm.from_types([["surv", "killer"], ["surv_player", "killer_player"]])
+cps = CropperSwarm.from_types([[SURV, KILLER], [f"{SURV}_player", f"{KILLER}_player"]])
 
 
 @router.post("/batch", status_code=status.HTTP_201_CREATED)

@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 from datetime import datetime
 import pandas as pd
 import requests
-from sqlalchemy import or_
 from dbdie_ml.classes.base import FullModelType
 from dbdie_ml.options import COMMON_FMT, KILLER_FMT, SURV_FMT
 from dbdie_ml.paths import LABELS_FD_RP, absp
@@ -21,6 +20,7 @@ from fastapi.exceptions import HTTPException
 
 from backbone.code.labels import (
     concat_player_types,
+    get_filtered_query,
     handle_mpp_crops,
     handle_opp_crops,
     join_dfs,
@@ -29,7 +29,11 @@ from backbone.code.labels import (
     process_joined_df,
 )
 from backbone.database import get_db
-from backbone.endpoints import add_commit_refresh, endp, fill_cols_custom, get_many, parse_or_raise
+from backbone.endpoints import (
+    add_commit_refresh,
+    endp,
+    parse_or_raise,
+)
 from backbone.models import Labels
 from backbone.options import ENDPOINTS as EP
 
@@ -48,45 +52,37 @@ def count_labels(
     db: "Session" = Depends(get_db),
 ):
     """Count player-centered labels."""
-    options = [(Labels.player_id, is_killer)]
-    if manual_checks is not None and manual_checks.is_init:
-        options += [
-            (col, chk)
-            for chk, col in zip(
-                manual_checks.checks,
-                manual_checks.model_to_cols(Labels),
-            )
-        ]
-
-    cols = fill_cols_custom(options, default_col=Labels.match_id)
-    query = db.query(*cols)
-
-    if is_killer is not None:
-        query = (
-            query.filter(Labels.player_id == 4)
-            if is_killer
-            else query.filter(Labels.player_id < 4)
-        )
-    if manual_checks is not None and manual_checks.is_init:
-        for col, chk in manual_checks.get_filters_conds(Labels):
-            if chk:
-                query = query.filter(col.is_(True))
-            else:
-                query = query.filter(
-                    or_(col.is_(False), col.is_(None))
-                )
-
+    query = get_filtered_query(
+        is_killer,
+        manual_checks,
+        force_prepend_default_col=False,
+        db=db,
+    )
     return query.count()
 
 
 @router.get("", response_model=list[LabelsOut])
 def get_labels(
+    is_killer: bool | None = None,
+    manual_checks: ManualChecksIn | None = None,
     limit: int = 10,
     skip: int = 0,
     db: "Session" = Depends(get_db),
 ):
     """Get many player-centered labels."""
-    labels = get_many(db, limit, Labels, skip)
+    assert limit > 0
+
+    query = get_filtered_query(
+        is_killer,
+        manual_checks,
+        force_prepend_default_col=True,
+        db=db,
+    )
+    if skip == 0:
+        labels = query.limit(limit).all()
+    else:
+        labels = query.limit(limit).offset(skip).all()
+
     labels = [LabelsOut.from_labels(lbl) for lbl in labels]
     return labels
 
@@ -221,7 +217,7 @@ def update_labels(
     del new_info["player"]
 
     new_info = sql_player.flatten_predictables(new_info)
-    new_info = new_info | player.to_sqla(fps)
+    new_info = new_info | player.to_sqla(fps, strict)
 
     new_info["date_modified"] = datetime.now()
     new_info["user_id"] = 1  # TODO: dynamic

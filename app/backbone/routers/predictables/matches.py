@@ -1,11 +1,9 @@
-"""Router code for the match"""
+"""Router code for the DBD match."""
 
 from typing import TYPE_CHECKING
 
 import os
-import re
 import requests
-import shutil
 from datetime import datetime
 from dbdie_ml.schemas.groupings import (
     MatchCreate,
@@ -13,11 +11,10 @@ from dbdie_ml.schemas.groupings import (
     VersionedFolderUpload,
     VersionedMatchOut,
 )
-from dbdie_ml.paths import absp, IMG_MAIN_FD_RP
 from fastapi import APIRouter, Depends, Response, status
 from fastapi.exceptions import HTTPException
 
-from backbone.code.matches import form_match
+from backbone.code.matches import form_match, get_versioned_fd_data, upload_dbdv_matches
 from backbone.database import get_db
 from backbone.endpoints import (
     NOT_WS_PATT,
@@ -38,8 +35,6 @@ if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
 router = APIRouter()
-
-DATE_PATT = re.compile(r"20\d\d-[0-1]\d-[0-3]\d")
 
 
 @router.get("/count", response_model=int)
@@ -109,16 +104,9 @@ def upload_versioned_folder(v_folder: VersionedFolderUpload):
     """Upload DBD-versioned folder that resides in the folder 'versioned',
     and move its matches to 'pending' folder.
     """
-    src_main_fd = absp(IMG_MAIN_FD_RP)
+    fs, src_fd, dst_fd = get_versioned_fd_data(v_folder)
 
-    src_fd = os.path.join(src_main_fd, f"versioned/{str(v_folder.dbd_version)}")
-    assert os.path.isdir(src_fd)
-    fs = os.listdir(src_fd)
-    assert fs, "Versioned folder cannot be empty."
-    dates = [DATE_PATT.search(f).group() for f in fs]
-
-    dst_fd = os.path.join(src_main_fd, "pending")
-
+    # Assert DBD version already exists
     parse_or_raise(
         requests.get(
             endp(f"{EP.DBD_VERSION}/id"),
@@ -126,24 +114,9 @@ def upload_versioned_folder(v_folder: VersionedFolderUpload):
         )
     )
 
-    matches = []
-    for f, d in zip(fs, dates):
-        matches.append(
-            parse_or_raise(
-                requests.post(
-                    endp(EP.MATCHES),
-                    json={
-                        "filename": f,
-                        "match_date": d,
-                        "dbd_version": v_folder.dbd_version.dict(),
-                        "special_mode": v_folder.special_mode,
-                    },
-                )
-            )
-        )
-        shutil.move(os.path.join(src_fd, f), os.path.join(dst_fd, f))
-
+    matches = upload_dbdv_matches(fs, src_fd, dst_fd, v_folder)
     os.rmdir(src_fd)
+
     return matches
 
 

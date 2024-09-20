@@ -1,7 +1,5 @@
-"""SQLAlchemy model definitions"""
+"""SQLAlchemy model definitions."""
 
-from backbone.database import Base
-from backbone.options import TABLE_NAMES as TN
 from sqlalchemy import Boolean as Bool
 from sqlalchemy import Column as C
 from sqlalchemy import Date
@@ -13,12 +11,15 @@ from sqlalchemy.orm import relationship as rel
 from sqlalchemy.sql.expression import text
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 
+from backbone.database import Base
+from backbone.options import TABLE_NAMES as TN
+
 
 class DBDVersion(Base):
     """SQLAlchemy DBD version model."""
     __tablename__ = TN.DBD_VERSION
 
-    id   = C(Int, primary_key=True, nullable=False)
+    id   = C(Int, nullable=False, primary_key=True)
     name = C(Str, nullable=False)
 
     release_date = C(Date, nullable=True)
@@ -29,8 +30,8 @@ class Character(Base):
     """SQLAlchemy character model."""
     __tablename__ = TN.CHARACTER
 
-    id   = C(SmallInt, primary_key=True, nullable=False)
-    name = C(Str, nullable=False)
+    id   = C(SmallInt, nullable=False, primary_key=True)
+    name = C(Str,      nullable=False)
 
     is_killer      = C(Bool, nullable=True)
     base_char_id   = C(SmallInt, nullable=True)
@@ -44,36 +45,36 @@ class Perk(Base):
     """SQLAlchemy perk model."""
     __tablename__ = TN.PERKS
 
-    id   = C(SmallInt, primary_key=True, nullable=False)
-    name = C(Str, nullable=False)
+    id   = C(SmallInt, nullable=False, primary_key=True)
+    name = C(Str,      nullable=False)
 
     character_id   = C(SmallInt, FK(f"{TN.CHARACTER}.id"), nullable=False)
-    character      = rel("Character")
     dbd_version_id = C(Int, FK(f"{TN.DBD_VERSION}.id"), nullable=True)
-    dbd_version    = rel("DBDVersion")
     emoji          = C(Str, nullable=True)
+    character      = rel("Character")
+    dbd_version    = rel("DBDVersion")
 
 
 class ItemType(Base):
     """SQLAlchemy item type model."""
     __tablename__ = TN.ITEM_TYPES
 
-    id            = C(SmallInt, primary_key=True, nullable=False)
-    name          = C(Str, nullable=False)
-    emoji         = C(Str, nullable=True)
-    is_for_killer = C(Bool, nullable=True)
+    id            = C(SmallInt, nullable=False, primary_key=True)
+    name          = C(Str,      nullable=False)
+    emoji         = C(Str,      nullable=True)
+    is_for_killer = C(Bool,     nullable=True)
 
 
 class Item(Base):
     """SQLAlchemy item model."""
     __tablename__ = TN.ITEM
 
-    id   = C(SmallInt, primary_key=True, nullable=False)
-    name = C(Str, nullable=False)
+    id   = C(SmallInt, nullable=False, primary_key=True)
+    name = C(Str,      nullable=False)
 
-    type_id        = C(SmallInt, FK(f"{TN.ITEM_TYPES}.id"), nullable=False)
+    type_id        = C(SmallInt, FK(f"{TN.ITEM_TYPES}.id"),  nullable=False)
+    dbd_version_id = C(Int,      FK(f"{TN.DBD_VERSION}.id"), nullable=True)
     type           = rel("ItemType")
-    dbd_version_id = C(Int, FK(f"{TN.DBD_VERSION}.id"), nullable=True)
     dbd_version    = rel("DBDVersion")
 
 
@@ -81,24 +82,24 @@ class AddonType(Base):
     """SQLAlchemy addon type model."""
     __tablename__ = TN.ADDONS_TYPES
 
-    id            = C(SmallInt, primary_key=True, nullable=False)
-    name          = C(Str, nullable=False)
-    emoji         = C(Str, nullable=True)
-    is_for_killer = C(Bool, nullable=True)
+    id            = C(SmallInt, nullable=False, primary_key=True)
+    name          = C(Str,      nullable=False)
+    emoji         = C(Str,      nullable=True)
+    is_for_killer = C(Bool,     nullable=True)
 
 
 class Addon(Base):
     """SQLAlchemy addon model."""
     __tablename__ = TN.ADDONS
 
-    id   = C(SmallInt, primary_key=True, nullable=False)
-    name = C(Str, nullable=False)
+    id   = C(SmallInt, nullable=False, primary_key=True)
+    name = C(Str,      nullable=False)
 
     type_id        = C(SmallInt, FK(f"{TN.ADDONS_TYPES}.id"), nullable=False)
+    user_id        = C(SmallInt, FK(f"{TN.CHARACTER}.id"),    nullable=False)
+    dbd_version_id = C(Int,      FK(f"{TN.DBD_VERSION}.id"),  nullable=True)
     type           = rel("AddonType")
-    user_id        = C(SmallInt, FK(f"{TN.CHARACTER}.id"), nullable=False)
     user           = rel("Character")
-    dbd_version_id = C(Int, FK(f"{TN.DBD_VERSION}.id"), nullable=True)
     dbd_version    = rel("DBDVersion")
 
 
@@ -106,24 +107,24 @@ class OfferingType(Base):
     """SQLAlchemy offering type model."""
     __tablename__ = TN.OFFERING_TYPES
 
-    id            = C(SmallInt, primary_key=True, nullable=False)
-    name          = C(Str, nullable=False)
-    emoji         = C(Str, nullable=True)
-    is_for_killer = C(Bool, nullable=True)
+    id            = C(SmallInt, nullable=False, primary_key=True)
+    name          = C(Str,      nullable=False)
+    emoji         = C(Str,      nullable=True)
+    is_for_killer = C(Bool,     nullable=True)
 
 
 class Offering(Base):
     """SQLAlchemy offering model."""
     __tablename__ = TN.OFFERING
 
-    id   = C(SmallInt, primary_key=True, nullable=False)
-    name = C(Str, nullable=False)
+    id   = C(SmallInt, nullable=False, primary_key=True)
+    name = C(Str,      nullable=False)
 
     type_id        = C(SmallInt, FK(f"{TN.OFFERING_TYPES}.id"), nullable=False)
+    user_id        = C(SmallInt, FK(f"{TN.CHARACTER}.id"),      nullable=False)
+    dbd_version_id = C(Int,      FK(f"{TN.DBD_VERSION}.id"),    nullable=True)
     type           = rel("OfferingType")
-    user_id        = C(SmallInt, FK(f"{TN.CHARACTER}.id"), nullable=False)
     user           = rel("Character")
-    dbd_version_id = C(Int, FK(f"{TN.DBD_VERSION}.id"), nullable=True)
     dbd_version    = rel("DBDVersion")
 
 
@@ -131,8 +132,8 @@ class Status(Base):
     """SQLAlchemy end player status model."""
     __tablename__ = TN.STATUS
 
-    id   = C(SmallInt, primary_key=True, nullable=False)
-    name = C(Str, nullable=False)
+    id   = C(SmallInt, nullable=False, primary_key=True)
+    name = C(Str,      nullable=False)
 
     character_id   = C(SmallInt, FK(f"{TN.CHARACTER}.id"), nullable=False)
     character      = rel("Character")
@@ -146,7 +147,7 @@ class Match(Base):
     """SQLAlchemy DBD match model."""
     __tablename__ = TN.MATCHES
 
-    id       = C(Int, primary_key=True, nullable=False)
+    id       = C(Int, nullable=False, primary_key=True)
     filename = C(Str, nullable=False)
 
     match_date     = C(Date, nullable=True)
@@ -165,8 +166,8 @@ class Match(Base):
         server_default=text("now()"),
     )
     user_id        = C(SmallInt, FK(f"{TN.USER}.id"), nullable=True)
-    user           = rel("User")
     extractor_id   = C(SmallInt, FK(f"{TN.EXTRACTOR}.id"), nullable=True)
+    user           = rel("User")
     extractor      = rel("Extractor")
 
 
@@ -181,7 +182,7 @@ class Labels(Base):
         nullable=False,
     )
     match     = rel("Match")
-    player_id = C(SmallInt, primary_key=True, nullable=False)
+    player_id = C(SmallInt, nullable=False, primary_key=True)
 
     character     = C(SmallInt, nullable=True)
     perk_0        = C(SmallInt, nullable=True)
@@ -200,8 +201,8 @@ class Labels(Base):
         server_default=text("now()"),
     )
     user_id          = C(SmallInt, FK(f"{TN.USER}.id"), nullable=True)
-    user             = rel("User")
     extractor_id     = C(SmallInt, FK(f"{TN.EXTRACTOR}.id"), nullable=True)
+    user             = rel("User")
     extractor        = rel("Extractor")
     perks_mckd       = C(Bool, nullable=True)
     character_mckd   = C(Bool, nullable=True)
@@ -218,7 +219,7 @@ class User(Base):
     """SQLAlchemy DBDIE user model."""
     __tablename__ = TN.USER
 
-    id   = C(SmallInt, primary_key=True, nullable=False)
+    id   = C(SmallInt, nullable=False, primary_key=True)
     name = C(Str, nullable=False, unique=True)
 
 
@@ -226,16 +227,16 @@ class CropperSwarm(Base):
     """SQLAlchemy CropperSwarm model."""
     __tablename__ = TN.CROPPER_SWARM
 
-    id   = C(SmallInt, primary_key=True, nullable=False)
+    id   = C(SmallInt, nullable=False, primary_key=True)
     name = C(Str, nullable=False)
 
     user_id       = C(SmallInt, FK(f"{TN.USER}.id"), nullable=False)
-    user          = rel("User")
     img_width     = C(SmallInt, nullable=False)
     img_height    = C(SmallInt, nullable=False)
     dbdv_min_id   = C(Int, FK(f"{TN.DBD_VERSION}.id"), nullable=False)
-    dbdv_min      = rel("DBDVersion", foreign_keys=[dbdv_min_id])
     dbdv_max_id   = C(Int, FK(f"{TN.DBD_VERSION}.id"), nullable=True)
+    user          = rel("User")
+    dbdv_min      = rel("DBDVersion", foreign_keys=[dbdv_min_id])
     dbdv_max      = rel("DBDVersion", foreign_keys=[dbdv_max_id])
     is_for_killer = C(Bool, nullable=True)
 
@@ -244,7 +245,7 @@ class FullModelType(Base):
     """SQLAlchemy full model type model."""
     __tablename__ = TN.FULL_MODEL_TYPES
 
-    id            = C(SmallInt, primary_key=True, nullable=False)
+    id            = C(SmallInt, nullable=False, primary_key=True)
     name          = C(Str, nullable=False)
     model_type    = C(Str, nullable=False)
     is_for_killer = C(Bool, nullable=False)
@@ -254,20 +255,20 @@ class Model(Base):
     """SQLAlchemy IEModel model."""
     __tablename__ = TN.MODEL
 
-    id   = C(SmallInt, primary_key=True, nullable=False)
+    id   = C(SmallInt, nullable=False, primary_key=True)
     name = C(Str, nullable=False)
 
-    user_id          = C(SmallInt, FK(f"{TN.USER}.id"), nullable=False)
-    user             = rel("User")
+    user_id          = C(SmallInt, FK(f"{TN.USER}.id"),             nullable=False)
     fmt_id           = C(SmallInt, FK(f"{TN.FULL_MODEL_TYPES}.id"), nullable=False)
-    fmt              = rel("FullModelType")
-    cropper_swarm_id = C(SmallInt, FK(f"{TN.CROPPER_SWARM}.id"), nullable=False)
-    cropper_swarm    = rel("CropperSwarm")
-    dbdv_min_id      = C(Int, FK(f"{TN.DBD_VERSION}.id"), nullable=False)
-    dbdv_min         = rel("DBDVersion", foreign_keys=[dbdv_min_id])
-    dbdv_max_id      = C(Int, FK(f"{TN.DBD_VERSION}.id"), nullable=True)
-    dbdv_max         = rel("DBDVersion", foreign_keys=[dbdv_max_id])
+    cropper_swarm_id = C(SmallInt, FK(f"{TN.CROPPER_SWARM}.id"),    nullable=False)
+    dbdv_min_id      = C(Int,      FK(f"{TN.DBD_VERSION}.id"),      nullable=False)
+    dbdv_max_id      = C(Int,      FK(f"{TN.DBD_VERSION}.id"),      nullable=True)
     special_mode     = C(Bool, nullable=True)
+    user             = rel("User")
+    fmt              = rel("FullModelType")
+    cropper_swarm    = rel("CropperSwarm")
+    dbdv_min         = rel("DBDVersion", foreign_keys=[dbdv_min_id])
+    dbdv_max         = rel("DBDVersion", foreign_keys=[dbdv_max_id])
     date_created     = C(
         TIMESTAMP(timezone=True),
         nullable=False,
@@ -285,32 +286,32 @@ class Extractor(Base):
     """SQLAlchemy InfoExtractor model."""
     __tablename__ = TN.EXTRACTOR
 
-    id   = C(SmallInt, primary_key=True, nullable=False)
+    id   = C(SmallInt, nullable=False, primary_key=True)
     name = C(Str, nullable=False)
 
     user_id          = C(SmallInt, FK(f"{TN.USER}.id"), nullable=False)
-    user             = rel("User")
     dbdv_min_id      = C(Int, FK(f"{TN.DBD_VERSION}.id"), nullable=False)
-    dbdv_min         = rel("DBDVersion", foreign_keys=[dbdv_min_id])
     dbdv_max_id      = C(Int, FK(f"{TN.DBD_VERSION}.id"), nullable=True)
-    dbdv_max         = rel("DBDVersion", foreign_keys=[dbdv_max_id])
     special_mode     = C(Bool, nullable=True)
     cropper_swarm_id = C(SmallInt, FK(f"{TN.CROPPER_SWARM}.id"), nullable=False)
+    user             = rel("User")
+    dbdv_min         = rel("DBDVersion", foreign_keys=[dbdv_min_id])
+    dbdv_max         = rel("DBDVersion", foreign_keys=[dbdv_max_id])
     cropper_swarm    = rel("CropperSwarm")
 
     mid_addons      = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
-    addons_model    = rel("Model", foreign_keys=[mid_addons])
     mid_character   = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
-    character_model = rel("Model", foreign_keys=[mid_character])
     mid_item        = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
-    item_model      = rel("Model", foreign_keys=[mid_item])
     mid_offering    = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
-    offering_model  = rel("Model", foreign_keys=[mid_offering])
     mid_perks       = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
-    perks_model     = rel("Model", foreign_keys=[mid_perks])
     mid_points      = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
-    points_model    = rel("Model", foreign_keys=[mid_points])
     mid_status      = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
+    addons_model    = rel("Model", foreign_keys=[mid_addons])
+    character_model = rel("Model", foreign_keys=[mid_character])
+    item_model      = rel("Model", foreign_keys=[mid_item])
+    offering_model  = rel("Model", foreign_keys=[mid_offering])
+    perks_model     = rel("Model", foreign_keys=[mid_perks])
+    points_model    = rel("Model", foreign_keys=[mid_points])
     status_model    = rel("Model", foreign_keys=[mid_status])
 
     date_created = C(

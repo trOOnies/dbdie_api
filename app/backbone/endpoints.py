@@ -109,11 +109,14 @@ def fill_cols(model, text: str, is_for_killer: bool | None):
 def fill_cols_custom(
     options: list[tuple["Column", bool | None]],
     default_col: "Column",
-):
+    force_prepend_default_col: bool,
+) -> list["Column"]:
     """Efficient custom filling of columns in the SQLAlchemy SELECT statement."""
     cols = [c for c, v in options if v is not None]
     if not cols:
         cols = [default_col]
+    elif force_prepend_default_col:
+        cols = [default_col] + cols
     return cols
 
 

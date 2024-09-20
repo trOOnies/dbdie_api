@@ -1,12 +1,41 @@
+"""Extra code for the '/labels' endpoint."""
+
 from typing import TYPE_CHECKING
 
+from dbdie_ml.schemas.groupings import ManualChecksIn
 import pandas as pd
 import requests
-from backbone.endpoints import endp
+from sqlalchemy import or_
+
+from backbone.endpoints import endp, fill_cols_custom
+from backbone.models import Labels
 from backbone.options import ENDPOINTS as EP
 
 if TYPE_CHECKING:
     from dbdie_ml.classes.base import FullModelType
+    from sqlalchemy.orm import Session
+
+
+def additional_filters(
+    query,
+    is_killer: bool | None = None,
+    manual_checks: ManualChecksIn | None = None,
+):
+    if is_killer is not None:
+        query = (
+            query.filter(Labels.player_id == 4)
+            if is_killer
+            else query.filter(Labels.player_id < 4)
+        )
+    if manual_checks is not None and manual_checks.is_init:
+        for col, chk in manual_checks.get_filters_conds(Labels):
+            if chk:
+                query = query.filter(col.is_(True))
+            else:
+                query = query.filter(
+                    or_(col.is_(False), col.is_(None))
+                )
+    return query
 
 
 def player_to_labels(player: dict) -> dict:
@@ -28,6 +57,33 @@ def player_to_labels(player: dict) -> dict:
         labels = labels | {f"addon_{i}": v for i, v in enumerate(player["addon_ids"])}
 
     return labels
+
+
+def get_filtered_query(
+    is_killer: bool | None,
+    manual_checks: ManualChecksIn | None,
+    force_prepend_default_col: bool,
+    db: "Session",
+):
+    options = [(Labels.player_id, is_killer)]
+    if manual_checks is not None and manual_checks.is_init:
+        options += [
+            (col, chk)
+            for chk, col in zip(
+                manual_checks.checks,
+                manual_checks.model_to_cols(Labels),
+            )
+        ]
+
+    cols = fill_cols_custom(
+        options,
+        default_col=Labels.match_id,
+        force_prepend_default_col=force_prepend_default_col,
+    )
+    query = db.query(*cols)
+    query = additional_filters(query, is_killer, manual_checks)
+
+    return query
 
 
 # * Batch create labels

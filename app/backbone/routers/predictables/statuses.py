@@ -77,7 +77,8 @@ def create_status(status: StatusCreate, db: "Session" = Depends(get_db)):
     if NOT_WS_PATT.search(status.name) is None:
         raise ValidationException("Status name can't be empty")
 
-    assert requests.get(endp(f"{EP.CHARACTERS}/{status.character_id}")).status_code == 200
+    resp = requests.get(endp(f"{EP.CHARACTERS}/{status.character_id}"))
+    assert resp.status_code == 200
 
     new_status = {
         "id": requests.get(endp(f"{EP.STATUSES}/count")).json()
