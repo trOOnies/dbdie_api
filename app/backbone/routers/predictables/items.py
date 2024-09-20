@@ -33,7 +33,7 @@ def count_items(
     text: str = "",
     db: "Session" = Depends(get_db),
 ):
-    return do_count(Item, text, db, is_for_killer)
+    return do_count(Item, text, db, is_for_killer, ItemType)
 
 
 @router.get("", response_model=list[ItemOut])
@@ -67,9 +67,9 @@ def create_item(item: ItemCreate, db: "Session" = Depends(get_db)):
 
     # TODO: assert type_id exists
 
-    new_item = {"id": requests.get(endp(f"{EP.ITEMS}/count")).json()} | item.model_dump()
+    new_item = {"id": requests.get(endp(f"{EP.ITEM}/count")).json()} | item.model_dump()
     new_item = Item(**new_item)
 
     add_commit_refresh(new_item, db)
 
-    return get_req(EP.ITEMS, new_item.id)
+    return get_req(EP.ITEM, new_item.id)

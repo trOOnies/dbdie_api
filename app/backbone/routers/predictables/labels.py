@@ -55,7 +55,8 @@ def count_labels(
     query = get_filtered_query(
         is_killer,
         manual_checks,
-        force_prepend_default_col=False,
+        default_cols=[Labels.match_id],
+        force_prepend_default_cols=False,
         db=db,
     )
     return query.count()
@@ -75,7 +76,22 @@ def get_labels(
     query = get_filtered_query(
         is_killer,
         manual_checks,
-        force_prepend_default_col=True,
+        default_cols=[
+            Labels.match_id,
+            Labels.player_id,
+            Labels.date_modified,
+            Labels.user_id,
+            Labels.extractor_id,
+            Labels.addons_mckd,
+            Labels.character_mckd,
+            Labels.item_mckd,
+            Labels.offering_mckd,
+            Labels.perks_mckd,
+            Labels.prestige_mckd,
+            Labels.points_mckd,
+            Labels.status_mckd,
+        ],
+        force_prepend_default_cols=True,
         db=db,
     )
     if skip == 0:

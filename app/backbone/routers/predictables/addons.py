@@ -34,7 +34,7 @@ def count_addons(
     text: str = "",
     db: "Session" = Depends(get_db),
 ):
-    return do_count(Addon, text, db, is_for_killer)
+    return do_count(Addon, text, db, is_for_killer, AddonType)
 
 
 @router.get("", response_model=list[AddonOut])
@@ -62,7 +62,7 @@ def create_addon(addon: AddonCreate, db: "Session" = Depends(get_db)):
     if NOT_WS_PATT.search(addon.name) is None:
         raise ValidationException("Addon name can't be empty")
 
-    get_req(EP.CHARACTERS, addon.user_id)
+    get_req(EP.CHARACTER, addon.user_id)
     # TODO: assert type_id exists
 
     new_addon = addon.model_dump()

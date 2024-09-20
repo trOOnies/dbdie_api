@@ -126,7 +126,7 @@ def create_character(
         raise ValidationException("Character name can't be empty")
 
     new_character = {
-        "id": requests.get(endp(f"{EP.CHARACTERS}/count")).json()
+        "id": requests.get(endp(f"{EP.CHARACTER}/count")).json()
     } | character.model_dump()
 
     if new_character["dbd_version_str"] is not None:
@@ -138,7 +138,7 @@ def create_character(
     new_character = Character(**new_character)
     add_commit_refresh(new_character, db)
 
-    resp = get_req(EP.CHARACTERS, new_character.id)
+    resp = get_req(EP.CHARACTER, new_character.id)
     return resp
 
 
@@ -151,7 +151,7 @@ def create_character_full(character: FullCharacterCreate):
         "dbd_version_str": str(character.dbd_version),
         "base_char_id": None,
     }
-    character_only = requests.post(endp(EP.CHARACTERS), json=payload)
+    character_only = requests.post(endp(EP.CHARACTER), json=payload)
 
     character_only = parse_or_raise(character_only)
 

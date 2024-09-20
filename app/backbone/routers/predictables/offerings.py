@@ -33,7 +33,7 @@ def count_offerings(
     db: "Session" = Depends(get_db),
 ):
     """Count DBD offerings."""
-    return do_count(Offering, text, db, is_for_killer)
+    return do_count(Offering, text, db, is_for_killer, OfferingType)
 
 
 @router.get("", response_model=list[OfferingOut])
@@ -99,10 +99,10 @@ def create_offering(offering: OfferingCreate, db: "Session" = Depends(get_db)):
     # TODO: assert type_id and user_id exists
 
     new_offering = {
-        "id": requests.get(endp(f"{EP.OFFERINGS}/count")).json()
+        "id": requests.get(endp(f"{EP.OFFERING}/count")).json()
     } | offering.model_dump()
     new_offering = Offering(**new_offering)
 
     add_commit_refresh(new_offering, db)
 
-    return get_req(EP.OFFERINGS, new_offering.id)
+    return get_req(EP.OFFERING, new_offering.id)

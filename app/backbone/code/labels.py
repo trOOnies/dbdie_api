@@ -62,7 +62,8 @@ def player_to_labels(player: dict) -> dict:
 def get_filtered_query(
     is_killer: bool | None,
     manual_checks: ManualChecksIn | None,
-    force_prepend_default_col: bool,
+    default_cols: list,
+    force_prepend_default_cols: bool,
     db: "Session",
 ):
     options = [(Labels.player_id, is_killer)]
@@ -77,8 +78,8 @@ def get_filtered_query(
 
     cols = fill_cols_custom(
         options,
-        default_col=Labels.match_id,
-        force_prepend_default_col=force_prepend_default_col,
+        default_cols=default_cols,
+        force_prepend_default_col=force_prepend_default_cols,
     )
     query = db.query(*cols)
     query = additional_filters(query, is_killer, manual_checks)

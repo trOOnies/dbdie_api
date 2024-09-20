@@ -16,11 +16,11 @@ def form_player(
 ):
     player_out = PlayerOut(
         id=id,
-        character=get_req(EP.CHARACTERS, player.character_id),
+        character=get_req(EP.CHARACTER, player.character_id),
         perks=[get_req(EP.PERKS, perk_id) for perk_id in player.perk_ids],
-        item=get_req(EP.ITEMS, player.item_id),
+        item=get_req(EP.ITEM, player.item_id),
         addons=[get_req(EP.ADDONS, addon_id) for addon_id in player.addon_ids],
-        offering=get_req(EP.OFFERINGS, player.offering_id),
+        offering=get_req(EP.OFFERING, player.offering_id),
     )
     player_out.check_consistency()
     return player_out

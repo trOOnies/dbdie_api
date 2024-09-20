@@ -12,14 +12,6 @@ if TYPE_CHECKING:
     from dbdie_ml.classes.base import FullModelType, ModelType
 
 
-def split_fmts(fmts: list["FullModelType"]) -> tuple[list["ModelType"], list[str]]:
-    split_ixs = [fmt.index("__") for fmt in fmts]
-    return (
-        [fmt[:ix] for ix, fmt in zip(split_ixs, fmts)],
-        [fmt[ix + 2:] for ix, fmt in zip(split_ixs, fmts)],
-    )
-
-
 def get_raw_dataset(
     fmts: list["FullModelType"],
     mts: list["ModelType"],

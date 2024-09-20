@@ -86,13 +86,25 @@ def add_commit_refresh(model, db: "Session") -> None:
 # * Base endpoint functions
 
 
-def fill_cols(model, text: str, is_for_killer: bool | None):
+def fill_cols(
+    model,
+    text: str,
+    is_for_killer: bool | None,
+    type_model,
+):
     """Efficient filling of columns in the SQLAlchemy SELECT statement."""
     cols = []
+    only_type_model = True
 
     if is_for_killer is not None:
-        cols.append(model.is_for_killer)
+        if type_model is not None:
+            cols.append(type_model.is_for_killer)
+        else:
+            only_type_model = False
+            cols.append(model.is_for_killer)
+
     if text != "":
+        only_type_model = False
         if model.__tablename__ in NAME_FILTERED_TABLENAMES:
             cols.append(model.name)
         elif model.__tablename__ == TN.MATCHES:
@@ -102,21 +114,23 @@ def fill_cols(model, text: str, is_for_killer: bool | None):
 
     if not cols:
         cols = [model.id]
+    elif only_type_model:
+        cols = [model.id] + cols
 
     return cols
 
 
 def fill_cols_custom(
     options: list[tuple["Column", bool | None]],
-    default_col: "Column",
+    default_cols: list["Column"],
     force_prepend_default_col: bool,
 ) -> list["Column"]:
     """Efficient custom filling of columns in the SQLAlchemy SELECT statement."""
     cols = [c for c, v in options if v is not None]
     if not cols:
-        cols = [default_col]
+        cols = default_cols
     elif force_prepend_default_col:
-        cols = [default_col] + cols
+        cols = default_cols + cols
     return cols
 
 
@@ -125,15 +139,22 @@ def do_count(
     text: str,
     db: "Session",
     is_for_killer: bool | None = None,
+    type_model = None,
 ) -> int:
     """Base count function.
     'model' is the sqlalchemy model.
     """
-    cols = fill_cols(model, text, is_for_killer)
+    cols = fill_cols(model, text, is_for_killer, type_model)
     query = db.query(*cols)
+    if type_model is not None:
+        query = query.join(type_model)
 
     if is_for_killer is not None:
-        query = query.filter(model.is_for_killer == is_for_killer)
+        if type_model is not None:
+            query = query.filter(type_model.is_for_killer == is_for_killer)
+        else:
+            query = query.filter(model.is_for_killer == is_for_killer)
+
     if text != "":
         query = filter_with_text(query, model, text)
 

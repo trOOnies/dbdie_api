@@ -1,5 +1,5 @@
-"""Tags for the routers"""
+"""Tags for the routers."""
 
-HELPERS = "helpers"
+HELPERS      = "helpers"
 PREDICTABLES = "predictables"
-PROCESSES = "processes"
+PROCESSES    = "processes"

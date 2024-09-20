@@ -77,14 +77,14 @@ def create_status(status: StatusCreate, db: "Session" = Depends(get_db)):
     if NOT_WS_PATT.search(status.name) is None:
         raise ValidationException("Status name can't be empty")
 
-    resp = requests.get(endp(f"{EP.CHARACTERS}/{status.character_id}"))
+    resp = requests.get(endp(f"{EP.CHARACTER}/{status.character_id}"))
     assert resp.status_code == 200
 
     new_status = {
-        "id": requests.get(endp(f"{EP.STATUSES}/count")).json()
+        "id": requests.get(endp(f"{EP.STATUS}/count")).json()
     } | status.model_dump()
     new_status = Status(**new_status)
 
     add_commit_refresh(new_status, db)
 
-    return get_req(EP.STATUSES, new_status.id)
+    return get_req(EP.STATUS, new_status.id)

@@ -97,7 +97,7 @@ def create_perk(perk: PerkCreate, db: "Session" = Depends(get_db)):
         raise ValidationException("Perk name can't be empty")
 
     assert (
-        requests.get(endp(f"{EP.CHARACTERS}/{perk.character_id}")).status_code
+        requests.get(endp(f"{EP.CHARACTER}/{perk.character_id}")).status_code
         == status.HTTP_200_OK
     )
 

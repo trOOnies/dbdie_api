@@ -1,4 +1,4 @@
-.PHONY: help venv activate install core-install fmt lint clean-lint test clean-test clean-pyc clean api
+.PHONY: help venv activate install core-install fmt lint clean-lint test clean-test clean-pyc clean api requirements
 .DEFAULT_GOAL := help
 
 define PRINT_HELP_PYSCRIPT
@@ -63,3 +63,8 @@ clean: ## Remove all lint, test, coverage and compiled Python artifacts
 
 api: ## [fastapi] Run the API on localhost
 	uvicorn --host=127.0.0.1 --port 8000 --app-dir=app --env-file=.env main:app
+
+rr: ## Run the API after installing dependencies
+	clear
+	make install
+	make api
