@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 import os
 import requests
 from datetime import datetime
-from dbdie_ml.schemas.groupings import (
+from dbdie_classes.schemas.groupings import (
     MatchCreate,
     MatchOut,
     VersionedFolderUpload,
@@ -14,7 +14,9 @@ from dbdie_ml.schemas.groupings import (
 from fastapi import APIRouter, Depends, Response, status
 from fastapi.exceptions import HTTPException
 
-from backbone.code.matches import form_match, get_versioned_fd_data, upload_dbdv_matches
+from backbone.code.matches import (
+    form_match, get_versioned_fd_data, upload_dbdv_matches
+)
 from backbone.database import get_db
 from backbone.endpoints import (
     NOT_WS_PATT,
@@ -24,12 +26,12 @@ from backbone.endpoints import (
     get_id,
     get_many,
     get_req,
-    object_as_dict,
     parse_or_raise,
 )
 from backbone.exceptions import ValidationException
-from backbone.models import Match
+from backbone.models.groupings import Match
 from backbone.options import ENDPOINTS as EP
+from backbone.sqla import object_as_dict
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -39,7 +41,7 @@ router = APIRouter()
 
 @router.get("/count", response_model=int)
 def count_matches(text: str = "", db: "Session" = Depends(get_db)):
-    return do_count(Match, text, db)
+    return do_count(db, Match, text)
 
 
 @router.get("", response_model=list[MatchOut])
@@ -53,12 +55,12 @@ def get_matches(
 
 @router.get("/id", response_model=int)
 def get_match_id(filename: str, db: "Session" = Depends(get_db)):
-    return get_id(Match, "Match", filename, db, name_col="filename")
+    return get_id(db, Match, "Match", filename, name_col="filename")
 
 
 @router.get("/{id}", response_model=MatchOut)
 def get_match(id: int, db: "Session" = Depends(get_db)):
-    m = filter_one(Match, "Match", id, db)[0]
+    m = filter_one(db, Match, "Match", id)[0]
     m = object_as_dict(m)
 
     dbdv_id = m["dbd_version_id"]
@@ -123,7 +125,7 @@ def upload_versioned_folder(v_folder: VersionedFolderUpload):
 @router.put("/{id}", status_code=status.HTTP_200_OK)
 def update_match(id: int, match_create: MatchCreate, db: "Session" = Depends(get_db)):
     """Update the information of a DBD match."""
-    _, select_query = filter_one(Match, "Match", id, db)
+    _, select_query = filter_one(db, Match, "Match", id)
 
     new_info = {"id": id} | match_create.model_dump()
 

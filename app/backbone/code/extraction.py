@@ -3,13 +3,13 @@
 import pandas as pd
 import requests
 from typing import TYPE_CHECKING
-from dbdie_ml.options.PLAYER_TYPE import KILLER
+from dbdie_classes.options.PLAYER_TYPE import KILLER
 
 from backbone.endpoints import endp, parse_or_raise
 from backbone.options import ENDPOINTS as EP
 
 if TYPE_CHECKING:
-    from dbdie_ml.classes.base import FullModelType, ModelType
+    from dbdie_classes.base import FullModelType, ModelType
 
 
 def get_raw_dataset(

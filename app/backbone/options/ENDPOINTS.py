@@ -1,17 +1,25 @@
 """DBDIE API high-level endpoints."""
 
-from dbdie_ml.options import MODEL_TYPES as MT
+from dbdie_classes.options import MODEL_TYPES as MT
 
 ADDONS      = "/addons"
 CHARACTER   = "/character"
 ITEM        = "/item"
 OFFERING    = "/offering"
 PERKS       = "/perks"
+POINTS      = "/points"
+PRESTIGE    = "/prestige"
 STATUS      = "/status"
-PLAYERS     = "/players"
+
+# Groupings
 DBD_VERSION = "/dbd-version"
 MATCHES     = "/matches"
+PLAYERS     = "/players"
 LABELS      = "/labels"
+
+# DBDIE objects
+EXTRACTOR   = "/extractor"
+MODELS      = "/models"
 
 # Processes
 CROP        = "/crop"
@@ -25,5 +33,7 @@ MT_TO_ENDPOINT = {
     MT.ITEM: ITEM,
     MT.OFFERING: OFFERING,
     MT.PERKS: PERKS,
+    MT.PRESTIGE: PRESTIGE,
+    MT.POINTS: POINTS,
     MT.STATUS: STATUS,
 }

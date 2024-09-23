@@ -2,8 +2,8 @@ import asyncio
 
 import aiohttp
 from backbone.endpoints import endp
-from dbdie_ml.classes.base import EncodedInfo
-from dbdie_ml.schemas.predictables import StatusOut
+from dbdie_classes.base import EncodedInfo
+from dbdie_classes.schemas.predictables import StatusOut
 
 
 async def fetch(session, url):

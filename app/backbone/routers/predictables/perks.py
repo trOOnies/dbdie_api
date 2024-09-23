@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING
 
 import requests
-from dbdie_ml.schemas.predictables import PerkCreate, PerkOut
+from dbdie_classes.schemas.predictables import PerkCreate, PerkOut
 from fastapi import APIRouter, Depends, status
 
 from backbone.database import get_db
@@ -18,7 +18,7 @@ from backbone.endpoints import (
     update_one,
 )
 from backbone.exceptions import ItemNotFoundException, ValidationException
-from backbone.models import Character, Perk
+from backbone.models.predictables import Character, Perk
 from backbone.options import ENDPOINTS as EP
 
 if TYPE_CHECKING:
@@ -34,7 +34,7 @@ def count_perks(
     db: "Session" = Depends(get_db),
 ):
     """Count DBD perks."""
-    return do_count(Perk, text, db, is_for_killer)
+    return do_count(db, Perk, text, is_for_killer)
 
 
 @router.get("", response_model=list[PerkOut])
@@ -110,7 +110,7 @@ def create_perk(perk: PerkCreate, db: "Session" = Depends(get_db)):
     del new_perk["dbd_version_str"]
     new_perk = Perk(**new_perk)
 
-    add_commit_refresh(new_perk, db)
+    add_commit_refresh(db, new_perk)
 
     return get_req(EP.PERKS, new_perk.id)
 
@@ -118,4 +118,4 @@ def create_perk(perk: PerkCreate, db: "Session" = Depends(get_db)):
 @router.put("/{id}", status_code=status.HTTP_200_OK)
 def update_perk(id: int, perk: PerkCreate, db: "Session" = Depends(get_db)):
     """Update the information of a DBD perk."""
-    return update_one(perk, Perk, "Perk", id, db)
+    return update_one(db, perk, Perk, "Perk", id)

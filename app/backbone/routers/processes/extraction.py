@@ -1,16 +1,13 @@
 """Endpoint for extraction related processes."""
 
-from copy import deepcopy
-from dbdie_ml.classes.base import FullModelType, PathToFolder
-from dbdie_ml.ml.extractor import InfoExtractor
-from dbdie_ml.options import MODEL_TYPES as MT
-from dbdie_ml.options.PLAYER_TYPE import extract_mts_and_pts
+from dbdie_classes.base import FullModelType, PathToFolder
+from dbdie_classes.options import MODEL_TYPES as MT
 from fastapi import APIRouter, status
 import requests
 
-from backbone.code.extraction import get_raw_dataset
 from backbone.endpoints import endp, parse_or_raise
 from backbone.options import ENDPOINTS as EP
+from backbone.options import ML_ENDPOINTS as MLEP
 
 router = APIRouter()
 
@@ -21,22 +18,18 @@ def batch_extract(
     fmts: list[FullModelType] | None = None,
 ):
     """IMPORTANT. If doing partial uploads, please use 'fmts'."""
-    ie = InfoExtractor.from_folder(ie_folder_path)
+    resp = parse_or_raise(
+        requests.post(
+            f"{MLEP.EXTRACT}/batch",
+            json={
+                "ie_folder_path": ie_folder_path,
+                "fmts": fmts,
+            },
+        )
+    )
 
-    try:
-        fmts_ = deepcopy(fmts) if fmts is not None else ie.fmts
-        mts, pts = extract_mts_and_pts(fmts_)
-
-        raw_dataset = get_raw_dataset(fmts_, mts, pts)
-        preds_dict = ie.predict_batch(raw_dataset, fmts_)
-    finally:
-        ie.flush()
-        del ie
-
-    for i, (mid, pid) in enumerate(
-        raw_dataset["match_id"].values,
-        raw_dataset["player_id"].values,
-    ):
+    preds_dict = resp["preds_dict"]
+    for i, (mid, pid) in enumerate(resp["match_ids"], resp["player_ids"]):
         parse_or_raise(
             requests.post(
                 endp(EP.LABELS),

@@ -8,29 +8,19 @@ import requests
 from fastapi import Response, status
 from fastapi.exceptions import HTTPException
 from fastapi.responses import FileResponse
-from sqlalchemy import func, inspect
 
 from backbone.config import ST
 from backbone.exceptions import ItemNotFoundException, NameNotFoundException
 from backbone.options import ENDPOINTS as EP
 from backbone.options import TABLE_NAMES as TN
+from backbone.sqla import fill_cols, filter_with_text
 from constants import ICONS_FOLDER
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
-    from sqlalchemy import Column
 
 ENDPOINT_PATT = re.compile(r"\/[a-z\-]+$")
 NOT_WS_PATT = re.compile(r"\S")
-NAME_FILTERED_TABLENAMES = {
-    TN.ADDONS,
-    TN.CHARACTER,
-    TN.DBD_VERSION,
-    TN.ITEM,
-    TN.OFFERING,
-    TN.PERKS,
-    TN.STATUS,
-}
 
 
 def endp(endpoint: str) -> str:
@@ -57,112 +47,50 @@ def parse_or_raise(resp, exp_status_code: int = status.HTTP_200_OK):
     return resp.json()
 
 
-def object_as_dict(obj) -> dict:
-    """Convert a sqlalchemy object into a dict."""
-    return {c.key: getattr(obj, c.key) for c in inspect(obj).mapper.column_attrs}
-
-
-def filter_with_text(query, model, search_text: str):
-    """Add a filter to a sqlalchemy query based on the filtered column.
-    search_text must already be non-empty.
-    """
-    search_text = search_text.lower()
-
-    if model.__tablename__ in NAME_FILTERED_TABLENAMES:
-        return query.filter(func.lower(model.name).contains(search_text))
-    elif model.__tablename__ == TN.MATCHES:
-        return query.filter(func.lower(model.filename).contains(search_text))
-    else:
-        raise NotImplementedError
-
-
-def add_commit_refresh(model, db: "Session") -> None:
-    """Add and commit a sqlalchemy change, and then refresh."""
-    db.add(model)
-    db.commit()
-    db.refresh(model)
-
-
 # * Base endpoint functions
 
 
-def fill_cols(
-    model,
-    text: str,
-    is_for_killer: bool | None,
-    type_model,
-):
-    """Efficient filling of columns in the SQLAlchemy SELECT statement."""
-    cols = []
-    only_type_model = True
-
-    if is_for_killer is not None:
-        if type_model is not None:
-            cols.append(type_model.is_for_killer)
-        else:
-            only_type_model = False
-            cols.append(model.is_for_killer)
-
-    if text != "":
-        only_type_model = False
-        if model.__tablename__ in NAME_FILTERED_TABLENAMES:
-            cols.append(model.name)
-        elif model.__tablename__ == TN.MATCHES:
-            cols.append(model.filename)
-        else:
-            raise NotImplementedError
-
-    if not cols:
-        cols = [model.id]
-    elif only_type_model:
-        cols = [model.id] + cols
-
-    return cols
-
-
-def fill_cols_custom(
-    options: list[tuple["Column", bool | None]],
-    default_cols: list["Column"],
-    force_prepend_default_col: bool,
-) -> list["Column"]:
-    """Efficient custom filling of columns in the SQLAlchemy SELECT statement."""
-    cols = [c for c, v in options if v is not None]
-    if not cols:
-        cols = default_cols
-    elif force_prepend_default_col:
-        cols = default_cols + cols
-    return cols
-
-
 def do_count(
+    db: "Session",
     model,
     text: str,
-    db: "Session",
     is_for_killer: bool | None = None,
     type_model = None,
 ) -> int:
     """Base count function.
     'model' is the sqlalchemy model.
     """
+    filled = {
+        "text": text != "",
+        "is_for_killer": is_for_killer is not None,
+        "type_model": type_model is not None,
+    }
+
+    # If no filter was applied, just do a count
+    if not any(filled.values()):
+        return db.query(model.id).count()
+
+    # Base query
     cols = fill_cols(model, text, is_for_killer, type_model)
     query = db.query(*cols)
-    if type_model is not None:
+    if filled["type_model"]:
         query = query.join(type_model)
 
-    if is_for_killer is not None:
+    # Other filters
+    if filled["is_for_killer"]:
         if type_model is not None:
             query = query.filter(type_model.is_for_killer == is_for_killer)
         else:
             query = query.filter(model.is_for_killer == is_for_killer)
-
-    if text != "":
+    if filled["text"]:
         query = filter_with_text(query, model, text)
 
     return query.count()
 
 
-def filter_one(model, model_str: str, id: int, db: "Session"):
+def filter_one(db: "Session", model, model_str: str, id: int):
     """Base get one (item) function.
+
     'model' is the sqlalchemy model, and model_str
     is its string name (also capitalized).
     """
@@ -180,9 +108,7 @@ def get_many(
     model,
     skip: int = 0,
 ):
-    """Base get many function.
-    'model' is the sqlalchemy model.
-    """
+    """Base get many function. 'model' is the sqlalchemy model."""
     assert limit > 0
     if skip == 0:
         return db.query(model).limit(limit).all()
@@ -209,10 +135,10 @@ def get_icon(
 
 
 def get_id(
+    db: "Session",
     model,
     model_str: str,
     name: str,
-    db: "Session",
     name_col: str = "name",
 ) -> int:
     """Base get id function.
@@ -226,11 +152,11 @@ def get_id(
 
 
 def update_one(
+    db: "Session",
     schema_create,
     model,
     model_str: str,
     id: int,
-    db: "Session",
 ):
     """Base update one (item) function."""
     _, select_query = filter_one(model, model_str, id, db)
@@ -243,17 +169,24 @@ def update_one(
     return Response(status_code=status.HTTP_200_OK)
 
 
+def add_commit_refresh(db: "Session", model) -> None:
+    """Add and commit a sqlalchemy change, and then refresh."""
+    db.add(model)
+    db.commit()
+    db.refresh(model)
+
+
 # * Specific endpoint functions
 
 
 def dbd_version_str_to_id(s: str) -> int:
     """Converts a DBDVersion string to a DBDVersion id."""
-    dbd_version_id = requests.get(
-        endp(f"{EP.DBD_VERSION}/id"),
-        params={"dbd_version_str": s},
+    return parse_or_raise(
+        requests.get(
+            endp(f"{EP.DBD_VERSION}/id"),
+            params={"dbd_version_str": s},
+        )
     )
-    dbd_version_id = parse_or_raise(dbd_version_id)
-    return dbd_version_id
 
 
 def get_types(db: "Session", type_sqla_model):

@@ -1,7 +1,7 @@
 """Router code for player"""
 
 from backbone.endpoints import get_req
-from dbdie_ml.schemas.groupings import PlayerIn, PlayerOut
+from dbdie_classes.schemas.groupings import PlayerIn, PlayerOut
 from fastapi import APIRouter
 
 from backbone.options import ENDPOINTS as EP
@@ -31,8 +31,8 @@ def form_player(
 #     return [to_player(i, sn_info) for i, sn_info in snippets_info.items()]
 
 # import requests
-# from dbdie_ml.classes.base import CropCoods, PlayerId
-# from dbdie_ml.schemas.groupings import PlayerIn, PlayerOut
+# from dbdie_classes.base import CropCoods, PlayerId
+# from dbdie_classes.schemas.groupings import PlayerIn, PlayerOut
 
 # URL = "http://127.0.0.1:8000"
 

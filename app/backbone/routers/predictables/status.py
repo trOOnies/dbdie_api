@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING
 
 import requests
-from dbdie_ml.schemas.predictables import StatusCreate, StatusOut
+from dbdie_classes.schemas.predictables import StatusCreate, StatusOut
 from fastapi import APIRouter, Depends
 
 from backbone.database import get_db
@@ -16,7 +16,7 @@ from backbone.endpoints import (
     get_req,
 )
 from backbone.exceptions import ItemNotFoundException, ValidationException
-from backbone.models import Character, Status
+from backbone.models.predictables import Character, Status
 from backbone.options import ENDPOINTS as EP
 
 if TYPE_CHECKING:
@@ -27,7 +27,7 @@ router = APIRouter()
 
 @router.get("/count", response_model=int)
 def count_statuses(text: str = "", db: "Session" = Depends(get_db)):
-    return do_count(Status, text, db)
+    return do_count(db, Status, text)
 
 
 @router.get("", response_model=list[StatusOut])
@@ -85,6 +85,6 @@ def create_status(status: StatusCreate, db: "Session" = Depends(get_db)):
     } | status.model_dump()
     new_status = Status(**new_status)
 
-    add_commit_refresh(new_status, db)
+    add_commit_refresh(db, new_status)
 
     return get_req(EP.STATUS, new_status.id)

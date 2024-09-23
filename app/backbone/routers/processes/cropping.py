@@ -1,12 +1,12 @@
-from dbdie_ml.cropping.cropper_swarm import CropperSwarm
-from dbdie_ml.options.PLAYER_TYPE import SURV, KILLER
+"""Endpoint for cropping related purposes."""
+
 from fastapi import APIRouter, status
-from fastapi.exceptions import HTTPException
-from traceback import print_exc
+import requests
+
+from backbone.endpoints import parse_or_raise
+from backbone.options import ML_ENDPOINTS as MLEP
 
 router = APIRouter()
-
-cps = CropperSwarm.from_types([[SURV, KILLER], [f"{SURV}_player", f"{KILLER}_player"]])
 
 
 @router.post("/batch", status_code=status.HTTP_201_CREATED)
@@ -25,16 +25,13 @@ def batch_crop(
     - use_croppers: Filter cropping using Cropper names (level=Cropper).
     - use_fmt: Filter cropping using FullModelTypes names (level=crop type).
     """
-    try:
-        cps.run(
-            move=move,
-            use_croppers=use_croppers,
-            use_fmts=use_fmts,
+    return parse_or_raise(
+        requests.post(
+            MLEP.CROP,
+            json={
+                "move": move,
+                "use_croppers": use_croppers,
+                "use_fmts": use_fmts,
+            },
         )
-    except AssertionError as e:
-        print_exc()
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e)) from e
-    except Exception as e:
-        print_exc()
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, str(e)) from e
-    return status.HTTP_201_CREATED
+    )

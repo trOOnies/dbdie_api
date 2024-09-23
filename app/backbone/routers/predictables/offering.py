@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING
 
 import requests
-from dbdie_ml.schemas.predictables import OfferingCreate, OfferingOut, OfferingTypeOut
+from dbdie_classes.schemas.predictables import OfferingCreate, OfferingOut, OfferingTypeOut
 from fastapi import APIRouter, Depends
 
 from backbone.database import get_db
@@ -17,7 +17,7 @@ from backbone.endpoints import (
     get_types,
 )
 from backbone.exceptions import ItemNotFoundException, ValidationException
-from backbone.models import Character, Offering, OfferingType
+from backbone.models.predictables import Character, Offering, OfferingType
 from backbone.options import ENDPOINTS as EP
 
 if TYPE_CHECKING:
@@ -33,7 +33,7 @@ def count_offerings(
     db: "Session" = Depends(get_db),
 ):
     """Count DBD offerings."""
-    return do_count(Offering, text, db, is_for_killer, OfferingType)
+    return do_count(db, Offering, text, is_for_killer, OfferingType)
 
 
 @router.get("", response_model=list[OfferingOut])
@@ -103,6 +103,6 @@ def create_offering(offering: OfferingCreate, db: "Session" = Depends(get_db)):
     } | offering.model_dump()
     new_offering = Offering(**new_offering)
 
-    add_commit_refresh(new_offering, db)
+    add_commit_refresh(db, new_offering)
 
     return get_req(EP.OFFERING, new_offering.id)

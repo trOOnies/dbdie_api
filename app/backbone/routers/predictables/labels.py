@@ -6,10 +6,11 @@ from typing import TYPE_CHECKING
 from datetime import datetime
 import pandas as pd
 import requests
-from dbdie_ml.classes.base import FullModelType
-from dbdie_ml.options import COMMON_FMT, KILLER_FMT, SURV_FMT
-from dbdie_ml.paths import LABELS_FD_RP, absp
-from dbdie_ml.schemas.groupings import (
+from dbdie_classes.base import FullModelType
+from dbdie_classes.options import COMMON_FMT, KILLER_FMT, SURV_FMT
+from dbdie_classes.paths import LABELS_FD_RP, absp
+from dbdie_classes.schemas.groupings import (
+    labels_model_to_checks,
     LabelsCreate,
     LabelsOut,
     ManualChecksIn,
@@ -34,7 +35,7 @@ from backbone.endpoints import (
     endp,
     parse_or_raise,
 )
-from backbone.models import Labels
+from backbone.models.groupings import Labels
 from backbone.options import ENDPOINTS as EP
 
 if TYPE_CHECKING:
@@ -82,15 +83,7 @@ def get_labels(
             Labels.date_modified,
             Labels.user_id,
             Labels.extractor_id,
-            Labels.addons_mckd,
-            Labels.character_mckd,
-            Labels.item_mckd,
-            Labels.offering_mckd,
-            Labels.perks_mckd,
-            Labels.prestige_mckd,
-            Labels.points_mckd,
-            Labels.status_mckd,
-        ],
+        ] + labels_model_to_checks(Labels),
         force_prepend_default_cols=True,
         db=db,
     )
@@ -136,7 +129,7 @@ def create_labels(
     del new_labels["player"]
     new_labels = Labels(**new_labels)
 
-    add_commit_refresh(new_labels, db)
+    add_commit_refresh(db, new_labels)
 
     resp = requests.get(
         endp(f"{EP.LABELS}/filter"),
@@ -162,9 +155,10 @@ def batch_create_labels(fmts: list[FullModelType], filename: str):
         for fmt in fmts
     )
 
+    labels_fd = absp(LABELS_FD_RP)
     dfs = {
         fmt: pd.read_csv(
-            os.path.join(absp(LABELS_FD_RP), f"{fmt}/{filename}"),
+            os.path.join(labels_fd, f"{fmt}/{filename}"),
             usecols=["name", "label_id"],
         )
         for fmt in fmts

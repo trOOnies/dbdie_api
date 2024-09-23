@@ -2,7 +2,7 @@
 
 import requests
 from typing import TYPE_CHECKING
-from dbdie_ml.schemas.predictables import ItemCreate, ItemOut, ItemTypeOut
+from dbdie_classes.schemas.predictables import ItemCreate, ItemOut, ItemTypeOut
 from fastapi import APIRouter, Depends
 
 from backbone.database import get_db
@@ -18,7 +18,7 @@ from backbone.endpoints import (
     get_types,
 )
 from backbone.exceptions import ValidationException
-from backbone.models import Item, ItemType
+from backbone.models.predictables import Item, ItemType
 from backbone.options import ENDPOINTS as EP
 
 if TYPE_CHECKING:
@@ -33,7 +33,7 @@ def count_items(
     text: str = "",
     db: "Session" = Depends(get_db),
 ):
-    return do_count(Item, text, db, is_for_killer, ItemType)
+    return do_count(db, Item, text, is_for_killer, ItemType)
 
 
 @router.get("", response_model=list[ItemOut])
@@ -52,7 +52,7 @@ def get_item_types(db: "Session" = Depends(get_db)):
 
 @router.get("/{id}", response_model=ItemOut)
 def get_item(id: int, db: "Session" = Depends(get_db)):
-    return filter_one(Item, "Item", id, db)[0]
+    return filter_one(db, Item, "Item", id)[0]
 
 
 @router.get("/{id}/icon")
@@ -70,6 +70,6 @@ def create_item(item: ItemCreate, db: "Session" = Depends(get_db)):
     new_item = {"id": requests.get(endp(f"{EP.ITEM}/count")).json()} | item.model_dump()
     new_item = Item(**new_item)
 
-    add_commit_refresh(new_item, db)
+    add_commit_refresh(db, new_item)
 
     return get_req(EP.ITEM, new_item.id)

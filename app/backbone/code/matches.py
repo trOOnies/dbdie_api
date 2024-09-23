@@ -5,8 +5,8 @@ import re
 import requests
 import shutil
 from typing import TYPE_CHECKING
-from dbdie_ml.classes.version import DBDVersion
-from dbdie_ml.paths import absp, IMG_MAIN_FD_RP
+from dbdie_classes.version import DBDVersion
+from dbdie_classes.paths import absp, IMG_MAIN_FD_RP
 
 from backbone.endpoints import (
     dbd_version_str_to_id,
@@ -16,14 +16,16 @@ from backbone.endpoints import (
 from backbone.options import ENDPOINTS as EP
 
 if TYPE_CHECKING:
-    from dbdie_ml.classes.base import Filename, PathToFolder
-    from dbdie_ml.schemas.groupings import MatchCreate, MatchOut, VersionedFolderUpload
+    from dbdie_classes.base import Filename, PathToFolder
+    from dbdie_classes.schemas.groupings import MatchCreate, MatchOut, VersionedFolderUpload
 
 DATE_PATT = re.compile(r"20\d\d-[0-1]\d-[0-3]\d")
 
 
 def form_match(match: "MatchCreate") -> dict:
-    new_match = {"id": requests.get(endp(f"{EP.MATCHES}/count")).json()} | match.model_dump()
+    new_match = {
+        "id": parse_or_raise(requests.get(endp(f"{EP.MATCHES}/count")))
+    } | match.model_dump()
 
     if new_match["dbd_version"] is None:
         new_match["dbd_version_id"] = None

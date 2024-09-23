@@ -6,6 +6,7 @@ Development currently in progress.
 
 ## See also
 
+- [dbdie_classes](https://github.com/trOOnies/dbdie_classes)
 - [dbdie_ml](https://github.com/trOOnies/dbdie_ml)
 - [dbdie_ui](https://github.com/trOOnies/dbdie_ui)
 - [dbdie_info_extraction](https://github.com/trOOnies/dbd_info_extraction)

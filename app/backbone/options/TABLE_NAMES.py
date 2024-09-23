@@ -39,3 +39,13 @@ DBDIE_OBJECTS = [
     MODEL,
     USER,
 ]
+
+NAME_FILTERED_TABLENAMES = {
+    ADDONS,
+    CHARACTER,
+    DBD_VERSION,
+    ITEM,
+    OFFERING,
+    PERKS,
+    STATUS,
+}

@@ -2,7 +2,7 @@
 
 import requests
 from typing import TYPE_CHECKING
-from dbdie_ml.schemas.predictables import AddonCreate, AddonOut, AddonTypeOut
+from dbdie_classes.schemas.predictables import AddonCreate, AddonOut, AddonTypeOut
 from fastapi import APIRouter, Depends
 
 from backbone.database import get_db
@@ -19,7 +19,7 @@ from backbone.endpoints import (
     get_types,
 )
 from backbone.exceptions import ValidationException
-from backbone.models import Addon, AddonType
+from backbone.models.predictables import Addon, AddonType
 from backbone.options import ENDPOINTS as EP
 
 if TYPE_CHECKING:
@@ -34,7 +34,7 @@ def count_addons(
     text: str = "",
     db: "Session" = Depends(get_db),
 ):
-    return do_count(Addon, text, db, is_for_killer, AddonType)
+    return do_count(db, Addon, text, is_for_killer, AddonType)
 
 
 @router.get("", response_model=list[AddonOut])
@@ -49,7 +49,7 @@ def get_addons_types(db: "Session" = Depends(get_db)):
 
 @router.get("/{id}", response_model=AddonOut)
 def get_addon(id: int, db: "Session" = Depends(get_db)):
-    return filter_one(Addon, "Addon", id, db)[0]
+    return filter_one(db, Addon, "Addon", id)[0]
 
 
 @router.get("/{id}/icon")
@@ -75,6 +75,6 @@ def create_addon(addon: AddonCreate, db: "Session" = Depends(get_db)):
     del new_addon["dbd_version_str"]
     new_addon = Addon(**new_addon)
 
-    add_commit_refresh(new_addon, db)
+    add_commit_refresh(db, new_addon)
 
     return get_req(EP.ADDONS, new_addon.id)
