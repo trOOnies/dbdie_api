@@ -19,6 +19,7 @@ from constants import ICONS_FOLDER
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
+
 ENDPOINT_PATT = re.compile(r"\/[a-z\-]+$")
 NOT_WS_PATT = re.compile(r"\S")
 
@@ -157,16 +158,30 @@ def update_one(
     model,
     model_str: str,
     id: int,
+    new_id: int | None = None,
 ):
     """Base update one (item) function."""
     _, select_query = filter_one(model, model_str, id, db)
 
-    new_info = {"id": id} | schema_create.model_dump()
+    new_info = {"id": new_id if new_id is not None else id} | schema_create.model_dump()
 
     select_query.update(new_info, synchronize_session=False)
     db.commit()
 
     return Response(status_code=status.HTTP_200_OK)
+
+
+def update_many(
+    db: "Session",
+    model,
+    filter,
+    update_f,
+) -> None:
+    """Customazible UPDATE query function."""
+    records = db.query(model).filter(filter).all()
+    for record in records:
+        update_f(record)
+    db.commit()
 
 
 def add_commit_refresh(db: "Session", model) -> None:

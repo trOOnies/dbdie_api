@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 import requests
 from dbdie_classes.schemas.predictables import PerkCreate, PerkOut
 from fastapi import APIRouter, Depends, status
+from sqlalchemy import or_
 
 from backbone.database import get_db
 from backbone.endpoints import (
@@ -15,9 +16,12 @@ from backbone.endpoints import (
     endp,
     get_icon,
     get_req,
+    parse_or_raise,
     update_one,
+    update_many,
 )
 from backbone.exceptions import ItemNotFoundException, ValidationException
+from backbone.models.groupings import Labels
 from backbone.models.predictables import Character, Perk
 from backbone.options import ENDPOINTS as EP
 
@@ -113,6 +117,46 @@ def create_perk(perk: PerkCreate, db: "Session" = Depends(get_db)):
     add_commit_refresh(db, new_perk)
 
     return get_req(EP.PERKS, new_perk.id)
+
+
+@router.put("/{id}/change_id", response_model=PerkOut)
+def change_perk_id(id: int, new_id: int, db: "Session" = Depends(get_db)):
+    assert new_id >= 0, "The new ID cannot be negative."
+    perk = parse_or_raise(requests.get(f"{EP.PERKS}/{id}"))
+
+    # Check that the new perk id isn't taken
+    try:
+        parse_or_raise(requests.get(f"{EP.PERKS}/{new_id}"))
+    except Exception:
+        pass
+    else:
+        raise AssertionError(f"New id '{new_id}' already exists.")
+
+    resp = update_one(db, perk, Perk, "Perk", id, new_id=new_id)
+    assert resp.status_code == status.HTTP_200_OK
+
+    def update_cols(record) -> None:
+        for col_name in ["perk_0", "perk_1", "perk_2", "perk_3"]:
+            if getattr(record, col_name) == id:
+                setattr(record, col_name, new_id)
+
+    update_many(
+        db,
+        Labels,
+        filter=or_(
+            Labels.perk_0 == id,
+            Labels.perk_1 == id,
+            Labels.perk_2 == id,
+            Labels.perk_3 == id,
+        ),
+        update_f=update_cols,
+    )
+
+    # TODO: Deprecate perk models and extractors that use them
+    # ...
+
+    perk.id = new_id
+    return perk
 
 
 @router.put("/{id}", status_code=status.HTTP_200_OK)
