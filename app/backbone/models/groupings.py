@@ -12,18 +12,9 @@ from sqlalchemy.sql.expression import text
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 
 from backbone.database import Base
+from backbone.models.helpers import DBDVersion  # noqa: F401
+from backbone.models.objects import Extractor, User  # noqa: F401
 from backbone.options import TABLE_NAMES as TN
-
-
-class DBDVersion(Base):
-    """SQLAlchemy DBD version model."""
-    __tablename__ = TN.DBD_VERSION
-
-    id   = C(Int, nullable=False, primary_key=True)
-    name = C(Str, nullable=False)
-
-    release_date = C(Date, nullable=True)
-    common_name  = C(Str, nullable=True)
 
 
 class Match(Base):

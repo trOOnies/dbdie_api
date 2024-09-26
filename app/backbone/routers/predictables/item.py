@@ -2,7 +2,8 @@
 
 import requests
 from typing import TYPE_CHECKING
-from dbdie_classes.schemas.predictables import ItemCreate, ItemOut, ItemTypeOut
+from dbdie_classes.schemas.predictables import ItemCreate, ItemOut
+from dbdie_classes.schemas.types import ItemTypeOut
 from fastapi import APIRouter, Depends
 
 from backbone.database import get_db

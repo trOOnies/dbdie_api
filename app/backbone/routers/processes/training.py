@@ -2,7 +2,7 @@
 
 from copy import deepcopy
 from dbdie_classes.base import FullModelType
-from dbdie_classes.options import MODEL_TYPES as MT
+from dbdie_classes.options import MODEL_TYPE as MT
 from dbdie_classes.options import PLAYER_TYPE as PT
 from fastapi import APIRouter, status
 import requests

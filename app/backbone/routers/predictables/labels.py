@@ -7,10 +7,14 @@ from datetime import datetime
 import pandas as pd
 import requests
 from dbdie_classes.base import FullModelType
-from dbdie_classes.options import COMMON_FMT, KILLER_FMT, SURV_FMT
+from dbdie_classes.code.groupings import (
+    labels_model_to_checks,
+    labels_model_to_labeled_predictables,
+)
+from dbdie_classes.options import KILLER_FMT, SURV_FMT
+from dbdie_classes.options.FMT import ALL as ALL_FMT
 from dbdie_classes.paths import LABELS_FD_RP, absp
 from dbdie_classes.schemas.groupings import (
-    labels_model_to_checks,
     LabelsCreate,
     LabelsOut,
     ManualChecksIn,
@@ -42,8 +46,6 @@ if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
 router = APIRouter()
-
-ALL_FMT = list(set(COMMON_FMT.ALL) | set(KILLER_FMT.ALL) | set(SURV_FMT.ALL))
 
 
 @router.get("/count", response_model=int)
@@ -77,13 +79,17 @@ def get_labels(
     query = get_filtered_query(
         is_killer,
         manual_checks,
-        default_cols=[
-            Labels.match_id,
-            Labels.player_id,
-            Labels.date_modified,
-            Labels.user_id,
-            Labels.extractor_id,
-        ] + labels_model_to_checks(Labels),
+        default_cols=(
+            [
+                Labels.match_id,
+                Labels.player_id,
+                Labels.date_modified,
+                Labels.user_id,
+                Labels.extractor_id,
+            ]
+            + labels_model_to_labeled_predictables(Labels)
+            + labels_model_to_checks(Labels)
+        ),
         force_prepend_default_cols=True,
         db=db,
     )

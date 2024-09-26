@@ -9,7 +9,30 @@ from sqlalchemy import String as Str
 from sqlalchemy.orm import relationship as rel
 
 from backbone.database import Base
+from backbone.models.types import (
+    AddonType,  # noqa: F401
+    ItemType,  # noqa: F401
+    OfferingType,  # noqa: F401
+    Rarity,  # noqa: F401
+)
+from backbone.models.helpers import DBDVersion  # noqa: F401
 from backbone.options import TABLE_NAMES as TN
+
+
+class Item(Base):
+    """SQLAlchemy item model."""
+    __tablename__ = TN.ITEM
+
+    id   = C(SmallInt, nullable=False, primary_key=True)
+    name = C(Str,      nullable=False)
+
+    type_id        = C(SmallInt, FK(f"{TN.ITEM_TYPES}.id"),  nullable=False)
+    dbd_version_id = C(Int,      FK(f"{TN.DBD_VERSION}.id"), nullable=True)
+    rarity_id      = C(SmallInt, FK(f"{TN.RARITY}.id"),      nullable=True)
+
+    type           = rel("ItemType")
+    dbd_version    = rel("DBDVersion")
+    rarity         = rel("Rarity")
 
 
 class Character(Base):
@@ -17,14 +40,36 @@ class Character(Base):
     __tablename__ = TN.CHARACTER
 
     id   = C(SmallInt, nullable=False, primary_key=True)
-    name = C(Str,      nullable=False)
+    name = C(Str,      nullable=False)  # TODO: add unique (and with alembic)
 
     is_killer      = C(Bool,     nullable=True)
     base_char_id   = C(SmallInt, nullable=True)
     dbd_version_id = C(Int, FK(f"{TN.DBD_VERSION}.id"), nullable=True)
     dbd_version    = rel("DBDVersion")
-    common_name    = C(Str,      nullable=True)
-    emoji          = C(Str,      nullable=True)
+
+    common_name = C(Str,      nullable=True)
+    emoji       = C(Str,      nullable=True)
+
+    power_id    = C(SmallInt, FK(f"{TN.ITEM}.id"), nullable=True)
+    power       = rel("Item")
+
+
+class Addon(Base):
+    """SQLAlchemy addon model."""
+    __tablename__ = TN.ADDONS
+
+    id   = C(SmallInt, nullable=False, primary_key=True)
+    name = C(Str,      nullable=False)
+
+    type_id        = C(SmallInt, FK(f"{TN.ADDONS_TYPES}.id"), nullable=False)
+    dbd_version_id = C(Int,      FK(f"{TN.DBD_VERSION}.id"),  nullable=True)
+    item_id        = C(SmallInt, FK(f"{TN.ITEM}.id"),         nullable=False)
+    rarity_id      = C(SmallInt, FK(f"{TN.RARITY}.id"),       nullable=True)
+
+    type           = rel("AddonType")
+    dbd_version    = rel("DBDVersion")
+    item           = rel("Item")
+    rarity         = rel("Rarity")
 
 
 class Perk(Base):
@@ -41,64 +86,6 @@ class Perk(Base):
     dbd_version    = rel("DBDVersion")
 
 
-class ItemType(Base):
-    """SQLAlchemy item type model."""
-    __tablename__ = TN.ITEM_TYPES
-
-    id            = C(SmallInt, nullable=False, primary_key=True)
-    name          = C(Str,      nullable=False)
-    emoji         = C(Str,      nullable=True)
-    is_for_killer = C(Bool,     nullable=True)
-
-
-class Item(Base):
-    """SQLAlchemy item model."""
-    __tablename__ = TN.ITEM
-
-    id   = C(SmallInt, nullable=False, primary_key=True)
-    name = C(Str,      nullable=False)
-
-    type_id        = C(SmallInt, FK(f"{TN.ITEM_TYPES}.id"),  nullable=False)
-    dbd_version_id = C(Int,      FK(f"{TN.DBD_VERSION}.id"), nullable=True)
-    type           = rel("ItemType")
-    dbd_version    = rel("DBDVersion")
-
-
-class AddonType(Base):
-    """SQLAlchemy addon type model."""
-    __tablename__ = TN.ADDONS_TYPES
-
-    id            = C(SmallInt, nullable=False, primary_key=True)
-    name          = C(Str,      nullable=False)
-    emoji         = C(Str,      nullable=True)
-    is_for_killer = C(Bool,     nullable=True)
-
-
-class Addon(Base):
-    """SQLAlchemy addon model."""
-    __tablename__ = TN.ADDONS
-
-    id   = C(SmallInt, nullable=False, primary_key=True)
-    name = C(Str,      nullable=False)
-
-    type_id        = C(SmallInt, FK(f"{TN.ADDONS_TYPES}.id"), nullable=False)
-    user_id        = C(SmallInt, FK(f"{TN.CHARACTER}.id"),    nullable=False)
-    dbd_version_id = C(Int,      FK(f"{TN.DBD_VERSION}.id"),  nullable=True)
-    type           = rel("AddonType")
-    user           = rel("Character")
-    dbd_version    = rel("DBDVersion")
-
-
-class OfferingType(Base):
-    """SQLAlchemy offering type model."""
-    __tablename__ = TN.OFFERING_TYPES
-
-    id            = C(SmallInt, nullable=False, primary_key=True)
-    name          = C(Str,      nullable=False)
-    emoji         = C(Str,      nullable=True)
-    is_for_killer = C(Bool,     nullable=True)
-
-
 class Offering(Base):
     """SQLAlchemy offering model."""
     __tablename__ = TN.OFFERING
@@ -109,9 +96,12 @@ class Offering(Base):
     type_id        = C(SmallInt, FK(f"{TN.OFFERING_TYPES}.id"), nullable=False)
     user_id        = C(SmallInt, FK(f"{TN.CHARACTER}.id"),      nullable=False)
     dbd_version_id = C(Int,      FK(f"{TN.DBD_VERSION}.id"),    nullable=True)
+    rarity_id      = C(SmallInt, FK(f"{TN.RARITY}.id"),         nullable=True)
+
     type           = rel("OfferingType")
     user           = rel("Character")
     dbd_version    = rel("DBDVersion")
+    rarity         = rel("Rarity")
 
 
 class Status(Base):

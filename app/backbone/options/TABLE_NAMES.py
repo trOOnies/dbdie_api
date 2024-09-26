@@ -15,6 +15,7 @@ MODEL            = "model"
 OFFERING         = "offering"
 OFFERING_TYPES   = "offering_types"
 PERKS            = "perks"
+RARITY           = "rarity"
 STATUS           = "status"
 USER             = "user"
 

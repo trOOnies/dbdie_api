@@ -39,7 +39,7 @@ def create_addons(
                 json={
                     "name": addon_name,
                     "type_id": ADDON_TYPE_ID,
-                    "user_id": character["id"],
+                    "user_id": character["id"],  # TODO
                     "dbd_version_id": character["dbd_version_id"],
                 },
             )

@@ -3,7 +3,8 @@
 from typing import TYPE_CHECKING
 
 import requests
-from dbdie_classes.schemas.predictables import OfferingCreate, OfferingOut, OfferingTypeOut
+from dbdie_classes.schemas.predictables import OfferingCreate, OfferingOut
+from dbdie_classes.schemas.types import OfferingTypeOut
 from fastapi import APIRouter, Depends
 
 from backbone.database import get_db
@@ -49,6 +50,8 @@ def get_offerings(
             Offering.name,
             Offering.type_id,
             Offering.user_id,
+            Offering.dbd_version_id,
+            Offering.rarity_id,
             Character.is_killer.label("is_for_killer"),
         )
         .join(Character)
@@ -73,6 +76,8 @@ def get_offering(id: int, db: "Session" = Depends(get_db)):
             Offering.name,
             Offering.type_id,
             Offering.user_id,
+            Offering.dbd_version_id,
+            Offering.rarity_id,
             Character.is_killer.label("is_for_killer"),
         )
         .join(Character)

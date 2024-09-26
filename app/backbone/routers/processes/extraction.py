@@ -1,7 +1,7 @@
 """Endpoint for extraction related processes."""
 
 from dbdie_classes.base import FullModelType, PathToFolder
-from dbdie_classes.options import MODEL_TYPES as MT
+from dbdie_classes.options import MODEL_TYPE as MT
 from fastapi import APIRouter, status
 import requests
 

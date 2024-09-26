@@ -1,6 +1,6 @@
 """DBDIE API high-level endpoints."""
 
-from dbdie_classes.options import MODEL_TYPES as MT
+from dbdie_classes.options import MODEL_TYPE as MT
 
 ADDONS      = "/addons"
 CHARACTER   = "/character"
@@ -10,6 +10,7 @@ PERKS       = "/perks"
 POINTS      = "/points"
 PRESTIGE    = "/prestige"
 STATUS      = "/status"
+RARITY      = "/rarity"
 
 # Groupings
 DBD_VERSION = "/dbd-version"

@@ -2,7 +2,7 @@
 
 import requests
 from typing import TYPE_CHECKING
-from dbdie_classes.schemas.predictables import DBDVersionCreate, DBDVersionOut
+from dbdie_classes.schemas.helpers import DBDVersionCreate, DBDVersionOut
 from fastapi import APIRouter, Depends, Response, status
 
 from backbone.database import get_db
@@ -17,7 +17,7 @@ from backbone.endpoints import (
     NOT_WS_PATT,
 )
 from backbone.exceptions import ValidationException
-from backbone.models.groupings import DBDVersion
+from backbone.models.helpers import DBDVersion
 from backbone.options import ENDPOINTS as EP
 
 if TYPE_CHECKING:
