@@ -1,34 +1,38 @@
 """DBDIE API high-level endpoints."""
 
 from dbdie_classes.options import MODEL_TYPE as MT
+from typing import TYPE_CHECKING
 
-ADDONS      = "/addons"
-CHARACTER   = "/character"
-ITEM        = "/item"
-OFFERING    = "/offering"
-PERKS       = "/perks"
-POINTS      = "/points"
-PRESTIGE    = "/prestige"
-STATUS      = "/status"
-RARITY      = "/rarity"
+if TYPE_CHECKING:
+    from dbdie_classes.base import Endpoint, ModelType
+
+ADDONS      : "Endpoint" = "/addons"
+CHARACTER   : "Endpoint" = "/character"
+ITEM        : "Endpoint" = "/item"
+OFFERING    : "Endpoint" = "/offering"
+PERKS       : "Endpoint" = "/perks"
+POINTS      : "Endpoint" = "/points"
+PRESTIGE    : "Endpoint" = "/prestige"
+STATUS      : "Endpoint" = "/status"
+RARITY      : "Endpoint" = "/rarity"
 
 # Groupings
-DBD_VERSION = "/dbd-version"
-MATCHES     = "/matches"
-PLAYERS     = "/players"
-LABELS      = "/labels"
+DBD_VERSION : "Endpoint" = "/dbd-version"
+MATCHES     : "Endpoint" = "/matches"
+PLAYERS     : "Endpoint" = "/players"
+LABELS      : "Endpoint" = "/labels"
 
 # DBDIE objects
-EXTRACTOR   = "/extractor"
-MODELS      = "/models"
+EXTRACTOR   : "Endpoint" = "/extractor"
+MODELS      : "Endpoint" = "/models"
 
 # Processes
-CROP        = "/crop"
-EXTRACT     = "/extract"
-BACKUP      = "/backup"
-TRAIN       = "/train"
+CROP        : "Endpoint" = "/crop"
+EXTRACT     : "Endpoint" = "/extract"
+BACKUP      : "Endpoint" = "/backup"
+TRAIN       : "Endpoint" = "/train"
 
-MT_TO_ENDPOINT = {
+MT_TO_ENDPOINT: dict["ModelType", "Endpoint"] = {
     MT.ADDONS: ADDONS,
     MT.CHARACTER: CHARACTER,
     MT.ITEM: ITEM,

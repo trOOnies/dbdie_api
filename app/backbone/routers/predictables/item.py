@@ -30,20 +30,21 @@ router = APIRouter()
 
 @router.get("/count", response_model=int)
 def count_items(
-    is_for_killer: bool | None = None,
+    ifk: bool | None = None,
     text: str = "",
     db: "Session" = Depends(get_db),
 ):
-    return do_count(db, Item, text, is_for_killer, ItemType)
+    return do_count(db, Item, text=text, ifk=ifk, model_type=ItemType)
 
 
 @router.get("", response_model=list[ItemOut])
 def get_items(
     limit: int = 10,
     skip: int = 0,
+    ifk: bool | None = None,
     db: "Session" = Depends(get_db),
 ):
-    return get_many(db, limit, Item, skip)
+    return get_many(db, limit, Item, skip, ifk, ItemType)
 
 
 @router.get("/types", response_model=list[ItemTypeOut])

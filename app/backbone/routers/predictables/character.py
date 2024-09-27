@@ -26,6 +26,7 @@ from backbone.endpoints import (
     endp,
     filter_one,
     get_icon,
+    get_many,
     get_req,
     parse_or_raise,
 )
@@ -75,17 +76,7 @@ def get_characters(
     db: "Session" = Depends(get_db),
 ):
     """Query many DBD characters."""
-    assert limit > 0
-
-    characters = db.query(Character)
-    if is_killer is not None:
-        characters = characters.filter(Character.is_killer == is_killer)
-
-    characters = characters.limit(limit)
-    if skip == 0:
-        return characters.all()
-    else:
-        return characters.offset(skip).all()
+    return get_many(db, limit, Character, skip, is_killer)
 
 
 @router.get("/{id}", response_model=CharacterOut)

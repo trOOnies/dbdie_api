@@ -25,6 +25,7 @@ from backbone.endpoints import (
     filter_one,
     get_id,
     get_many,
+    get_match_img,
     get_req,
     parse_or_raise,
 )
@@ -41,7 +42,7 @@ router = APIRouter()
 
 @router.get("/count", response_model=int)
 def count_matches(text: str = "", db: "Session" = Depends(get_db)):
-    return do_count(db, Match, text)
+    return do_count(db, Match, text=text)
 
 
 @router.get("", response_model=list[MatchOut])
@@ -56,6 +57,12 @@ def get_matches(
 @router.get("/id", response_model=int)
 def get_match_id(filename: str, db: "Session" = Depends(get_db)):
     return get_id(db, Match, "Match", filename, name_col="filename")
+
+
+@router.get("/image/{id}")
+def get_match_image(id: int):
+    m = parse_or_raise(requests.get(endp(f"{EP.MATCHES}/{id}")))
+    return get_match_img(m["filename"])
 
 
 @router.get("/{id}", response_model=MatchOut)

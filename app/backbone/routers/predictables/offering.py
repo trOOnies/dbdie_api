@@ -14,6 +14,7 @@ from backbone.endpoints import (
     do_count,
     endp,
     get_icon,
+    get_many,
     get_req,
     get_types,
 )
@@ -29,37 +30,23 @@ router = APIRouter()
 
 @router.get("/count", response_model=int)
 def count_offerings(
-    is_for_killer: bool | None = None,
+    ifk: bool | None = None,
     text: str = "",
     db: "Session" = Depends(get_db),
 ):
     """Count DBD offerings."""
-    return do_count(db, Offering, text, is_for_killer, OfferingType)
+    return do_count(db, Offering, text=text, ifk=ifk, model_type=OfferingType)
 
 
 @router.get("", response_model=list[OfferingOut])
 def get_offerings(
     limit: int = 10,
     skip: int = 0,
+    ifk: bool | None = None,
     db: "Session" = Depends(get_db),
 ):
     """Get many DBD offerings."""
-    offerings = (
-        db.query(
-            Offering.id,
-            Offering.name,
-            Offering.type_id,
-            Offering.user_id,
-            Offering.dbd_version_id,
-            Offering.rarity_id,
-            Character.is_killer.label("is_for_killer"),
-        )
-        .join(Character)
-        .limit(limit)
-        .offset(skip)
-        .all()
-    )
-    return offerings
+    return get_many(db, limit, Offering, skip, ifk, Character)
 
 
 @router.get("/types", response_model=list[OfferingTypeOut])

@@ -1,6 +1,11 @@
 """DBDIE API high-level endpoints."""
 
-CROP        = "/crop"
-EXTRACT     = "/extract"
-BACKUP      = "/backup"
-TRAIN       = "/train"
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from dbdie_classes.base import Endpoint
+
+CROP    : "Endpoint" = "/crop"
+EXTRACT : "Endpoint" = "/extract"
+BACKUP  : "Endpoint" = "/backup"
+TRAIN   : "Endpoint" = "/train"

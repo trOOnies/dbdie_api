@@ -15,6 +15,7 @@ from backbone.endpoints import (
     do_count,
     endp,
     get_icon,
+    get_many,
     get_req,
     parse_or_raise,
     update_one,
@@ -33,38 +34,23 @@ router = APIRouter()
 
 @router.get("/count", response_model=int)
 def count_perks(
-    is_for_killer: bool | None = None,
+    ifk: bool | None = None,
     text: str = "",
     db: "Session" = Depends(get_db),
 ):
     """Count DBD perks."""
-    return do_count(db, Perk, text, is_for_killer)
+    return do_count(db, Perk, text=text, ifk=ifk)
 
 
 @router.get("", response_model=list[PerkOut])
 def get_perks(
-    is_for_killer: bool | None = None,
     limit: int = 10,
     skip: int = 0,
+    ifk: bool | None = None,
     db: "Session" = Depends(get_db),
 ):
     """Get many DBD perks."""
-    perks = db.query(
-        Perk.id,
-        Perk.name,
-        Perk.character_id,
-        Perk.dbd_version_id,
-        Perk.emoji,
-        Character.is_killer.label("is_for_killer"),
-    ).join(Character)
-    if is_for_killer is not None:
-        perks = perks.filter(Character.is_killer == is_for_killer)
-    perks = perks.limit(limit)
-    if skip > 0:
-        perks = perks.offset(skip)
-
-    perks = perks.all()
-    return perks
+    return get_many(db, limit, Perk, skip, ifk, Character)
 
 
 @router.get("/{id}", response_model=PerkOut)

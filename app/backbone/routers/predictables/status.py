@@ -1,4 +1,4 @@
-"""Router code for player end status"""
+"""Router code for player end status."""
 
 from typing import TYPE_CHECKING
 
@@ -13,6 +13,7 @@ from backbone.endpoints import (
     do_count,
     endp,
     get_icon,
+    get_many,
     get_req,
 )
 from backbone.exceptions import ItemNotFoundException, ValidationException
@@ -27,25 +28,17 @@ router = APIRouter()
 
 @router.get("/count", response_model=int)
 def count_statuses(text: str = "", db: "Session" = Depends(get_db)):
-    return do_count(db, Status, text)
+    return do_count(db, Status, text=text)
 
 
 @router.get("", response_model=list[StatusOut])
-def get_statuses(db: "Session" = Depends(get_db)):
-    perks = (
-        db.query(
-            Status.id,
-            Status.name,
-            Status.character_id,
-            Status.is_dead,
-            Status.dbd_version_id,
-            Status.emoji,
-            Character.is_killer.label("is_for_killer"),
-        )
-        .join(Character)
-        .all()
-    )
-    return perks
+def get_statuses(
+    limit: int = 10,
+    skip: int = 0,
+    ifk: bool | None = None,
+    db: "Session" = Depends(get_db),
+):
+    return get_many(db, limit, Status, skip, ifk, Character)
 
 
 @router.get("/{id}", response_model=StatusOut)

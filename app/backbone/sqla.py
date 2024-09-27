@@ -1,23 +1,48 @@
 """SQLAlchemy related functions."""
 
-from sqlalchemy import func, inspect
+from sqlalchemy import func, inspect, or_
 from typing import TYPE_CHECKING
 
 from backbone.options import TABLE_NAMES as TN
 
 if TYPE_CHECKING:
     from sqlalchemy import Column
+    from sqlalchemy.orm import Query, Session
 
 
-def object_as_dict(obj) -> dict:
-    """Convert a sqlalchemy object into a dict."""
-    return {c.key: getattr(obj, c.key) for c in inspect(obj).mapper.column_attrs}
+def soft_bool_filter(col, cond: bool):
+    """Leave bool values equal to 'cond' AND the null bool values."""
+    return or_(col.is_(cond), col.is_(None))
 
 
-def filter_with_text(query, model, search_text: str):
+def join_and_filter_ifk(query: "Query", model, model_type, ifk: bool) -> "Query":
+    if (model_type is not None) and (ifk is not None):
+        query = query.join(model_type)
+        if model.__tablename__ in {TN.OFFERING, TN.PERKS, TN.STATUS}:
+            query = query.filter(soft_bool_filter(model_type.is_killer, ifk))
+        else:
+            query = query.filter(soft_bool_filter(model_type.is_for_killer, ifk))
+    elif model.__tablename__ == TN.CHARACTER:
+        query = query.filter(soft_bool_filter(model.is_killer, ifk))
+
+    return query
+
+
+def limit_and_skip(query: "Query", limit: int, skip: int) -> "Query":
+    return (
+        query.limit(limit)
+        if skip == 0
+        else query.limit(limit).offset(skip)
+    )
+
+
+def filter_with_text(query: "Query", model, search_text: str) -> "Query":
     """Add a filter to a sqlalchemy query based on the filtered column.
     search_text must already be non-empty.
     """
+    if search_text == "":
+        return query
+
     search_text = search_text.lower()
 
     if model.__tablename__ in TN.NAME_FILTERED_TABLENAMES:
@@ -28,39 +53,29 @@ def filter_with_text(query, model, search_text: str):
         raise NotImplementedError
 
 
-def fill_cols(
+def get_items_query(
+    db: "Session",
+    limit: int,
     model,
+    skip: int,
+    ifk: bool | None,
+    model_type,
     text: str,
-    is_for_killer: bool | None,
-    type_model,
-):
-    """Efficient filling of columns in the SQLAlchemy SELECT statement."""
-    cols = []
-    only_type_model = True
+) -> "Query":
+    """Base get many function. 'model' is the sqlalchemy model."""
+    assert limit > 0
+    assert skip >= 0
 
-    if is_for_killer is not None:
-        if type_model is not None:
-            cols.append(type_model.is_for_killer)
-        else:
-            only_type_model = False
-            cols.append(model.is_for_killer)
+    query = db.query(model)
+    query = join_and_filter_ifk(query, model, model_type, ifk)
+    query = filter_with_text(query, model, text)
+    query = limit_and_skip(query, limit, skip)
+    return query
 
-    if text != "":
-        only_type_model = False
-        if model.__tablename__ in TN.NAME_FILTERED_TABLENAMES:
-            cols.append(model.name)
-        elif model.__tablename__ == TN.MATCHES:
-            cols.append(model.filename)
-        else:
-            raise NotImplementedError
 
-    if not cols:
-        cols = [model.id]
-    elif only_type_model:
-        cols = [model.id] + cols
-
-    return cols
-
+def object_as_dict(obj) -> dict:
+    """Convert a sqlalchemy object into a dict."""
+    return {c.key: getattr(obj, c.key) for c in inspect(obj).mapper.column_attrs}
 
 
 def fill_cols_custom(

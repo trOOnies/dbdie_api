@@ -31,16 +31,21 @@ router = APIRouter()
 
 @router.get("/count", response_model=int)
 def count_addons(
-    is_for_killer: bool | None = None,
+    ifk: bool | None = None,
     text: str = "",
     db: "Session" = Depends(get_db),
 ):
-    return do_count(db, Addon, text, is_for_killer, AddonType)
+    return do_count(db, Addon, text=text, ifk=ifk, model_type=AddonType)
 
 
 @router.get("", response_model=list[AddonOut])
-def get_addons(limit: int = 10, skip: int = 0, db: "Session" = Depends(get_db)):
-    return get_many(db, limit, Addon, skip)
+def get_addons(
+    limit: int = 10,
+    skip: int = 0,
+    ifk: bool | None = None,
+    db: "Session" = Depends(get_db),
+):
+    return get_many(db, limit, Addon, skip, ifk, AddonType)
 
 
 @router.get("/types", response_model=list[AddonTypeOut])

@@ -29,7 +29,7 @@ router = APIRouter()
 @router.get("/count", response_model=int)
 def count_dbd_versions(text: str = "", db: "Session" = Depends(get_db)):
     """Count DBD versions."""
-    return do_count(db, DBDVersion, text)
+    return do_count(db, DBDVersion, text=text)
 
 
 @router.get("", response_model=list[DBDVersionOut])

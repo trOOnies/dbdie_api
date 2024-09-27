@@ -5,12 +5,11 @@ from typing import TYPE_CHECKING
 from dbdie_classes.schemas.groupings import ManualChecksIn
 import pandas as pd
 import requests
-from sqlalchemy import or_
 
 from backbone.endpoints import endp
 from backbone.models.groupings import Labels
 from backbone.options import ENDPOINTS as EP
-from backbone.sqla import fill_cols_custom
+from backbone.sqla import fill_cols_custom, soft_bool_filter
 
 if TYPE_CHECKING:
     from dbdie_classes.base import FullModelType
@@ -28,14 +27,14 @@ def additional_filters(
             if is_killer
             else query.filter(Labels.player_id < 4)
         )
+
     if manual_checks is not None and manual_checks.is_init:
         for col, chk in manual_checks.get_filters_conds(Labels):
             if chk:
                 query = query.filter(col.is_(True))
             else:
-                query = query.filter(
-                    or_(col.is_(False), col.is_(None))
-                )
+                query = query.filter(soft_bool_filter(col, False))
+
     return query
 
 

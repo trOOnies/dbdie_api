@@ -4,19 +4,21 @@ import os
 import re
 from typing import TYPE_CHECKING
 
-import requests
+from dbdie_classes.paths import CROPPED_IMG_FD_RP, absp
 from fastapi import Response, status
 from fastapi.exceptions import HTTPException
 from fastapi.responses import FileResponse
+import requests
 
 from backbone.config import ST
 from backbone.exceptions import ItemNotFoundException, NameNotFoundException
 from backbone.options import ENDPOINTS as EP
 from backbone.options import TABLE_NAMES as TN
-from backbone.sqla import fill_cols, filter_with_text
+from backbone.sqla import get_items_query
 from constants import ICONS_FOLDER
 
 if TYPE_CHECKING:
+    from dbdie_classes.base import Endpoint, FullEndpoint, PathToFolder
     from sqlalchemy.orm import Session
 
 
@@ -24,12 +26,12 @@ ENDPOINT_PATT = re.compile(r"\/[a-z\-]+$")
 NOT_WS_PATT = re.compile(r"\S")
 
 
-def endp(endpoint: str) -> str:
+def endp(endpoint: "Endpoint") -> "FullEndpoint":
     """Get full URL of the endpoint."""
     return ST.fastapi_host + endpoint
 
 
-def get_req(endpoint: str, id: int) -> dict:
+def get_req(endpoint: "Endpoint", id: int) -> dict:
     """Request wrapper for a GET request for a type 'endpoint' with an id 'id'."""
     assert ENDPOINT_PATT.match(endpoint)
     resp = requests.get(endp(f"{endpoint}/{id}"))
@@ -51,44 +53,6 @@ def parse_or_raise(resp, exp_status_code: int = status.HTTP_200_OK):
 # * Base endpoint functions
 
 
-def do_count(
-    db: "Session",
-    model,
-    text: str,
-    is_for_killer: bool | None = None,
-    type_model = None,
-) -> int:
-    """Base count function.
-    'model' is the sqlalchemy model.
-    """
-    filled = {
-        "text": text != "",
-        "is_for_killer": is_for_killer is not None,
-        "type_model": type_model is not None,
-    }
-
-    # If no filter was applied, just do a count
-    if not any(filled.values()):
-        return db.query(model.id).count()
-
-    # Base query
-    cols = fill_cols(model, text, is_for_killer, type_model)
-    query = db.query(*cols)
-    if filled["type_model"]:
-        query = query.join(type_model)
-
-    # Other filters
-    if filled["is_for_killer"]:
-        if type_model is not None:
-            query = query.filter(type_model.is_for_killer == is_for_killer)
-        else:
-            query = query.filter(model.is_for_killer == is_for_killer)
-    if filled["text"]:
-        query = filter_with_text(query, model, text)
-
-    return query.count()
-
-
 def filter_one(db: "Session", model, model_str: str, id: int):
     """Base get one (item) function.
 
@@ -103,22 +67,64 @@ def filter_one(db: "Session", model, model_str: str, id: int):
     return item, filter_query
 
 
+def get_first(
+    db: "Session",
+    limit: int,
+    model,
+    skip: int = 0,
+    ifk: bool | None = None,
+    model_type = None,
+    text: str = "",
+):
+    """Base get first function. 'model' is the sqlalchemy model."""
+    query = get_items_query(db, limit, model, skip, ifk, model_type, text)
+    return query.first()
+
+
 def get_many(
     db: "Session",
     limit: int,
     model,
     skip: int = 0,
+    ifk: bool | None = None,
+    model_type = None,
+    text: str = "",
 ):
     """Base get many function. 'model' is the sqlalchemy model."""
-    assert limit > 0
-    if skip == 0:
-        return db.query(model).limit(limit).all()
-    else:
-        return db.query(model).limit(limit).offset(skip).all()
+    query = get_items_query(db, limit, model, skip, ifk, model_type, text)
+    return query.all()
+
+
+def do_count(
+    db: "Session",
+    model,
+    ifk: bool | None = None,
+    model_type = None,
+    text: str = "",
+) -> int:
+    """Base count function.
+    'model' is the sqlalchemy model.
+    """
+    query = get_items_query(db, 100_000, model, 0, ifk, model_type, text)
+    return query.count()
+
+
+def get_image(
+    img_add_path: str,
+    model_str: str,
+    folder_path: "PathToFolder",
+) -> FileResponse:
+    """Base get image function.
+    Get the image of the 'endpoint' item with id 'id'.
+    """
+    path = os.path.join(folder_path, img_add_path)
+    if not os.path.exists(path):
+        raise ItemNotFoundException(f"{model_str} image", id)
+    return FileResponse(path)
 
 
 def get_icon(
-    endpoint: str,
+    endpoint: "Endpoint",
     id: int,
     plural_len: int = 1,
 ) -> FileResponse:
@@ -127,12 +133,19 @@ def get_icon(
     """
     assert isinstance(id, int), "ID must be an integer"
     assert id >= 0, "ID can't be negative"
-    path = os.path.join(ICONS_FOLDER, f"{endpoint}/{id}.png")
-    if not os.path.exists(path):
-        assert plural_len >= 0
-        model_str = endpoint[:-plural_len] if plural_len > 0 else endpoint
-        raise ItemNotFoundException(f"{model_str.capitalize()} image", id)
-    return FileResponse(path)
+    assert plural_len >= 0
+
+    img_add_path = f"{endpoint}/{id}.png"
+    model_str = endpoint[:-plural_len] if plural_len > 0 else endpoint
+    model_str = model_str.capitalize()
+
+    return get_image(img_add_path, model_str, ICONS_FOLDER)
+
+
+def get_match_img(filename: str) -> FileResponse:
+    """Base get match image function."""
+    assert "." not in filename[:-4]
+    return get_image(filename, "Match", absp(CROPPED_IMG_FD_RP))
 
 
 def get_id(
@@ -159,7 +172,7 @@ def update_one(
     model_str: str,
     id: int,
     new_id: int | None = None,
-):
+) -> Response:
     """Base update one (item) function."""
     _, select_query = filter_one(model, model_str, id, db)
 
