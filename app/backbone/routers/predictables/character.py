@@ -23,6 +23,7 @@ from backbone.endpoints import (
     NOT_WS_PATT,
     add_commit_refresh,
     dbd_version_str_to_id,
+    do_count,
     endp,
     filter_one,
     get_icon,
@@ -33,7 +34,6 @@ from backbone.endpoints import (
 from backbone.exceptions import ItemNotFoundException, ValidationException
 from backbone.models.predictables import Addon, Character, Item, Perk
 from backbone.options import ENDPOINTS as EP
-from backbone.sqla import filter_with_text
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -48,24 +48,7 @@ def count_characters(
     db: "Session" = Depends(get_db),
 ):
     """Count DBD characters."""
-    cols = []
-
-    if is_killer is not None:
-        cols.append(Character.is_killer)
-    if text != "":
-        cols.append(Character.name)
-
-    if not cols:
-        cols = [Character.id]
-
-    query = db.query(*cols)
-
-    if is_killer is not None:
-        query = query.filter(Character.is_killer == is_killer)
-    if text != "":
-        query = filter_with_text(query, Character, text)
-
-    return query.count()
+    return do_count(db, Character, is_killer, text=text)
 
 
 @router.get("", response_model=list[CharacterOut])
@@ -99,23 +82,19 @@ def get_full_character(id: int, db: "Session" = Depends(get_db)):
     if character is None:
         raise ItemNotFoundException("Character", id)
 
-    power = (
-        db.query(Item).filter(Item.character_id).first()
-        if character.is_killer.value
-        else None
-    )
-    perks = db.query(Perk).filter(Perk.character_id == id).limit(3).all()
-    addons = (
-        db.query(Addon).filter(Addon.character_id == id).all()
-        if character.is_killer.value
-        else None
-    )
-
     return {
         "character": character,
-        "power": power,
-        "perks": perks,
-        "addons": addons,
+        "power": (
+            db.query(Item).filter(Item.character_id).first()
+            if character.is_killer.value
+            else None
+        ),
+        "perks": db.query(Perk).filter(Perk.character_id == id).limit(3).all(),
+        "addons": (
+            db.query(Addon).filter(Addon.character_id == id).all()
+            if character.is_killer.value
+            else None
+        ),
     }
 
 
@@ -154,17 +133,13 @@ def create_character_full(character: FullCharacterCreate):
         "dbd_version_str": str(character.dbd_version),
         "base_char_id": None,
     }
-    character_only = requests.post(endp(EP.CHARACTER), json=payload)
-
-    character_only = parse_or_raise(character_only)
-
-    power = create_killer_power(character.power_name)
-    perks = create_perks(character_only, character.perk_names)
-    addons = create_addons(character_only, character.addon_names)
+    character_only = parse_or_raise(
+        requests.post(endp(EP.CHARACTER), json=payload)
+    )
 
     return {
         "character": character_only,
-        "power": power,
-        "perks": perks,
-        "addons": addons,
+        "power": create_killer_power(character.power_name),
+        "perks": create_perks(character_only, character.perk_names),
+        "addons": create_addons(character_only, character.addon_names),
     }

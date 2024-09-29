@@ -15,6 +15,7 @@ from backbone.endpoints import (
     get_icon,
     get_many,
     get_req,
+    poke,
 )
 from backbone.exceptions import ItemNotFoundException, ValidationException
 from backbone.models.predictables import Character, Status
@@ -43,6 +44,7 @@ def get_statuses(
 
 @router.get("/{id}", response_model=StatusOut)
 def get_status(id: int, db: "Session" = Depends(get_db)):
+    # TODO: Replace with base function
     status_ = (
         db.query(
             Status.id,
@@ -75,9 +77,7 @@ def create_status(status: StatusCreate, db: "Session" = Depends(get_db)):
     resp = requests.get(endp(f"{EP.CHARACTER}/{status.character_id}"))
     assert resp.status_code == 200
 
-    new_status = {
-        "id": requests.get(endp(f"{EP.STATUS}/count")).json()
-    } | status.model_dump()
+    new_status = {"id": poke(f"{EP.STATUS}/count")} | status.model_dump()
     new_status = Status(**new_status)
 
     add_commit_refresh(db, new_status)

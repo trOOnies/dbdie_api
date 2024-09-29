@@ -50,6 +50,13 @@ def parse_or_raise(resp, exp_status_code: int = status.HTTP_200_OK):
     return resp.json()
 
 
+def poke(endpoint: "Endpoint", **kwargs):
+    """Includes the boilerplate for a GET request."""
+    return parse_or_raise(
+        requests.get(endp(endpoint), **kwargs)
+    )
+
+
 # * Base endpoint functions
 
 
@@ -63,7 +70,7 @@ def filter_one(db: "Session", model, model_str: str, id: int):
     filter_query = db.query(model).filter(model.id == id)
     item = filter_query.first()
     if item is None:
-        raise ItemNotFoundException(model_str, id)
+        raise ItemNotFoundException(model_str, id)  # TODO: Get from model
     return item, filter_query
 
 
@@ -151,7 +158,7 @@ def get_match_img(filename: str) -> FileResponse:
 def get_id(
     db: "Session",
     model,
-    model_str: str,
+    model_str: str,  # TODO: Get from model
     name: str,
     name_col: str = "name",
 ) -> int:
@@ -169,7 +176,7 @@ def update_one(
     db: "Session",
     schema_create,
     model,
-    model_str: str,
+    model_str: str,  # TODO: Get from model
     id: int,
     new_id: int | None = None,
 ) -> Response:

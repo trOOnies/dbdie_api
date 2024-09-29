@@ -2,7 +2,6 @@
 
 from typing import TYPE_CHECKING
 
-import requests
 from dbdie_classes.schemas.predictables import OfferingCreate, OfferingOut
 from dbdie_classes.schemas.types import OfferingTypeOut
 from fastapi import APIRouter, Depends
@@ -12,13 +11,14 @@ from backbone.endpoints import (
     NOT_WS_PATT,
     add_commit_refresh,
     do_count,
-    endp,
+    filter_one,
     get_icon,
     get_many,
     get_req,
     get_types,
+    poke,
 )
-from backbone.exceptions import ItemNotFoundException, ValidationException
+from backbone.exceptions import ValidationException
 from backbone.models.predictables import Character, Offering, OfferingType
 from backbone.options import ENDPOINTS as EP
 
@@ -57,23 +57,7 @@ def get_offering_types(db: "Session" = Depends(get_db)):
 @router.get("/{id}", response_model=OfferingOut)
 def get_offering(id: int, db: "Session" = Depends(get_db)):
     """Get a DBD offering with a certain ID."""
-    offering = (
-        db.query(
-            Offering.id,
-            Offering.name,
-            Offering.type_id,
-            Offering.user_id,
-            Offering.dbd_version_id,
-            Offering.rarity_id,
-            Character.is_killer.label("is_for_killer"),
-        )
-        .join(Character)
-        .filter(Offering.id == id)
-        .first()
-    )
-    if offering is None:
-        raise ItemNotFoundException("Offering", id)
-    return offering
+    return filter_one(db, Offering, "Offering", id)[0]
 
 
 @router.get("/{id}/icon")
@@ -90,9 +74,7 @@ def create_offering(offering: OfferingCreate, db: "Session" = Depends(get_db)):
 
     # TODO: assert type_id and user_id exists
 
-    new_offering = {
-        "id": requests.get(endp(f"{EP.OFFERING}/count")).json()
-    } | offering.model_dump()
+    new_offering = {"id": poke(f"{EP.OFFERING}/count")} | offering.model_dump()
     new_offering = Offering(**new_offering)
 
     add_commit_refresh(db, new_offering)

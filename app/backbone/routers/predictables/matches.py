@@ -3,7 +3,6 @@
 from typing import TYPE_CHECKING
 
 import os
-import requests
 from datetime import datetime
 from dbdie_classes.schemas.groupings import (
     MatchCreate,
@@ -21,13 +20,12 @@ from backbone.database import get_db
 from backbone.endpoints import (
     NOT_WS_PATT,
     do_count,
-    endp,
     filter_one,
     get_id,
     get_many,
     get_match_img,
     get_req,
-    parse_or_raise,
+    poke,
 )
 from backbone.exceptions import ValidationException
 from backbone.models.groupings import Match
@@ -61,7 +59,7 @@ def get_match_id(filename: str, db: "Session" = Depends(get_db)):
 
 @router.get("/image/{id}")
 def get_match_image(id: int):
-    m = parse_or_raise(requests.get(endp(f"{EP.MATCHES}/{id}")))
+    m = poke(f"{EP.MATCHES}/{id}")
     return get_match_img(m["filename"])
 
 
@@ -71,12 +69,10 @@ def get_match(id: int, db: "Session" = Depends(get_db)):
     m = object_as_dict(m)
 
     dbdv_id = m["dbd_version_id"]
-    if dbdv_id is None:
-        m["dbd_version"] = None
-    else:
-        resp = requests.get(endp(f"{EP.DBD_VERSION}/{dbdv_id}"))
-        m["dbd_version"] = parse_or_raise(resp)
-
+    m["dbd_version"] = (
+        None if dbdv_id is None
+        else poke(f"{EP.DBD_VERSION}/{dbdv_id}")
+    )
     del m["dbd_version_id"]
 
     m = MatchOut(**m)
@@ -116,11 +112,9 @@ def upload_versioned_folder(v_folder: VersionedFolderUpload):
     fs, src_fd, dst_fd = get_versioned_fd_data(v_folder)
 
     # Assert DBD version already exists
-    parse_or_raise(
-        requests.get(
-            endp(f"{EP.DBD_VERSION}/id"),
-            params={"dbd_version_str": str(v_folder.dbd_version)},
-        )
+    poke(
+        f"{EP.DBD_VERSION}/id",
+        params={"dbd_version_str": str(v_folder.dbd_version)},
     )
 
     matches = upload_dbdv_matches(fs, src_fd, dst_fd, v_folder)
@@ -139,11 +133,9 @@ def update_match(id: int, match_create: MatchCreate, db: "Session" = Depends(get
     del new_info["dbd_version"]
     new_info["dbd_version_id"] = (
         None if match_create.dbd_version is None
-        else parse_or_raise(
-            requests.get(
-                endp(f"{EP.DBD_VERSION}/id"),
-                params={"dbd_version_str": str(match_create.dbd_version)},
-            )
+        else poke(
+            f"{EP.DBD_VERSION}/id",
+            params={"dbd_version_str": str(match_create.dbd_version)},
         )
     )
 

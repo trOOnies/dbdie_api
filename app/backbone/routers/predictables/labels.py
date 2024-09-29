@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 
 from datetime import datetime
 import pandas as pd
-import requests
 from dbdie_classes.base import FullModelType
 from dbdie_classes.code.groupings import (
     labels_model_to_checks,
@@ -34,11 +33,7 @@ from backbone.code.labels import (
     process_joined_df,
 )
 from backbone.database import get_db
-from backbone.endpoints import (
-    add_commit_refresh,
-    endp,
-    parse_or_raise,
-)
+from backbone.endpoints import add_commit_refresh, poke
 from backbone.models.groupings import Labels
 from backbone.options import ENDPOINTS as EP
 
@@ -137,14 +132,13 @@ def create_labels(
 
     add_commit_refresh(db, new_labels)
 
-    resp = requests.get(
-        endp(f"{EP.LABELS}/filter"),
+    return poke(
+        f"{EP.LABELS}/filter",
         params={
             "match_id": new_labels.match_id,
             "player_id": new_labels.player_id,
         },
     )
-    return parse_or_raise(resp)
 
 
 @router.post("/batch", status_code=status.HTTP_201_CREATED)

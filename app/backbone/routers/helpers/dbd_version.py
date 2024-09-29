@@ -1,6 +1,5 @@
 """Router code for DBD version"""
 
-import requests
 from typing import TYPE_CHECKING
 from dbdie_classes.schemas.helpers import DBDVersionCreate, DBDVersionOut
 from fastapi import APIRouter, Depends, Response, status
@@ -9,11 +8,11 @@ from backbone.database import get_db
 from backbone.endpoints import (
     add_commit_refresh,
     do_count,
-    endp,
     filter_one,
     get_id,
     get_many,
     get_req,
+    poke,
     NOT_WS_PATT,
 )
 from backbone.exceptions import ValidationException
@@ -56,7 +55,7 @@ def create_dbd_version(dbdv: DBDVersionCreate, db: "Session" = Depends(get_db)):
     if NOT_WS_PATT.search(dbdv.name) is None:
         raise ValidationException("DBD version name can't be empty")
 
-    new_dbdv = {"id": requests.get(endp(f"{EP.DBD_VERSION}/count")).json()} | dbdv.model_dump()
+    new_dbdv = {"id": poke(f"{EP.DBD_VERSION}/count")} | dbdv.model_dump()
     new_dbdv = DBDVersion(**new_dbdv)
 
     add_commit_refresh(db, new_dbdv)

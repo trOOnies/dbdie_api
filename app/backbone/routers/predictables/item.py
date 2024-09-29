@@ -1,6 +1,5 @@
 """Router code for DBD game item."""
 
-import requests
 from typing import TYPE_CHECKING
 from dbdie_classes.schemas.predictables import ItemCreate, ItemOut
 from dbdie_classes.schemas.types import ItemTypeOut
@@ -11,12 +10,12 @@ from backbone.endpoints import (
     NOT_WS_PATT,
     add_commit_refresh,
     do_count,
-    endp,
     filter_one,
     get_icon,
     get_many,
     get_req,
     get_types,
+    poke,
 )
 from backbone.exceptions import ValidationException
 from backbone.models.predictables import Item, ItemType
@@ -69,7 +68,7 @@ def create_item(item: ItemCreate, db: "Session" = Depends(get_db)):
 
     # TODO: assert type_id exists
 
-    new_item = {"id": requests.get(endp(f"{EP.ITEM}/count")).json()} | item.model_dump()
+    new_item = {"id": poke(f"{EP.ITEM}/count")} | item.model_dump()
     new_item = Item(**new_item)
 
     add_commit_refresh(db, new_item)

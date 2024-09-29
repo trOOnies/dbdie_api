@@ -1,6 +1,5 @@
 """Router code for DBD addons."""
 
-import requests
 from typing import TYPE_CHECKING
 from dbdie_classes.schemas.predictables import AddonCreate, AddonOut
 from dbdie_classes.schemas.types import AddonTypeOut
@@ -12,12 +11,12 @@ from backbone.endpoints import (
     add_commit_refresh,
     dbd_version_str_to_id,
     do_count,
-    endp,
     filter_one,
     get_icon,
     get_many,
     get_req,
     get_types,
+    poke,
 )
 from backbone.exceptions import ValidationException
 from backbone.models.predictables import Addon, AddonType
@@ -71,8 +70,7 @@ def create_addon(addon: AddonCreate, db: "Session" = Depends(get_db)):
     get_req(EP.CHARACTER, addon.user_id)
     # TODO: assert type_id exists
 
-    new_addon = addon.model_dump()
-    new_addon = {"id": requests.get(endp(f"{EP.ADDONS}/count")).json()} | new_addon
+    new_addon = {"id": poke(f"{EP.ADDONS}/count")} | addon.model_dump()
     new_addon["dbd_version_id"] = (
         dbd_version_str_to_id(new_addon["dbd_version_str"])
         if new_addon["dbd_version_str"] is not None

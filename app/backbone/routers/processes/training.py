@@ -7,7 +7,7 @@ from dbdie_classes.options import PLAYER_TYPE as PT
 from fastapi import APIRouter, status
 import requests
 
-from backbone.endpoints import endp, parse_or_raise
+from backbone.endpoints import endp, parse_or_raise, poke
 from backbone.options import ENDPOINTS as EP
 from backbone.options import ML_ENDPOINTS as MLEP
 
@@ -23,18 +23,14 @@ def batch_train(
     extractor_exists = extr_id is not None
     extr_id_ = (
         extr_id if extractor_exists
-        else parse_or_raise(
-            requests.get(f"{EP.EXTRACTOR}/count")
-        )
+        else poke(f"{EP.EXTRACTOR}/count")
     )
 
     if extractor_exists:
         assert fmts is None, "You can't choose fmts when retraining"
 
     if extractor_exists:
-        extr_info = parse_or_raise(
-            requests.get(f"{EP.EXTRACTOR}/{extr_id_}")
-        )
+        extr_info = poke(f"{EP.EXTRACTOR}/{extr_id_}")
         fmts_ = ...
     else:
         fmts_ = deepcopy(fmts) if fmts is not None else [
@@ -51,13 +47,11 @@ def batch_train(
     mts, pts = PT.extract_mts_and_pts(fmts_)
 
     fmts_with_counts = {
-        fmt: parse_or_raise(
-            requests.get(
-                endp(f"{EP.MT_TO_ENDPOINT[mt]}/count"),
-                params={
-                    ("is_killer" if mt == MT.CHARACTER else "is_for_killer"): PT.pt_to_ifk(pt)
-                },
-            )
+        fmt: poke(
+            f"{EP.MT_TO_ENDPOINT[mt]}/count",
+            params={
+                ("is_killer" if mt == MT.CHARACTER else "is_for_killer"): PT.pt_to_ifk(pt)
+            },
         )
         for fmt, mt, pt in zip(fmts_, mts, pts)
     }
