@@ -6,6 +6,7 @@ from fastapi import FastAPI
 
 from backbone.options import ENDPOINTS as EP
 from backbone.routers.helpers import dbd_version
+from backbone.routers.objects import extractor, full_model_types, model
 from backbone.routers.predictables import (
     addons,
     labels,
@@ -16,6 +17,7 @@ from backbone.routers.predictables import (
 )
 from backbone.routers.processes import backup, cropping, extraction, training
 from backbone.routers.tags import HELPERS as HELP
+from backbone.routers.tags import OBJECTS as OBJ
 from backbone.routers.tags import PREDICTABLES as PRED
 from backbone.routers.tags import PROCESSES as PROC
 
@@ -24,6 +26,12 @@ app = FastAPI(
     summary="DBD Information Extraction API",
     description="Process your 💀 Dead By Daylight 💀 matches' endcards.",
 )
+
+# TODO
+if True:
+    app.include_router(extractor.router,        prefix=EP.EXTRACTOR, tags=[OBJ])
+    app.include_router(full_model_types.router, prefix=EP.FMT,       tags=[OBJ])
+    app.include_router(model.router,            prefix=EP.MODELS,    tags=[OBJ])
 
 # TODO
 if True:

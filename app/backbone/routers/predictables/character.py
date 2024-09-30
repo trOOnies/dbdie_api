@@ -65,7 +65,7 @@ def get_characters(
 @router.get("/{id}", response_model=CharacterOut)
 def get_character(id: int, db: "Session" = Depends(get_db)):
     """Get a DBD character with an ID."""
-    return filter_one(db, Character, "Character", id)[0]
+    return filter_one(db, Character, id)[0]
 
 
 @router.get("/{id}/icon")

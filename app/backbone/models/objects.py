@@ -51,7 +51,7 @@ class FullModelType(Base):
     id            = C(SmallInt, nullable=False, primary_key=True)
     name          = C(Str, nullable=False)
     model_type    = C(Str, nullable=False)
-    is_for_killer = C(Bool, nullable=False)
+    is_for_killer = C(Bool, nullable=True)
 
 
 class Model(Base):
@@ -82,7 +82,7 @@ class Model(Base):
         nullable=False,
         server_default=text("now()"),
     )
-    date_last_retrained = C(Date, nullable=False)
+    date_last_trained = C(Date, nullable=False)
 
 
 class Extractor(Base):
@@ -103,22 +103,33 @@ class Extractor(Base):
     dbdv_max         = rel("DBDVersion", foreign_keys=[dbdv_max_id])
     cropper_swarm    = rel("CropperSwarm")
 
-    mid_addons      = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
-    mid_character   = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
-    mid_item        = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
-    mid_offering    = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
-    mid_perks       = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
-    mid_points      = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
-    mid_prestige    = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
-    mid_status      = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
-    addons_model    = rel("Model", foreign_keys=[mid_addons])
-    character_model = rel("Model", foreign_keys=[mid_character])
-    item_model      = rel("Model", foreign_keys=[mid_item])
-    offering_model  = rel("Model", foreign_keys=[mid_offering])
-    perks_model     = rel("Model", foreign_keys=[mid_perks])
-    points_model    = rel("Model", foreign_keys=[mid_points])
-    prestige_model  = rel("Model", foreign_keys=[mid_prestige])
-    status_model    = rel("Model", foreign_keys=[mid_status])
+    mid_0  = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
+    mid_1  = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
+    mid_2  = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
+    mid_3  = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
+    mid_4  = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
+    mid_5  = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
+    mid_6  = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
+    mid_7  = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
+    mid_8  = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
+    mid_9  = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
+    mid_10 = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
+    mid_11 = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
+    mid_12 = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
+
+    model_0  = rel("Model", foreign_keys=[mid_0])
+    model_1  = rel("Model", foreign_keys=[mid_1])
+    model_2  = rel("Model", foreign_keys=[mid_2])
+    model_3  = rel("Model", foreign_keys=[mid_3])
+    model_4  = rel("Model", foreign_keys=[mid_4])
+    model_5  = rel("Model", foreign_keys=[mid_5])
+    model_6  = rel("Model", foreign_keys=[mid_6])
+    model_7  = rel("Model", foreign_keys=[mid_7])
+    model_8  = rel("Model", foreign_keys=[mid_8])
+    model_9  = rel("Model", foreign_keys=[mid_9])
+    model_10 = rel("Model", foreign_keys=[mid_10])
+    model_11 = rel("Model", foreign_keys=[mid_11])
+    model_12 = rel("Model", foreign_keys=[mid_12])
 
     date_created = C(
         TIMESTAMP(timezone=True),
@@ -130,4 +141,4 @@ class Extractor(Base):
         nullable=False,
         server_default=text("now()"),
     )
-    date_last_retrained = C(Date, nullable=False)
+    date_last_trained = C(Date, nullable=False)

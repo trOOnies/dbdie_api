@@ -38,4 +38,4 @@ def get_items(
 
 @router.get("/{id}", response_model=RarityOut)
 def get_item(id: int, db: "Session" = Depends(get_db)):
-    return filter_one(db, Rarity, "Rarity", id)[0]
+    return filter_one(db, Rarity, id)[0]

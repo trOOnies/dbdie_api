@@ -1,13 +1,13 @@
 """Endpoint for training related processes."""
 
-from copy import deepcopy
+import datetime as dt
 from dbdie_classes.base import FullModelType
-from dbdie_classes.options import MODEL_TYPE as MT
-from dbdie_classes.options import PLAYER_TYPE as PT
+from dbdie_classes.options.FMT import from_fmts
 from fastapi import APIRouter, status
 import requests
 
-from backbone.endpoints import endp, parse_or_raise, poke
+from backbone.code.training import get_extr_id, get_fmts_with_counts, get_objects_info
+from backbone.endpoints import endp, mlendp, parse_or_raise
 from backbone.options import ENDPOINTS as EP
 from backbone.options import ML_ENDPOINTS as MLEP
 
@@ -16,70 +16,67 @@ router = APIRouter()
 
 @router.post("/batch", status_code=status.HTTP_201_CREATED)
 def batch_train(
+    name: str | None = None,
     fmts: list[FullModelType] | None = None,
     extr_id: int | None = None,
 ):
     """IMPORTANT. If doing partial training, please use 'fmts'."""
     extractor_exists = extr_id is not None
-    extr_id_ = (
-        extr_id if extractor_exists
-        else poke(f"{EP.EXTRACTOR}/count")
-    )
-
     if extractor_exists:
-        assert fmts is None, "You can't choose fmts when retraining"
+        assert name is None, "No name is needed if the extractor already exists."
 
-    if extractor_exists:
-        extr_info = poke(f"{EP.EXTRACTOR}/{extr_id_}")
-        fmts_ = ...
-    else:
-        fmts_ = deepcopy(fmts) if fmts is not None else [
-            f"{MT.CHARACTER}__{PT.KILLER}",
-            f"{MT.CHARACTER}__{PT.SURV}",
-            f"{MT.ITEM}__{PT.KILLER}",
-            f"{MT.ITEM}__{PT.SURV}",
-            f"{MT.PERKS}__{PT.KILLER}",
-            f"{MT.PERKS}__{PT.SURV}",
-            f"{MT.STATUS}__{PT.SURV}",
-        ]
+    extr_id_ = get_extr_id(extr_id, extractor_exists)
 
-    extr_name = extr_info["name"] if extractor_exists else "random-name"  # TODO
-    mts, pts = PT.extract_mts_and_pts(fmts_)
+    extr_info, models_info, fmts_ = get_objects_info(extr_id_, name, extractor_exists, fmts)
+    mts, pts, _ = from_fmts(fmts_)
 
-    fmts_with_counts = {
-        fmt: poke(
-            f"{EP.MT_TO_ENDPOINT[mt]}/count",
-            params={
-                ("is_killer" if mt == MT.CHARACTER else "is_for_killer"): PT.pt_to_ifk(pt)
-            },
-        )
-        for fmt, mt, pt in zip(fmts_, mts, pts)
-    }
+    fmts_with_counts = get_fmts_with_counts(fmts_, mts, pts)
 
+    # Train extractor
     parse_or_raise(
         requests.post(
-            f"{MLEP.TRAIN}/batch",
-            json={
-                "extr_name": extr_name,
-                "fmts_with_counts": fmts_with_counts,
-            },
+            mlendp(f"{MLEP.TRAIN}/batch"),
+            params={"extr_name": extr_info["name"]},
+            json=fmts_with_counts,
         ),
         exp_status_code=status.HTTP_201_CREATED,
     )
 
-    # TODO: Update extractor and models last train date
+    today = dt.date.today().strftime("%Y-%m-%d")
+    extr_info["date_last_trained"] = today
+    for fmt in models_info:
+        models_info[fmt]["date_last_trained"] = today
+
+    # Update models
+    if extractor_exists:
+        for mid, mjson in zip(extr_info["models_ids"].values(), models_info.values()):
+            parse_or_raise(
+                requests.put(
+                    endp(f"{EP.MODELS}/{mid}"),
+                    json=mjson,
+                ),
+            )
+    else:
+        for mid, mjson in zip(extr_info["models_ids"].values(), models_info.values()):
+            parse_or_raise(
+                requests.post(
+                    endp(f"{EP.MODELS}/{mid}"),
+                    json=mjson,
+                ),
+            )
+
+    # Update extractor
     if extractor_exists:
         parse_or_raise(
-            requests.post(
-                f"{EP.MODEL}/{extr_id_}",
-                json={...},
+            requests.put(
+                endp(f"{EP.EXTRACTOR}/{extr_id_}"),
+                json=extr_info,
             ),
-            exp_status_code=status.HTTP_201_CREATED,
         )
     else:
         parse_or_raise(
-            requests.put(
-                f"{EP.MODEL}/{extr_id_}",
-                json={...},
+            requests.post(
+                endp(f"{EP.EXTRACTOR}/{extr_id_}"),
+                json=extr_info,
             ),
         )

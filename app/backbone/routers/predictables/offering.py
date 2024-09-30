@@ -57,7 +57,7 @@ def get_offering_types(db: "Session" = Depends(get_db)):
 @router.get("/{id}", response_model=OfferingOut)
 def get_offering(id: int, db: "Session" = Depends(get_db)):
     """Get a DBD offering with a certain ID."""
-    return filter_one(db, Offering, "Offering", id)[0]
+    return filter_one(db, Offering, id)[0]
 
 
 @router.get("/{id}/icon")

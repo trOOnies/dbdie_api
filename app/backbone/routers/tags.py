@@ -3,3 +3,4 @@
 HELPERS      = "helpers"
 PREDICTABLES = "predictables"
 PROCESSES    = "processes"
+OBJECTS      = "objects"

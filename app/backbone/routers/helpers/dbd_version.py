@@ -46,7 +46,7 @@ def get_dbd_version_id(dbd_version_str: str, db: "Session" = Depends(get_db)):
 @router.get("/{id}", response_model=DBDVersionOut)
 def get_dbd_version(id: int, db: "Session" = Depends(get_db)):
     """Get a certain DBD version with its id."""
-    return filter_one(db, DBDVersion, "DBD version", id)[0]
+    return filter_one(db, DBDVersion, id, "DBD version")[0]
 
 
 @router.post("", response_model=DBDVersionOut)
@@ -70,7 +70,7 @@ def update_dbd_version(
     db: "Session" = Depends(get_db),
 ):
     """Update a DBD version."""
-    _, dbdv_query = filter_one(db, DBDVersion, "DBD version", id)
+    _, dbdv_query = filter_one(db, DBDVersion, id, "DBD version")
 
     new_info = {"id": id} | dbdv.model_dump()
     dbdv_query.update(new_info, synchronize_session=False)

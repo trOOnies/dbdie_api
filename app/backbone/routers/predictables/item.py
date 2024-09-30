@@ -53,7 +53,7 @@ def get_item_types(db: "Session" = Depends(get_db)):
 
 @router.get("/{id}", response_model=ItemOut)
 def get_item(id: int, db: "Session" = Depends(get_db)):
-    return filter_one(db, Item, "Item", id)[0]
+    return filter_one(db, Item, id)[0]
 
 
 @router.get("/{id}/icon")

@@ -65,7 +65,7 @@ def get_match_image(id: int):
 
 @router.get("/{id}", response_model=MatchOut)
 def get_match(id: int, db: "Session" = Depends(get_db)):
-    m = filter_one(db, Match, "Match", id)[0]
+    m = filter_one(db, Match, id, "Match")[0]
     m = object_as_dict(m)
 
     dbdv_id = m["dbd_version_id"]
@@ -126,7 +126,7 @@ def upload_versioned_folder(v_folder: VersionedFolderUpload):
 @router.put("/{id}", status_code=status.HTTP_200_OK)
 def update_match(id: int, match_create: MatchCreate, db: "Session" = Depends(get_db)):
     """Update the information of a DBD match."""
-    _, select_query = filter_one(db, Match, "Match", id)
+    _, select_query = filter_one(db, Match, id, "Match")
 
     new_info = {"id": id} | match_create.model_dump()
 

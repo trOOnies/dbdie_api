@@ -31,6 +31,11 @@ def endp(endpoint: "Endpoint") -> "FullEndpoint":
     return ST.fastapi_host + endpoint
 
 
+def mlendp(endpoint: "Endpoint") -> "FullEndpoint":
+    """Get full URL of the ML endpoint."""
+    return ST.ml_host + endpoint
+
+
 def get_req(endpoint: "Endpoint", id: int) -> dict:
     """Request wrapper for a GET request for a type 'endpoint' with an id 'id'."""
     assert ENDPOINT_PATT.match(endpoint)
@@ -60,7 +65,7 @@ def poke(endpoint: "Endpoint", **kwargs):
 # * Base endpoint functions
 
 
-def filter_one(db: "Session", model, model_str: str, id: int):
+def filter_one(db: "Session", model, id: int, model_str: str | None = None):
     """Base get one (item) function.
 
     'model' is the sqlalchemy model, and model_str
@@ -70,7 +75,10 @@ def filter_one(db: "Session", model, model_str: str, id: int):
     filter_query = db.query(model).filter(model.id == id)
     item = filter_query.first()
     if item is None:
-        raise ItemNotFoundException(model_str, id)  # TODO: Get from model
+        raise ItemNotFoundException(
+            (model_str if model_str is not None else model.__tablename__.capitalize()),
+            id,
+        )
     return item, filter_query
 
 

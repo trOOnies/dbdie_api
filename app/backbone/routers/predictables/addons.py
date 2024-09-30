@@ -54,7 +54,7 @@ def get_addons_types(db: "Session" = Depends(get_db)):
 
 @router.get("/{id}", response_model=AddonOut)
 def get_addon(id: int, db: "Session" = Depends(get_db)):
-    return filter_one(db, Addon, "Addon", id)[0]
+    return filter_one(db, Addon, id, "Addon")[0]
 
 
 @router.get("/{id}/icon")

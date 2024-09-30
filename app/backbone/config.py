@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     db_name: str
     db_username: str
     db_password: str
+    ml_host: str
     check_rps: str
 
     class Config:
