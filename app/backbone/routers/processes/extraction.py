@@ -1,6 +1,6 @@
 """Endpoint for extraction related processes."""
 
-from dbdie_classes.base import FullModelType, PathToFolder
+from dbdie_classes.base import PathToFolder
 from dbdie_classes.options import MODEL_TYPE as MT
 from fastapi import APIRouter, status
 import requests
@@ -15,7 +15,7 @@ router = APIRouter()
 @router.post("/batch", status_code=status.HTTP_201_CREATED)
 def batch_extract(
     ie_folder_path: PathToFolder,
-    fmts: list[FullModelType] | None = None,
+    # fmts: list[FullModelType] | None = None,  # TODO
 ):
     """IMPORTANT. If doing partial uploads, please use 'fmts'."""
     resp = parse_or_raise(
@@ -23,9 +23,10 @@ def batch_extract(
             f"{MLEP.EXTRACT}/batch",
             json={
                 "ie_folder_path": ie_folder_path,
-                "fmts": fmts,
+                # "fmts": fmts,
             },
-        )
+        ),
+        exp_status_code=status.HTTP_201_CREATED,
     )
 
     preds_dict = resp["preds_dict"]
