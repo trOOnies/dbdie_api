@@ -62,7 +62,7 @@ def create_extractor(
     extractor: ExtractorCreate,
     db: "Session" = Depends(get_db),
 ):
-    """Create a DBD character."""
+    """Register an InfoExtractor."""
     if NOT_WS_PATT.search(extractor.name) is None:
         raise ValidationException("Extractor name can't be empty.")
 

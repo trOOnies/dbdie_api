@@ -6,7 +6,7 @@ from fastapi import FastAPI
 
 from backbone.options import ENDPOINTS as EP
 from backbone.routers.helpers import dbd_version
-from backbone.routers.objects import extractor, full_model_types, model
+from backbone.routers.objects import cropper_swarm, extractor, full_model_types, model
 from backbone.routers.predictables import (
     addons,
     labels,
@@ -29,9 +29,10 @@ app = FastAPI(
 
 # TODO
 if True:
-    app.include_router(extractor.router,        prefix=EP.EXTRACTOR, tags=[OBJ])
-    app.include_router(full_model_types.router, prefix=EP.FMT,       tags=[OBJ])
-    app.include_router(model.router,            prefix=EP.MODELS,    tags=[OBJ])
+    app.include_router(cropper_swarm.router,    prefix=EP.CROPPER_SWARM, tags=[OBJ])
+    app.include_router(extractor.router,        prefix=EP.EXTRACTOR,     tags=[OBJ])
+    app.include_router(full_model_types.router, prefix=EP.FMT,           tags=[OBJ])
+    app.include_router(model.router,            prefix=EP.MODELS,        tags=[OBJ])
 
 # TODO
 if True:

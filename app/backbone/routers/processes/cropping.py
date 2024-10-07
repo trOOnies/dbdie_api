@@ -26,7 +26,6 @@ def batch_crop(
     - use_croppers: Filter cropping using Cropper names (level=Cropper).
     - use_fmt: Filter cropping using FullModelTypes names (level=crop type).
     """
-    # TODO: Go first to the DB to assert it's already registered
     return parse_or_raise(
         requests.post(
             mlendp(f"{MLEP.CROP}/batch"),

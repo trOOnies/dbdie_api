@@ -23,9 +23,10 @@ PLAYERS     : "Endpoint" = "/players"
 LABELS      : "Endpoint" = "/labels"
 
 # DBDIE objects
-EXTRACTOR   : "Endpoint" = "/extractor"
-MODELS      : "Endpoint" = "/models"
-FMT         : "Endpoint" = "/fmt"
+CROPPER_SWARM : "Endpoint" = "/cropper-swarm"
+EXTRACTOR     : "Endpoint" = "/extractor"
+MODELS        : "Endpoint" = "/models"
+FMT           : "Endpoint" = "/fmt"
 
 # Processes
 CROP        : "Endpoint" = "/crop"
