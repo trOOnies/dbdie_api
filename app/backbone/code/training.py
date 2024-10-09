@@ -41,6 +41,7 @@ def gei_not_existing(
     extr_id: int,
     extr_name: str,
     fmts: list["FullModelType"] | None,
+    cps_id: int,
 ):
     fmts_ = deepcopy(fmts) if fmts is not None else [
         KILLER_FMT.CHARACTER,
@@ -68,7 +69,7 @@ def gei_not_existing(
         "dbdv_min_id": 1,  # TODO
         "dbdv_max_id": None,  # TODO
         "special_mode": None,  # TODO
-        "cropper_swarm_id": 1,  # TODO
+        "cropper_swarm_id": cps_id,
         "models_ids": {
             f"mid_{fmts_ref[fmt]}": mid
             for fmt, mid in zip(fmts_, models_ids)
@@ -81,7 +82,7 @@ def gei_not_existing(
             "name": f"{extr_name}-m{i}",  # TODO: add optional randomized
             "user_id": 1,  # TODO
             "fmt_id": fmts_ref[fmt],
-            "cropper_swarm_id": 1,  # TODO
+            "cropper_swarm_id": cps_id,
             "dbdv_min_id": 1,  # TODO
             "dbdv_max_id": None,  # TODO
             "special_mode": None,  # TODO
@@ -98,6 +99,7 @@ def get_objects_info(
     extr_name: str | None,
     extr_exists: bool,
     fmts: list["FullModelType"] | None,
+    cps_id: int | None,
 ) -> tuple[dict, dict["FullModelType", dict], list["FullModelType"]]:
     if extr_exists:
         assert fmts is None, "You can't choose fmts when retraining."
@@ -106,7 +108,7 @@ def get_objects_info(
         extr_name_ = (
             deepcopy(extr_name) if extr_name is not None else "test-2"
         )  # TODO: add optional randomized
-        return gei_not_existing(extr_id, extr_name_, fmts)
+        return gei_not_existing(extr_id, extr_name_, fmts, cps_id)
 
 
 def get_fmts_with_counts(
@@ -128,6 +130,7 @@ def get_fmts_with_counts(
 def train_extractor(
     extr_id: int,
     extr_name: str,
+    cps_name: str,
     models_ids: dict["FullModelType", int],
     fmts_with_counts: dict["FullModelType", int],
 ) -> None:
@@ -137,13 +140,18 @@ def train_extractor(
             json={
                 "id": extr_id,
                 "name": extr_name,
-                "full_model_types": {
+                "cps_name": cps_name,
+                "fmts": {
                     fmt: {
                         "model_id": models_ids[fmt],
+                        "fmt": fmt,
                         "total_classes": total_classes,
+                        "cps_name": cps_name,
+                        "trained_model": None,  # TODO: Probably separate TrainModel from a train API schema
                     }
                     for fmt, total_classes in fmts_with_counts.items()
                 },
+                "custom_dbdvr": None,  # TODO
             },
         ),
         exp_status_code=201,  # Created

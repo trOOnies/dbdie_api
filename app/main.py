@@ -74,3 +74,7 @@ if True:
 @app.get("/health", summary="Health check")
 def health():
     return {"status": "OK"}
+
+
+with open("app/ascii_art.txt") as f:
+    print(f.read())
