@@ -12,7 +12,7 @@ from backbone.endpoints import (
     get_id,
     get_many,
     get_req,
-    poke,
+    getr,
     NOT_WS_PATT,
 )
 from backbone.exceptions import ValidationException
@@ -55,7 +55,7 @@ def create_dbd_version(dbdv: DBDVersionCreate, db: "Session" = Depends(get_db)):
     if NOT_WS_PATT.search(dbdv.name) is None:
         raise ValidationException("DBD version name can't be empty")
 
-    new_dbdv = {"id": poke(f"{EP.DBD_VERSION}/count")} | dbdv.model_dump()
+    new_dbdv = {"id": getr(f"{EP.DBD_VERSION}/count")} | dbdv.model_dump()
     new_dbdv = DBDVersion(**new_dbdv)
 
     add_commit_refresh(db, new_dbdv)

@@ -33,7 +33,7 @@ from backbone.code.labels import (
     process_joined_df,
 )
 from backbone.database import get_db
-from backbone.endpoints import add_commit_refresh, poke
+from backbone.endpoints import add_commit_refresh, getr
 from backbone.models.groupings import Labels
 from backbone.options import ENDPOINTS as EP
 
@@ -132,7 +132,7 @@ def create_labels(
 
     add_commit_refresh(db, new_labels)
 
-    return poke(
+    return getr(
         f"{EP.LABELS}/filter",
         params={
             "match_id": new_labels.match_id,

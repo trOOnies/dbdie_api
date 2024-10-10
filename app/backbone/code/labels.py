@@ -6,7 +6,7 @@ from dbdie_classes.schemas.groupings import ManualChecksIn
 import pandas as pd
 import requests
 
-from backbone.endpoints import endp
+from backbone.endpoints import endp, postr
 from backbone.models.groupings import Labels
 from backbone.options import ENDPOINTS as EP
 from backbone.sqla import fill_cols_custom, soft_bool_filter
@@ -183,8 +183,8 @@ def post_labels(joined_df: pd.DataFrame) -> None:
         }
     )
     for _, row in joined_df.iterrows():
-        requests.post(
-            endp(EP.LABELS),
+        postr(
+            EP.LABELS,
             json={
                 "match_id": int(row["match_id"]),
                 "player": {

@@ -5,35 +5,37 @@ import datetime as dt
 from dbdie_classes.options import KILLER_FMT
 from dbdie_classes.options import SURV_FMT
 from dbdie_classes.options.MODEL_TYPE import CHARACTER
-from dbdie_classes.options.PLAYER_TYPE import pt_to_ifk
+from dbdie_classes.schemas.objects import ExtractorOut
 import requests
 from typing import TYPE_CHECKING
 
-from backbone.endpoints import endp, mlendp, parse_or_raise, poke
+from backbone.endpoints import mlendp, parse_or_raise, getr, postr, putr
 from backbone.options import ENDPOINTS as EP
 from backbone.options import ML_ENDPOINTS as MLEP
 
 if TYPE_CHECKING:
-    from dbdie_classes.base import FullModelType, ModelType, PlayerType
+    from dbdie_classes.base import FullModelType
+    from dbdie_classes.groupings import PredictableTuples
 
 
 def get_extr_id(
     extr_id: int | None,
     extr_exists: bool,
 ) -> tuple[int]:
-    return extr_id if extr_exists else (poke(f"{EP.EXTRACTOR}/count") + 1)
+    return extr_id if extr_exists else (getr(f"{EP.EXTRACTOR}/count") + 1)
 
 
 def gei_existing(extr_id: str):
-    extr_info = poke(f"{EP.EXTRACTOR}/{extr_id}")
+    """Get Extractor info that does already exist."""
+    extr_info = getr(f"{EP.EXTRACTOR}/{extr_id}")
 
+    raise NotImplementedError
     fmts_ = ...  # TODO
     models_info = {
-        fmt: poke(f"{EP.MODELS}/{mid}")
+        fmt: getr(f"{EP.MODELS}/{mid}")
         for fmt, mid in extr_info["models_ids"].items()
     }
 
-    raise NotImplementedError
     return extr_info, models_info, fmts_
 
 
@@ -43,6 +45,7 @@ def gei_not_existing(
     fmts: list["FullModelType"] | None,
     cps_id: int,
 ):
+    """Get Extractor info that does not exist yet."""
     fmts_ = deepcopy(fmts) if fmts is not None else [
         KILLER_FMT.CHARACTER,
         SURV_FMT.CHARACTER,
@@ -53,11 +56,11 @@ def gei_not_existing(
         SURV_FMT.STATUS,
     ]
 
-    model_count = poke(f"{EP.MODELS}/count")
+    model_count = getr(f"{EP.MODELS}/count")
 
     fmts_ref = [
         {"id": fmt["id"], "name": fmt["name"]}
-        for fmt in poke(EP.FMT, params={"limit": 300})
+        for fmt in getr(EP.FMT, params={"limit": 300})
     ]
     fmts_ref = {fmt["name"]: fmt["id"] for fmt in fmts_ref}
     models_ids = [model_count + i for i in range(len(fmts_))]
@@ -111,19 +114,15 @@ def get_objects_info(
         return gei_not_existing(extr_id, extr_name_, fmts, cps_id)
 
 
-def get_fmts_with_counts(
-    fmts: list["FullModelType"],
-    mts: list["ModelType"],
-    pts: list["PlayerType"],
-) -> dict["FullModelType", int]:
+def get_fmts_with_counts(ptups: "PredictableTuples") -> dict["FullModelType", int]:
     return {
-        fmt: poke(
-            f"{EP.MT_TO_ENDPOINT[mt]}/count",
+        ptup.fmt: getr(
+            f"{EP.MT_TO_ENDPOINT[ptup.mt]}/count",
             params={
-                ("is_killer" if mt == CHARACTER else "is_for_killer"): pt_to_ifk(pt)
+                ("is_killer" if ptup.mt == CHARACTER else "is_for_killer"): ptup.ifk
             },
         )
-        for fmt, mt, pt in zip(fmts, mts, pts)
+        for ptup in ptups
     }
 
 
@@ -133,8 +132,8 @@ def train_extractor(
     cps_name: str,
     models_ids: dict["FullModelType", int],
     fmts_with_counts: dict["FullModelType", int],
-) -> None:
-    parse_or_raise(
+) -> ExtractorOut:
+    return parse_or_raise(
         requests.post(
             mlendp(f"{MLEP.TRAIN}/batch"),
             json={
@@ -173,20 +172,10 @@ def update_models(
 ) -> None:
     if extr_exists:
         for mid, mjson in zip(models_ids.values(), models_info.values()):
-            parse_or_raise(
-                requests.put(
-                    endp(f"{EP.MODELS}/{mid}"),
-                    json=mjson,
-                ),
-            )
+            putr(f"{EP.MODELS}/{mid}", json=mjson)
     else:
         for mid, mjson in zip(models_ids.values(), models_info.values()):
-            parse_or_raise(
-                requests.post(
-                    endp(f"{EP.MODELS}/{mid}"),
-                    json=mjson,
-                ),
-            )
+            postr(f"{EP.MODELS}/{mid}", json=mjson)
 
 
 def update_extractor(
@@ -195,16 +184,6 @@ def update_extractor(
     extr_id: int,
 ) -> None:
     if extr_exists:
-        parse_or_raise(
-            requests.put(
-                endp(f"{EP.EXTRACTOR}/{extr_id}"),
-                json=extr_info,
-            ),
-        )
+        putr(f"{EP.EXTRACTOR}/{extr_id}", json=extr_info)
     else:
-        parse_or_raise(
-            requests.post(
-                endp(f"{EP.EXTRACTOR}/{extr_id}"),
-                json=extr_info,
-            ),
-        )
+        postr(f"{EP.EXTRACTOR}/{extr_id}", json=extr_info)

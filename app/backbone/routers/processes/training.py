@@ -1,9 +1,8 @@
 """Endpoint for training related processes."""
 
 from dbdie_classes.base import FullModelType
-from dbdie_classes.options.FMT import from_fmts
+from dbdie_classes.groupings import PredictableTuples
 from fastapi import APIRouter, status
-import requests
 
 from backbone.code.training import (
     get_extr_id,
@@ -14,7 +13,7 @@ from backbone.code.training import (
     update_extractor,
     update_models,
 )
-from backbone.endpoints import endp, parse_or_raise
+from backbone.endpoints import getr
 
 router = APIRouter()
 
@@ -41,14 +40,12 @@ def batch_train(
         fmts,
         cps_id,
     )
-    mts, pts, _ = from_fmts(fmts_)
+    ptups = PredictableTuples.from_fmts(fmts_)
 
-    fmts_with_counts = get_fmts_with_counts(fmts_, mts, pts)
-    cps_name = parse_or_raise(
-        requests.get(endp(f"/cropper-swarm/{extr_info['cropper_swarm_id']}"))
-    )["name"]
+    fmts_with_counts = get_fmts_with_counts(ptups)
+    cps_name = getr(f"/cropper-swarm/{extr_info['cropper_swarm_id']}")["name"]
 
-    train_extractor(
+    extr_out = train_extractor(
         extr_info["id"],
         extr_info["name"],
         cps_name,

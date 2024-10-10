@@ -16,7 +16,7 @@ from backbone.endpoints import (
     get_many,
     get_req,
     get_types,
-    poke,
+    getr,
 )
 from backbone.exceptions import ValidationException
 from backbone.models.predictables import Addon, AddonType
@@ -70,7 +70,7 @@ def create_addon(addon: AddonCreate, db: "Session" = Depends(get_db)):
     get_req(EP.CHARACTER, addon.user_id)
     # TODO: assert type_id exists
 
-    new_addon = {"id": poke(f"{EP.ADDONS}/count")} | addon.model_dump()
+    new_addon = {"id": getr(f"{EP.ADDONS}/count")} | addon.model_dump()
     new_addon["dbd_version_id"] = (
         dbd_version_str_to_id(new_addon["dbd_version_str"])
         if new_addon["dbd_version_str"] is not None

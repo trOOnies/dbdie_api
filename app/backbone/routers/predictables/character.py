@@ -29,7 +29,7 @@ from backbone.endpoints import (
     get_icon,
     get_many,
     get_req,
-    parse_or_raise,
+    postr,
 )
 from backbone.exceptions import ItemNotFoundException, ValidationException
 from backbone.models.predictables import Addon, Character, Item, Perk
@@ -133,9 +133,7 @@ def create_character_full(character: FullCharacterCreate):
         "dbd_version_str": str(character.dbd_version),
         "base_char_id": None,
     }
-    character_only = parse_or_raise(
-        requests.post(endp(EP.CHARACTER), json=payload)
-    )
+    character_only = postr(EP.CHARACTER, json=payload)
 
     return {
         "character": character_only,

@@ -15,7 +15,7 @@ from backbone.endpoints import (
     get_many,
     get_req,
     get_types,
-    poke,
+    getr,
 )
 from backbone.exceptions import ValidationException
 from backbone.models.predictables import Item, ItemType
@@ -68,7 +68,7 @@ def create_item(item: ItemCreate, db: "Session" = Depends(get_db)):
 
     # TODO: assert type_id exists
 
-    new_item = {"id": poke(f"{EP.ITEM}/count")} | item.model_dump()
+    new_item = {"id": getr(f"{EP.ITEM}/count")} | item.model_dump()
     new_item = Item(**new_item)
 
     add_commit_refresh(db, new_item)

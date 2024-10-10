@@ -1,7 +1,6 @@
 """Extra code for the '/character' endpoints."""
 
-import requests
-from backbone.endpoints import endp, parse_or_raise
+from backbone.endpoints import postr
 from backbone.options import ENDPOINTS as EP
 
 ADDON_TYPE_ID = 1
@@ -11,15 +10,15 @@ def create_perks(character: dict, perk_names: list[str]) -> list[dict]:
     """Perks creation for use in FullCharacterCreate."""
     perks = []
     for perk_name in perk_names:
-        p = requests.post(
-            endp(EP.PERKS),
+        p = postr(
+            EP.PERKS,
             json={
                 "name": perk_name,
                 "character_id": character["id"],
                 "dbd_version_id": character["dbd_version_id"],
             },
         )
-        perks.append(parse_or_raise(p))
+        perks.append(p)
 
     return perks
 
@@ -34,8 +33,8 @@ def create_addons(
     else:
         addons = []
         for addon_name in addon_names:
-            a = requests.post(
-                endp(EP.ADDONS),
+            a = postr(
+                EP.ADDONS,
                 json={
                     "name": addon_name,
                     "type_id": ADDON_TYPE_ID,
@@ -43,7 +42,7 @@ def create_addons(
                     "dbd_version_id": character["dbd_version_id"],
                 },
             )
-            addons.append(parse_or_raise(a))
+            addons.append(a)
 
     return addons
 
@@ -52,13 +51,11 @@ def create_killer_power(power_name: str | None) -> dict | None:
     """Killer power creation for use in FullCharacterCreate."""
     return (
         None if power_name is None
-        else parse_or_raise(
-            requests.post(
-                endp(EP.ITEM),
-                json={
-                    "name": power_name,
-                    "type_id": 1,  # * Killer power id
-                },
-            )
+        else postr(
+            EP.ITEM,
+            json={
+                "name": power_name,
+                "type_id": 1,  # * Killer power id
+            },
         )
     )

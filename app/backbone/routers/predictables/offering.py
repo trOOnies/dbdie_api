@@ -16,7 +16,7 @@ from backbone.endpoints import (
     get_many,
     get_req,
     get_types,
-    poke,
+    getr,
 )
 from backbone.exceptions import ValidationException
 from backbone.models.predictables import Character, Offering, OfferingType
@@ -74,7 +74,7 @@ def create_offering(offering: OfferingCreate, db: "Session" = Depends(get_db)):
 
     # TODO: assert type_id and user_id exists
 
-    new_offering = {"id": poke(f"{EP.OFFERING}/count")} | offering.model_dump()
+    new_offering = {"id": getr(f"{EP.OFFERING}/count")} | offering.model_dump()
     new_offering = Offering(**new_offering)
 
     add_commit_refresh(db, new_offering)

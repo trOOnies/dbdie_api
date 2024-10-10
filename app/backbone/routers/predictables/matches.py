@@ -25,7 +25,7 @@ from backbone.endpoints import (
     get_many,
     get_match_img,
     get_req,
-    poke,
+    getr,
 )
 from backbone.exceptions import ValidationException
 from backbone.models.groupings import Match
@@ -59,7 +59,7 @@ def get_match_id(filename: str, db: "Session" = Depends(get_db)):
 
 @router.get("/image/{id}")
 def get_match_image(id: int):
-    m = poke(f"{EP.MATCHES}/{id}")
+    m = getr(f"{EP.MATCHES}/{id}")
     return get_match_img(m["filename"])
 
 
@@ -71,7 +71,7 @@ def get_match(id: int, db: "Session" = Depends(get_db)):
     dbdv_id = m["dbd_version_id"]
     m["dbd_version"] = (
         None if dbdv_id is None
-        else poke(f"{EP.DBD_VERSION}/{dbdv_id}")
+        else getr(f"{EP.DBD_VERSION}/{dbdv_id}")
     )
     del m["dbd_version_id"]
 
@@ -112,7 +112,7 @@ def upload_versioned_folder(v_folder: VersionedFolderUpload):
     fs, src_fd, dst_fd = get_versioned_fd_data(v_folder)
 
     # Assert DBD version already exists
-    poke(
+    getr(
         f"{EP.DBD_VERSION}/id",
         params={"dbd_version_str": str(v_folder.dbd_version)},
     )
@@ -133,7 +133,7 @@ def update_match(id: int, match_create: MatchCreate, db: "Session" = Depends(get
     del new_info["dbd_version"]
     new_info["dbd_version_id"] = (
         None if match_create.dbd_version is None
-        else poke(
+        else getr(
             f"{EP.DBD_VERSION}/id",
             params={"dbd_version_str": str(match_create.dbd_version)},
         )

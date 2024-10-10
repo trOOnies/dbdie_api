@@ -55,10 +55,25 @@ def parse_or_raise(resp, exp_status_code: int = status.HTTP_200_OK):
     return resp.json()
 
 
-def poke(endpoint: "Endpoint", **kwargs):
-    """Includes the boilerplate for a GET request."""
+def getr(endpoint: "Endpoint", **kwargs):
+    """Include the boilerplate for a GET request."""
     return parse_or_raise(
         requests.get(endp(endpoint), **kwargs)
+    )
+
+
+def postr(endpoint: "Endpoint", **kwargs):
+    """Include the boilerplate for a POST request."""
+    return parse_or_raise(
+        requests.post(endp(endpoint), **kwargs),
+        exp_status_code=status.HTTP_201_CREATED,
+    )
+
+
+def putr(endpoint: "Endpoint", **kwargs):
+    """Include the boilerplate for a PUT request."""
+    return parse_or_raise(
+        requests.put(endp(endpoint), **kwargs)
     )
 
 
@@ -224,12 +239,7 @@ def add_commit_refresh(db: "Session", model) -> None:
 
 def dbd_version_str_to_id(s: str) -> int:
     """Converts a DBDVersion string to a DBDVersion id."""
-    return parse_or_raise(
-        requests.get(
-            endp(f"{EP.DBD_VERSION}/id"),
-            params={"dbd_version_str": s},
-        )
-    )
+    return getr(f"{EP.DBD_VERSION}/id", params={"dbd_version_str": s})
 
 
 def get_types(db: "Session", type_sqla_model):

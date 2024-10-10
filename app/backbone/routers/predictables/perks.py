@@ -17,7 +17,7 @@ from backbone.endpoints import (
     get_icon,
     get_many,
     get_req,
-    poke,
+    getr,
     update_one,
     update_many,
 )
@@ -108,11 +108,11 @@ def create_perk(perk: PerkCreate, db: "Session" = Depends(get_db)):
 @router.put("/{id}/change_id", response_model=PerkOut)
 def change_perk_id(id: int, new_id: int, db: "Session" = Depends(get_db)):
     assert new_id >= 0, "The new ID cannot be negative."
-    perk = poke(f"{EP.PERKS}/{id}")
+    perk = getr(f"{EP.PERKS}/{id}")
 
     # Check that the new perk id isn't taken
     try:
-        poke(f"{EP.PERKS}/{new_id}")
+        getr(f"{EP.PERKS}/{new_id}")
     except Exception:
         pass
     else:
