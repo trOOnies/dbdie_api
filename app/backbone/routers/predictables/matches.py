@@ -68,12 +68,12 @@ def get_match(id: int, db: "Session" = Depends(get_db)):
     m = filter_one(db, Match, id, "Match")[0]
     m = object_as_dict(m)
 
-    dbdv_id = m["dbd_version_id"]
+    dbdv_id = m["dbdv_id"]
     m["dbd_version"] = (
         None if dbdv_id is None
         else getr(f"{EP.DBD_VERSION}/{dbdv_id}")
     )
-    del m["dbd_version_id"]
+    del m["dbdv_id"]
 
     m = MatchOut(**m)
     return m
@@ -131,7 +131,7 @@ def update_match(id: int, match_create: MatchCreate, db: "Session" = Depends(get
     new_info = {"id": id} | match_create.model_dump()
 
     del new_info["dbd_version"]
-    new_info["dbd_version_id"] = (
+    new_info["dbdv_id"] = (
         None if match_create.dbd_version is None
         else getr(
             f"{EP.DBD_VERSION}/id",

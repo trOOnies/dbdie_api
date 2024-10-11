@@ -35,7 +35,7 @@ def count_offerings(
     db: "Session" = Depends(get_db),
 ):
     """Count DBD offerings."""
-    return do_count(db, Offering, text=text, ifk=ifk, model_type=OfferingType)
+    return do_count(db, Offering, text=text, ifk=ifk, mt_type=OfferingType)
 
 
 @router.get("", response_model=list[OfferingOut])

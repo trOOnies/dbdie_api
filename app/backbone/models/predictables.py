@@ -26,13 +26,13 @@ class Item(Base):
     id   = C(SmallInt, nullable=False, primary_key=True)
     name = C(Str,      nullable=False)
 
-    type_id        = C(SmallInt, FK(f"{TN.ITEM_TYPES}.id"),  nullable=False)
-    dbd_version_id = C(Int,      FK(f"{TN.DBD_VERSION}.id"), nullable=True)
-    rarity_id      = C(SmallInt, FK(f"{TN.RARITY}.id"),      nullable=True)
+    type_id     = C(SmallInt, FK(f"{TN.ITEM_TYPES}.id"),  nullable=False)
+    dbdv_id     = C(Int,      FK(f"{TN.DBD_VERSION}.id"), nullable=True)
+    rarity_id   = C(SmallInt, FK(f"{TN.RARITY}.id"),      nullable=True)
 
-    type           = rel("ItemType")
-    dbd_version    = rel("DBDVersion")
-    rarity         = rel("Rarity")
+    type        = rel("ItemType")
+    dbd_version = rel("DBDVersion")
+    rarity      = rel("Rarity")
 
 
 class Character(Base):
@@ -42,10 +42,10 @@ class Character(Base):
     id   = C(SmallInt, nullable=False, primary_key=True)
     name = C(Str,      nullable=False)  # TODO: add unique (and with alembic)
 
-    is_killer      = C(Bool,     nullable=True)
-    base_char_id   = C(SmallInt, nullable=True)
-    dbd_version_id = C(Int, FK(f"{TN.DBD_VERSION}.id"), nullable=True)
-    dbd_version    = rel("DBDVersion")
+    ifk           = C(Bool,     nullable=True)
+    base_char_id  = C(SmallInt, nullable=True)
+    dbdv_id       = C(Int, FK(f"{TN.DBD_VERSION}.id"), nullable=True)
+    dbd_version   = rel("DBDVersion")
 
     common_name = C(Str,      nullable=True)
     emoji       = C(Str,      nullable=True)
@@ -61,15 +61,15 @@ class Addon(Base):
     id   = C(SmallInt, nullable=False, primary_key=True)
     name = C(Str,      nullable=False)
 
-    type_id        = C(SmallInt, FK(f"{TN.ADDONS_TYPES}.id"), nullable=False)
-    dbd_version_id = C(Int,      FK(f"{TN.DBD_VERSION}.id"),  nullable=True)
-    item_id        = C(SmallInt, FK(f"{TN.ITEM}.id"),         nullable=False)
-    rarity_id      = C(SmallInt, FK(f"{TN.RARITY}.id"),       nullable=True)
+    type_id      = C(SmallInt, FK(f"{TN.ADDONS_TYPES}.id"), nullable=False)
+    dbdv_id      = C(Int,      FK(f"{TN.DBD_VERSION}.id"),  nullable=True)
+    item_id      = C(SmallInt, FK(f"{TN.ITEM}.id"),         nullable=False)
+    rarity_id    = C(SmallInt, FK(f"{TN.RARITY}.id"),       nullable=True)
 
-    type           = rel("AddonType")
-    dbd_version    = rel("DBDVersion")
-    item           = rel("Item")
-    rarity         = rel("Rarity")
+    type         = rel("AddonType")
+    dbd_version  = rel("DBDVersion")
+    item         = rel("Item")
+    rarity       = rel("Rarity")
 
 
 class Perk(Base):
@@ -79,11 +79,11 @@ class Perk(Base):
     id   = C(SmallInt, nullable=False, primary_key=True)
     name = C(Str,      nullable=False)
 
-    character_id   = C(SmallInt, FK(f"{TN.CHARACTER}.id"),   nullable=False)
-    dbd_version_id = C(Int,      FK(f"{TN.DBD_VERSION}.id"), nullable=True)
-    emoji          = C(Str, nullable=True)
-    character      = rel("Character")
-    dbd_version    = rel("DBDVersion")
+    character_id = C(SmallInt, FK(f"{TN.CHARACTER}.id"),   nullable=False)
+    dbdv_id      = C(Int,      FK(f"{TN.DBD_VERSION}.id"), nullable=True)
+    emoji        = C(Str, nullable=True)
+    character    = rel("Character")
+    dbd_version  = rel("DBDVersion")
 
 
 class Offering(Base):
@@ -93,10 +93,10 @@ class Offering(Base):
     id   = C(SmallInt, nullable=False, primary_key=True)
     name = C(Str,      nullable=False)
 
-    type_id        = C(SmallInt, FK(f"{TN.OFFERING_TYPES}.id"), nullable=False)
-    user_id        = C(SmallInt, FK(f"{TN.CHARACTER}.id"),      nullable=False)
-    dbd_version_id = C(Int,      FK(f"{TN.DBD_VERSION}.id"),    nullable=True)
-    rarity_id      = C(SmallInt, FK(f"{TN.RARITY}.id"),         nullable=True)
+    type_id    = C(SmallInt, FK(f"{TN.OFFERING_TYPES}.id"), nullable=False)
+    user_id    = C(SmallInt, FK(f"{TN.CHARACTER}.id"),      nullable=False)
+    dbdv_id    = C(Int,      FK(f"{TN.DBD_VERSION}.id"),    nullable=True)
+    rarity_id  = C(SmallInt, FK(f"{TN.RARITY}.id"),         nullable=True)
 
     type           = rel("OfferingType")
     user           = rel("Character")
@@ -111,10 +111,10 @@ class Status(Base):
     id   = C(SmallInt, nullable=False, primary_key=True)
     name = C(Str,      nullable=False)
 
-    character_id   = C(SmallInt, FK(f"{TN.CHARACTER}.id"),  nullable=False)
-    is_dead        = C(Bool, nullable=True)
-    dbd_version_id = C(Int,      FK(f"{TN.DBD_VERSION}.id"), nullable=True)
-    emoji          = C(Str,  nullable=True)
+    character_id = C(SmallInt, FK(f"{TN.CHARACTER}.id"),  nullable=False)
+    is_dead      = C(Bool, nullable=True)
+    dbdv_id      = C(Int,      FK(f"{TN.DBD_VERSION}.id"), nullable=True)
+    emoji        = C(Str,  nullable=True)
 
-    character      = rel("Character")
-    dbd_version    = rel("DBDVersion")
+    character    = rel("Character")
+    dbd_version  = rel("DBDVersion")

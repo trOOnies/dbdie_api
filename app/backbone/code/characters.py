@@ -15,7 +15,7 @@ def create_perks(character: dict, perk_names: list[str]) -> list[dict]:
             json={
                 "name": perk_name,
                 "character_id": character["id"],
-                "dbd_version_id": character["dbd_version_id"],
+                "dbdv_id": character["dbdv_id"],
             },
         )
         perks.append(p)
@@ -39,7 +39,7 @@ def create_addons(
                     "name": addon_name,
                     "type_id": ADDON_TYPE_ID,
                     "user_id": character["id"],  # TODO
-                    "dbd_version_id": character["dbd_version_id"],
+                    "dbdv_id": character["dbdv_id"],
                 },
             )
             addons.append(a)

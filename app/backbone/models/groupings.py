@@ -24,14 +24,14 @@ class Match(Base):
     id       = C(Int, nullable=False, primary_key=True)
     filename = C(Str, nullable=False)
 
-    match_date     = C(Date, nullable=True)
-    dbd_version_id = C(Int, FK(f"{TN.DBD_VERSION}.id"), nullable=True)
-    dbd_version    = rel("DBDVersion")
+    match_date   = C(Date, nullable=True)
+    dbdv_id      = C(Int, FK(f"{TN.DBD_VERSION}.id"), nullable=True)
+    dbd_version  = rel("DBDVersion")
 
-    special_mode   = C(Bool,     nullable=True)
-    kills          = C(SmallInt, nullable=True)
+    special_mode = C(Bool,     nullable=True)
+    kills        = C(SmallInt, nullable=True)
 
-    date_created   = C(
+    date_created = C(
         TIMESTAMP(timezone=True),
         nullable=False,
         server_default=text("now()"),
@@ -42,10 +42,10 @@ class Match(Base):
         server_default=text("now()"),
     )
 
-    user_id        = C(SmallInt, FK(f"{TN.USER}.id"),      nullable=True)
-    extractor_id   = C(SmallInt, FK(f"{TN.EXTRACTOR}.id"), nullable=True)
-    user           = rel("User")
-    extractor      = rel("Extractor")
+    user_id   = C(SmallInt, FK(f"{TN.USER}.id"),      nullable=True)
+    extr_id   = C(SmallInt, FK(f"{TN.EXTRACTOR}.id"), nullable=True)
+    user      = rel("User")
+    extractor = rel("Extractor")
 
 
 class Labels(Base):
@@ -62,13 +62,13 @@ class Labels(Base):
     player_id = C(SmallInt, nullable=False, primary_key=True)
 
     character     = C(SmallInt, nullable=True)
-    perk_0        = C(SmallInt, nullable=True)
-    perk_1        = C(SmallInt, nullable=True)
-    perk_2        = C(SmallInt, nullable=True)
-    perk_3        = C(SmallInt, nullable=True)
+    perks_0       = C(SmallInt, nullable=True)
+    perks_1       = C(SmallInt, nullable=True)
+    perks_2       = C(SmallInt, nullable=True)
+    perks_3       = C(SmallInt, nullable=True)
     item          = C(SmallInt, nullable=True)
-    addon_0       = C(SmallInt, nullable=True)
-    addon_1       = C(SmallInt, nullable=True)
+    addons_0      = C(SmallInt, nullable=True)
+    addons_1      = C(SmallInt, nullable=True)
     offering      = C(SmallInt, nullable=True)
     status        = C(SmallInt, nullable=True)
     points        = C(Int, nullable=True)
@@ -78,7 +78,7 @@ class Labels(Base):
         server_default=text("now()"),
     )
     user_id          = C(SmallInt, FK(f"{TN.USER}.id"), nullable=True)
-    extractor_id     = C(SmallInt, FK(f"{TN.EXTRACTOR}.id"), nullable=True)
+    extr_id          = C(SmallInt, FK(f"{TN.EXTRACTOR}.id"), nullable=True)
     user             = rel("User")
     extractor        = rel("Extractor")
     perks_mckd       = C(Bool, nullable=True)

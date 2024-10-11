@@ -61,9 +61,9 @@ def get_perk(id: int, db: "Session" = Depends(get_db)):
             Perk.id,
             Perk.name,
             Perk.character_id,
-            Perk.dbd_version_id,
+            Perk.dbdv_id,
             Perk.emoji,
-            Character.is_killer.label("is_for_killer"),
+            Character.ifk,
         )
         .join(Character)
         .filter(Perk.id == id)
@@ -92,7 +92,7 @@ def create_perk(perk: PerkCreate, db: "Session" = Depends(get_db)):
     )
 
     new_perk = {"id": requests.get(endp(f"{EP.PERKS}/count")).json()} | perk.model_dump()
-    new_perk["dbd_version_id"] = (
+    new_perk["dbdv_id"] = (
         dbd_version_str_to_id(new_perk["dbd_version_str"])
         if new_perk["dbd_version_str"] is not None
         else None
@@ -122,7 +122,7 @@ def change_perk_id(id: int, new_id: int, db: "Session" = Depends(get_db)):
     assert resp.status_code == status.HTTP_200_OK
 
     def update_cols(record) -> None:
-        for col_name in ["perk_0", "perk_1", "perk_2", "perk_3"]:
+        for col_name in ["perks_0", "perks_1", "perks_2", "perks_3"]:
             if getattr(record, col_name) == id:
                 setattr(record, col_name, new_id)
 
@@ -130,10 +130,10 @@ def change_perk_id(id: int, new_id: int, db: "Session" = Depends(get_db)):
         db,
         Labels,
         filter=or_(
-            Labels.perk_0 == id,
-            Labels.perk_1 == id,
-            Labels.perk_2 == id,
-            Labels.perk_3 == id,
+            Labels.perks_0 == id,
+            Labels.perks_1 == id,
+            Labels.perks_2 == id,
+            Labels.perks_3 == id,
         ),
         update_f=update_cols,
     )

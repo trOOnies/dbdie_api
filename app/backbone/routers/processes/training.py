@@ -1,19 +1,20 @@
 """Endpoint for training related processes."""
 
+from copy import deepcopy
 from dbdie_classes.base import FullModelType
-from dbdie_classes.groupings import PredictableTuples
 from fastapi import APIRouter, status
 
 from backbone.code.training import (
     get_extr_id,
     get_fmts_with_counts,
-    get_objects_info,
+    goi_existing,
+    goi_not_existing,
     set_today,
     train_extractor,
     update_extractor,
     update_models,
 )
-from backbone.endpoints import getr
+from backbone.endpoints import EP, getr
 
 router = APIRouter()
 
@@ -26,33 +27,36 @@ def batch_train(
     fmts: list[FullModelType] | None = None,
 ):
     """IMPORTANT. If doing partial training, please use 'fmts'."""
-    extractor_exists = extr_id is not None
-    if extractor_exists:
+    extr_exists = extr_id is not None
+    if extr_exists:
         assert extr_name is None, "No name is needed if the extractor already exists."
-        assert cps_id is None, "No cps_id is needed if the extractor already exists."
+        assert cps_id is None,  "No cps_id is needed if the extractor already exists."
 
-    extr_id_ = get_extr_id(extr_id, extractor_exists)
+    extr_id_ = get_extr_id(extr_id, extr_exists)
 
-    extr_info, models_info, fmts_ = get_objects_info(
-        extr_id_,
-        extr_name,
-        extractor_exists,
-        fmts,
-        cps_id,
-    )
-    ptups = PredictableTuples.from_fmts(fmts_)
+    if extr_exists:
+        assert fmts is None, "You can't choose fmts when retraining."
+        extr_info, models_info, ptups = goi_existing(extr_id_)
+    else:
+        extr_name_ = (
+            deepcopy(extr_name) if extr_name is not None else "test-2"
+        )  # TODO: add optional randomized
+        extr_info, models_info, ptups = goi_not_existing(extr_id_, extr_name_, fmts, cps_id)
 
     fmts_with_counts = get_fmts_with_counts(ptups)
-    cps_name = getr(f"/cropper-swarm/{extr_info['cropper_swarm_id']}")["name"]
+    cps_name = getr(f"{EP.CROPPER_SWARM}/{extr_info['cps_id']}")["name"]
 
-    extr_out = train_extractor(
+    extr_out, models_out = train_extractor(
         extr_info["id"],
         extr_info["name"],
         cps_name,
         {fmt: minfo["id"] for fmt, minfo in models_info.items()},
         fmts_with_counts,
     )
+    extr_out    = extr_info   if extr_exists else (extr_out | extr_info)
+    models_out  = models_info if extr_exists else (models_out | models_info)
+
     extr_info, models_info = set_today(extr_info, models_info)
 
-    update_models(extractor_exists, extr_info["models_ids"], models_info)
-    update_extractor(extractor_exists, extr_info, extr_id_)
+    update_models(extr_exists, extr_info["models_ids"], models_info)
+    update_extractor(extr_exists, extr_info, extr_id_)

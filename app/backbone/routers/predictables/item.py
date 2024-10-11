@@ -33,7 +33,7 @@ def count_items(
     text: str = "",
     db: "Session" = Depends(get_db),
 ):
-    return do_count(db, Item, text=text, ifk=ifk, model_type=ItemType)
+    return do_count(db, Item, text=text, ifk=ifk, mt_type=ItemType)
 
 
 @router.get("", response_model=list[ItemOut])

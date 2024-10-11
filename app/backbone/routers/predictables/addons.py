@@ -34,7 +34,7 @@ def count_addons(
     text: str = "",
     db: "Session" = Depends(get_db),
 ):
-    return do_count(db, Addon, text=text, ifk=ifk, model_type=AddonType)
+    return do_count(db, Addon, text=text, ifk=ifk, mt_type=AddonType)
 
 
 @router.get("", response_model=list[AddonOut])
@@ -71,7 +71,7 @@ def create_addon(addon: AddonCreate, db: "Session" = Depends(get_db)):
     # TODO: assert type_id exists
 
     new_addon = {"id": getr(f"{EP.ADDONS}/count")} | addon.model_dump()
-    new_addon["dbd_version_id"] = (
+    new_addon["dbdv_id"] = (
         dbd_version_str_to_id(new_addon["dbd_version_str"])
         if new_addon["dbd_version_str"] is not None
         else None

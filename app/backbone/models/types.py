@@ -13,30 +13,30 @@ class ItemType(Base):
     """SQLAlchemy item type model."""
     __tablename__ = TN.ITEM_TYPES
 
-    id            = C(SmallInt, nullable=False, primary_key=True)
-    name          = C(Str,      nullable=False)
-    emoji         = C(Str,      nullable=True)
-    is_for_killer = C(Bool,     nullable=True)
+    id    = C(SmallInt, nullable=False, primary_key=True)
+    name  = C(Str,      nullable=False)
+    emoji = C(Str,      nullable=True)
+    ifk   = C(Bool,     nullable=True)
 
 
 class AddonType(Base):
     """SQLAlchemy addon type model."""
     __tablename__ = TN.ADDONS_TYPES
 
-    id            = C(SmallInt, nullable=False, primary_key=True)
-    name          = C(Str,      nullable=False)
-    emoji         = C(Str,      nullable=True)
-    is_for_killer = C(Bool,     nullable=True)
+    id    = C(SmallInt, nullable=False, primary_key=True)
+    name  = C(Str,      nullable=False)
+    emoji = C(Str,      nullable=True)
+    ifk   = C(Bool,     nullable=True)
 
 
 class OfferingType(Base):
     """SQLAlchemy offering type model."""
     __tablename__ = TN.OFFERING_TYPES
 
-    id            = C(SmallInt, nullable=False, primary_key=True)
-    name          = C(Str,      nullable=False)
-    emoji         = C(Str,      nullable=True)
-    is_for_killer = C(Bool,     nullable=True)
+    id    = C(SmallInt, nullable=False, primary_key=True)
+    name  = C(Str,      nullable=False)
+    emoji = C(Str,      nullable=True)
+    ifk   = C(Bool,     nullable=True)
 
 
 class Rarity(Base):

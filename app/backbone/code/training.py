@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 import datetime as dt
+from dbdie_classes.groupings import PredictableTuples
 from dbdie_classes.options import KILLER_FMT
 from dbdie_classes.options import SURV_FMT
 from dbdie_classes.options.MODEL_TYPE import CHARACTER
@@ -15,7 +16,6 @@ from backbone.options import ML_ENDPOINTS as MLEP
 
 if TYPE_CHECKING:
     from dbdie_classes.base import FullModelType
-    from dbdie_classes.groupings import PredictableTuples
 
 
 def get_extr_id(
@@ -25,27 +25,28 @@ def get_extr_id(
     return extr_id if extr_exists else (getr(f"{EP.EXTRACTOR}/count") + 1)
 
 
-def gei_existing(extr_id: str):
-    """Get Extractor info that does already exist."""
+def goi_existing(extr_id: str):
+    """Get objects info when Extractor already exist."""
     extr_info = getr(f"{EP.EXTRACTOR}/{extr_id}")
 
     raise NotImplementedError
     fmts_ = ...  # TODO
-    models_info = {
+    extr = ...
+    models = {
         fmt: getr(f"{EP.MODELS}/{mid}")
         for fmt, mid in extr_info["models_ids"].items()
     }
 
-    return extr_info, models_info, fmts_
+    return extr, models, PredictableTuples.from_fmts(fmts_)
 
 
-def gei_not_existing(
+def goi_not_existing(
     extr_id: int,
     extr_name: str,
     fmts: list["FullModelType"] | None,
     cps_id: int,
 ):
-    """Get Extractor info that does not exist yet."""
+    """Get objects info when Extractor doesn't exist yet."""
     fmts_ = deepcopy(fmts) if fmts is not None else [
         KILLER_FMT.CHARACTER,
         SURV_FMT.CHARACTER,
@@ -58,69 +59,24 @@ def gei_not_existing(
 
     model_count = getr(f"{EP.MODELS}/count")
 
-    fmts_ref = [
-        {"id": fmt["id"], "name": fmt["name"]}
-        for fmt in getr(EP.FMT, params={"limit": 300})
-    ]
-    fmts_ref = {fmt["name"]: fmt["id"] for fmt in fmts_ref}
-    models_ids = [model_count + i for i in range(len(fmts_))]
-
     extr_info = {
         "id": extr_id,
         "name": extr_name,  # TODO: add optional randomized
-        "user_id": 1,  # TODO
-        "dbdv_min_id": 1,  # TODO
-        "dbdv_max_id": None,  # TODO
-        "special_mode": None,  # TODO
-        "cropper_swarm_id": cps_id,
-        "models_ids": {
-            f"mid_{fmts_ref[fmt]}": mid
-            for fmt, mid in zip(fmts_, models_ids)
-        },
-        "date_last_trained": None,  # placeholder
+        "cps_id": cps_id,
     }
     models_info = {
-        fmt: {
-            "id": mid,
-            "name": f"{extr_name}-m{i}",  # TODO: add optional randomized
-            "user_id": 1,  # TODO
-            "fmt_id": fmts_ref[fmt],
-            "cropper_swarm_id": cps_id,
-            "dbdv_min_id": 1,  # TODO
-            "dbdv_max_id": None,  # TODO
-            "special_mode": None,  # TODO
-            "date_last_trained": None,  # placeholder
-        }
-        for i, (fmt, mid) in enumerate(zip(fmts_, models_ids))
+        fmt: {"id": model_count + i}
+        for i, fmt in enumerate(fmts_)
     }
 
-    return extr_info, models_info, fmts_
+    return extr_info, models_info, PredictableTuples.from_fmts(fmts_)
 
 
-def get_objects_info(
-    extr_id: id,
-    extr_name: str | None,
-    extr_exists: bool,
-    fmts: list["FullModelType"] | None,
-    cps_id: int | None,
-) -> tuple[dict, dict["FullModelType", dict], list["FullModelType"]]:
-    if extr_exists:
-        assert fmts is None, "You can't choose fmts when retraining."
-        return gei_existing(extr_id)
-    else:
-        extr_name_ = (
-            deepcopy(extr_name) if extr_name is not None else "test-2"
-        )  # TODO: add optional randomized
-        return gei_not_existing(extr_id, extr_name_, fmts, cps_id)
-
-
-def get_fmts_with_counts(ptups: "PredictableTuples") -> dict["FullModelType", int]:
+def get_fmts_with_counts(ptups: PredictableTuples) -> dict["FullModelType", int]:
     return {
         ptup.fmt: getr(
             f"{EP.MT_TO_ENDPOINT[ptup.mt]}/count",
-            params={
-                ("is_killer" if ptup.mt == CHARACTER else "is_for_killer"): ptup.ifk
-            },
+            params={"ifk": ptup.ifk},
         )
         for ptup in ptups
     }

@@ -21,11 +21,11 @@ def form_match(match: "MatchCreate") -> dict:
     new_match = {"id": getr(f"{EP.MATCHES}/count")} | match.model_dump()
 
     if new_match["dbd_version"] is None:
-        new_match["dbd_version_id"] = None
+        new_match["dbdv_id"] = None
     else:
         dbdv = str(DBDVersion(**new_match["dbd_version"]))
 
-        new_match["dbd_version_id"] = dbd_version_str_to_id(dbdv)
+        new_match["dbdv_id"] = dbd_version_str_to_id(dbdv)
 
     del new_match["dbd_version"]
     return new_match

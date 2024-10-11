@@ -18,13 +18,13 @@ if TYPE_CHECKING:
 
 def additional_filters(
     query,
-    is_killer: bool | None = None,
+    ifk: bool | None = None,
     manual_checks: ManualChecksIn | None = None,
 ):
-    if is_killer is not None:
+    if ifk is not None:
         query = (
             query.filter(Labels.player_id == 4)
-            if is_killer
+            if ifk
             else query.filter(Labels.player_id < 4)
         )
 
@@ -52,21 +52,21 @@ def player_to_labels(player: dict) -> dict:
         labels = labels | {k[:-3]: player[k] for k in keys_ending_in_id}
 
     if player["perk_ids"] is not None:
-        labels = labels | {f"perk_{i}": v for i, v in enumerate(player["perk_ids"])}
+        labels = labels | {f"perks_{i}": v for i, v in enumerate(player["perk_ids"])}
     if player["addon_ids"] is not None:
-        labels = labels | {f"addon_{i}": v for i, v in enumerate(player["addon_ids"])}
+        labels = labels | {f"addons_{i}": v for i, v in enumerate(player["addon_ids"])}
 
     return labels
 
 
 def get_filtered_query(
-    is_killer: bool | None,
+    ifk: bool | None,
     manual_checks: ManualChecksIn | None,
     default_cols: list,
     force_prepend_default_cols: bool,
     db: "Session",
 ):
-    options = [(Labels.player_id, is_killer)]
+    options = [(Labels.player_id, ifk)]
     if manual_checks is not None and manual_checks.is_init:
         options += [
             (col, chk)
@@ -82,7 +82,7 @@ def get_filtered_query(
         force_prepend_default_col=force_prepend_default_cols,
     )
     query = db.query(*cols)
-    query = additional_filters(query, is_killer, manual_checks)
+    query = additional_filters(query, ifk, manual_checks)
 
     return query
 
@@ -115,9 +115,9 @@ def handle_mpp_crops(df: pd.DataFrame) -> pd.DataFrame:
     df = pd.get_dummies(df, columns=["perk"])
     assert "perk" not in df.columns
 
-    df = df.astype({f"perk_{i}": int for i in range(4)})
+    df = df.astype({f"perks_{i}": int for i in range(4)})
     for i in range(4):
-        df[f"perk_{i}"] = df[f"perk_{i}"] * df["label_id"]
+        df[f"perks_{i}"] = df[f"perks_{i}"] * df["label_id"]
     df = df.drop("label_id", axis=1)
 
     df = df.groupby(["name", "player_id"]).sum()
@@ -175,10 +175,10 @@ def post_labels(joined_df: pd.DataFrame) -> None:
                 "match_id",
                 "player_id",
                 "character",
-                "perk_0",
-                "perk_1",
-                "perk_2",
-                "perk_3",
+                "perks_0",
+                "perks_1",
+                "perks_2",
+                "perks_3",
             ]
         }
     )
@@ -190,7 +190,7 @@ def post_labels(joined_df: pd.DataFrame) -> None:
                 "player": {
                     "id": int(row["player_id"]),
                     "character_id": int(row["character"]),
-                    "perk_ids": [int(row[f"perk_{i}"]) for i in range(4)],
+                    "perk_ids": [int(row[f"perks_{i}"]) for i in range(4)],
                     "item_id": None,
                     "addon_ids": None,
                     "offering_id": None,

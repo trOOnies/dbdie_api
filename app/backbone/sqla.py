@@ -15,15 +15,15 @@ def soft_bool_filter(col, cond: bool):
     return or_(col.is_(cond), col.is_(None))
 
 
-def join_and_filter_ifk(query: "Query", model, model_type, ifk: bool) -> "Query":
-    if (model_type is not None) and (ifk is not None):
-        query = query.join(model_type)
+def join_and_filter_ifk(query: "Query", model, mt_type, ifk: bool) -> "Query":
+    if (mt_type is not None) and (ifk is not None):
+        query = query.join(mt_type)
         if model.__tablename__ in {TN.OFFERING, TN.PERKS, TN.STATUS}:
-            query = query.filter(soft_bool_filter(model_type.is_killer, ifk))
+            query = query.filter(soft_bool_filter(mt_type.ifk, ifk))
         else:
-            query = query.filter(soft_bool_filter(model_type.is_for_killer, ifk))
+            query = query.filter(soft_bool_filter(mt_type.ifk, ifk))
     elif model.__tablename__ == TN.CHARACTER:
-        query = query.filter(soft_bool_filter(model.is_killer, ifk))
+        query = query.filter(soft_bool_filter(model.ifk, ifk))
 
     return query
 
@@ -59,7 +59,7 @@ def get_items_query(
     model,
     skip: int,
     ifk: bool | None,
-    model_type,
+    mt_type,
     text: str,
 ) -> "Query":
     """Base get many function. 'model' is the sqlalchemy model."""
@@ -67,7 +67,7 @@ def get_items_query(
     assert skip >= 0
 
     query = db.query(model)
-    query = join_and_filter_ifk(query, model, model_type, ifk)
+    query = join_and_filter_ifk(query, model, mt_type, ifk)
     query = filter_with_text(query, model, text)
     query = limit_and_skip(query, limit, skip)
     return query

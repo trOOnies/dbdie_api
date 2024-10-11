@@ -43,23 +43,23 @@ router = APIRouter()
 
 @router.get("/count", response_model=int)
 def count_characters(
-    is_killer: bool | None = None,
+    ifk: bool | None = None,
     text: str = "",
     db: "Session" = Depends(get_db),
 ):
     """Count DBD characters."""
-    return do_count(db, Character, is_killer, text=text)
+    return do_count(db, Character, ifk, text=text)
 
 
 @router.get("", response_model=list[CharacterOut])
 def get_characters(
-    is_killer: bool | None = None,
+    ifk: bool | None = None,
     limit: int = 10,
     skip: int = 0,
     db: "Session" = Depends(get_db),
 ):
     """Query many DBD characters."""
-    return get_many(db, limit, Character, skip, is_killer)
+    return get_many(db, limit, Character, skip, ifk)
 
 
 @router.get("/{id}", response_model=CharacterOut)
@@ -86,13 +86,13 @@ def get_full_character(id: int, db: "Session" = Depends(get_db)):
         "character": character,
         "power": (
             db.query(Item).filter(Item.character_id).first()
-            if character.is_killer.value
+            if character.ifk.value
             else None
         ),
         "perks": db.query(Perk).filter(Perk.character_id == id).limit(3).all(),
         "addons": (
             db.query(Addon).filter(Addon.character_id == id).all()
-            if character.is_killer.value
+            if character.ifk.value
             else None
         ),
     }
@@ -112,7 +112,7 @@ def create_character(
     } | character.model_dump()
 
     if new_character["dbd_version_str"] is not None:
-        new_character["dbd_version_id"] = dbd_version_str_to_id(
+        new_character["dbdv_id"] = dbd_version_str_to_id(
             new_character["dbd_version_str"]
         )
     del new_character["dbd_version_str"]
@@ -129,7 +129,7 @@ def create_character_full(character: FullCharacterCreate):
     """Create a DBD character in full (with its perks and addons, if applies)."""
     payload = {
         "name": character.name,
-        "is_killer": character.is_killer,
+        "ifk": character.ifk,
         "dbd_version_str": str(character.dbd_version),
         "base_char_id": None,
     }

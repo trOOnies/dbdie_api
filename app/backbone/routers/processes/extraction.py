@@ -47,7 +47,7 @@ def batch_extract(
                     "prestige":     preds_dict[MT.PRESTIGE][i],
                 },
                 "user_id": 1,  # TODO
-                "extractor_id": 1,  # TODO
+                "extr_id": 1,  # TODO
                 "manually_checked": False,
             },
         )

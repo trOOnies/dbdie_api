@@ -21,7 +21,7 @@ router = APIRouter()
 
 
 @router.get("/count", response_model=int)
-def count_full_model_types(
+def count_fmts(
     text: str = "",
     db: "Session" = Depends(get_db),
 ):
@@ -30,7 +30,7 @@ def count_full_model_types(
 
 
 @router.get("", response_model=list[FullModelTypeOut])
-def get_full_model_types(
+def get_fmts(
     limit: int = 10,
     skip: int = 0,
     db: "Session" = Depends(get_db),
@@ -40,6 +40,6 @@ def get_full_model_types(
 
 
 @router.get("/{id}", response_model=FullModelTypeOut)
-def get_full_model_type(id: int, db: "Session" = Depends(get_db)):
+def get_fmt(id: int, db: "Session" = Depends(get_db)):
     """Get a FullModelType with an ID."""
     return filter_one(db, FullModelType, id)[0]

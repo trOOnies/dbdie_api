@@ -38,7 +38,7 @@ def get_dbd_versions(limit: int = 10, skip: int = 0, db: "Session" = Depends(get
 
 
 @router.get("/id", response_model=int)
-def get_dbd_version_id(dbd_version_str: str, db: "Session" = Depends(get_db)):
+def get_dbdv_id(dbd_version_str: str, db: "Session" = Depends(get_db)):
     """Get DBD version id from its string form."""
     return get_id(db, DBDVersion, "DBD version", dbd_version_str)
 

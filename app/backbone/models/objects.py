@@ -41,17 +41,17 @@ class CropperSwarm(Base):
     dbdv_min      = rel("DBDVersion", foreign_keys=[dbdv_min_id])
     dbdv_max      = rel("DBDVersion", foreign_keys=[dbdv_max_id])
 
-    is_for_killer = C(Bool, nullable=True)
+    ifk = C(Bool, nullable=True)
 
 
 class FullModelType(Base):
     """SQLAlchemy full model type model."""
     __tablename__ = TN.FULL_MODEL_TYPES
 
-    id            = C(SmallInt, nullable=False, primary_key=True)
-    name          = C(Str, nullable=False)
-    model_type    = C(Str, nullable=False)
-    is_for_killer = C(Bool, nullable=True)
+    id   = C(SmallInt, nullable=False, primary_key=True)
+    name = C(Str, nullable=False)
+    mt   = C(Str, nullable=False)
+    ifk  = C(Bool, nullable=True)
 
 
 class Model(Base):
@@ -61,18 +61,18 @@ class Model(Base):
     id   = C(SmallInt, nullable=False, primary_key=True)
     name = C(Str, nullable=False)
 
-    user_id          = C(SmallInt, FK(f"{TN.USER}.id"),             nullable=False)
-    fmt_id           = C(SmallInt, FK(f"{TN.FULL_MODEL_TYPES}.id"), nullable=False)
-    cropper_swarm_id = C(SmallInt, FK(f"{TN.CROPPER_SWARM}.id"),    nullable=False)
-    dbdv_min_id      = C(Int,      FK(f"{TN.DBD_VERSION}.id"),      nullable=False)
-    dbdv_max_id      = C(Int,      FK(f"{TN.DBD_VERSION}.id"),      nullable=True)
-    special_mode     = C(Bool, nullable=True)
-    user             = rel("User")
-    fmt              = rel("FullModelType")
-    cropper_swarm    = rel("CropperSwarm")
-    dbdv_min         = rel("DBDVersion", foreign_keys=[dbdv_min_id])
-    dbdv_max         = rel("DBDVersion", foreign_keys=[dbdv_max_id])
-    date_created     = C(
+    user_id       = C(SmallInt, FK(f"{TN.USER}.id"),             nullable=False)
+    fmt_id        = C(SmallInt, FK(f"{TN.FULL_MODEL_TYPES}.id"), nullable=False)
+    cps_id        = C(SmallInt, FK(f"{TN.CROPPER_SWARM}.id"),    nullable=False)
+    dbdv_min_id   = C(Int,      FK(f"{TN.DBD_VERSION}.id"),      nullable=False)
+    dbdv_max_id   = C(Int,      FK(f"{TN.DBD_VERSION}.id"),      nullable=True)
+    special_mode  = C(Bool, nullable=True)
+    user          = rel("User")
+    fmt           = rel("FullModelType")
+    cropper_swarm = rel("CropperSwarm")
+    dbdv_min      = rel("DBDVersion", foreign_keys=[dbdv_min_id])
+    dbdv_max      = rel("DBDVersion", foreign_keys=[dbdv_max_id])
+    date_created  = C(
         TIMESTAMP(timezone=True),
         nullable=False,
         server_default=text("now()"),
@@ -92,16 +92,16 @@ class Extractor(Base):
     id   = C(SmallInt, nullable=False, primary_key=True)
     name = C(Str, nullable=False)
 
-    user_id          = C(SmallInt, FK(f"{TN.USER}.id"),          nullable=False)
-    dbdv_min_id      = C(Int,      FK(f"{TN.DBD_VERSION}.id"),   nullable=False)
-    dbdv_max_id      = C(Int,      FK(f"{TN.DBD_VERSION}.id"),   nullable=True)
-    special_mode     = C(Bool, nullable=True)
-    cropper_swarm_id = C(SmallInt, FK(f"{TN.CROPPER_SWARM}.id"), nullable=False)
+    user_id       = C(SmallInt, FK(f"{TN.USER}.id"),          nullable=False)
+    dbdv_min_id   = C(Int,      FK(f"{TN.DBD_VERSION}.id"),   nullable=False)
+    dbdv_max_id   = C(Int,      FK(f"{TN.DBD_VERSION}.id"),   nullable=True)
+    special_mode  = C(Bool, nullable=True)
+    cps_id        = C(SmallInt, FK(f"{TN.CROPPER_SWARM}.id"), nullable=False)
 
-    user             = rel("User")
-    dbdv_min         = rel("DBDVersion", foreign_keys=[dbdv_min_id])
-    dbdv_max         = rel("DBDVersion", foreign_keys=[dbdv_max_id])
-    cropper_swarm    = rel("CropperSwarm")
+    user          = rel("User")
+    dbdv_min      = rel("DBDVersion", foreign_keys=[dbdv_min_id])
+    dbdv_max      = rel("DBDVersion", foreign_keys=[dbdv_max_id])
+    cropper_swarm = rel("CropperSwarm")
 
     mid_0  = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)
     mid_1  = C(SmallInt, FK(f"{TN.MODEL}.id"), nullable=True)

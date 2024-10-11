@@ -103,11 +103,11 @@ def get_first(
     model,
     skip: int = 0,
     ifk: bool | None = None,
-    model_type = None,
+    mt = None,
     text: str = "",
 ):
     """Base get first function. 'model' is the sqlalchemy model."""
-    query = get_items_query(db, limit, model, skip, ifk, model_type, text)
+    query = get_items_query(db, limit, model, skip, ifk, mt, text)
     return query.first()
 
 
@@ -117,11 +117,11 @@ def get_many(
     model,
     skip: int = 0,
     ifk: bool | None = None,
-    model_type = None,
+    mt = None,
     text: str = "",
 ):
     """Base get many function. 'model' is the sqlalchemy model."""
-    query = get_items_query(db, limit, model, skip, ifk, model_type, text)
+    query = get_items_query(db, limit, model, skip, ifk, mt, text)
     return query.all()
 
 
@@ -129,13 +129,13 @@ def do_count(
     db: "Session",
     model,
     ifk: bool | None = None,
-    model_type = None,
+    mt_type = None,
     text: str = "",
 ) -> int:
     """Base count function.
     'model' is the sqlalchemy model.
     """
-    query = get_items_query(db, 100_000, model, 0, ifk, model_type, text)
+    query = get_items_query(db, 100_000, model, 0, ifk, mt_type, text)
     return query.count()
 
 

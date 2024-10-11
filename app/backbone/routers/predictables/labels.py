@@ -45,13 +45,13 @@ router = APIRouter()
 
 @router.get("/count", response_model=int)
 def count_labels(
-    is_killer: bool | None = None,
+    ifk: bool | None = None,
     manual_checks: ManualChecksIn | None = None,
     db: "Session" = Depends(get_db),
 ):
     """Count player-centered labels."""
     query = get_filtered_query(
-        is_killer,
+        ifk,
         manual_checks,
         default_cols=[Labels.match_id],
         force_prepend_default_cols=False,
@@ -62,7 +62,7 @@ def count_labels(
 
 @router.get("", response_model=list[LabelsOut])
 def get_labels(
-    is_killer: bool | None = None,
+    ifk: bool | None = None,
     manual_checks: ManualChecksIn | None = None,
     limit: int = 10,
     skip: int = 0,
@@ -72,7 +72,7 @@ def get_labels(
     assert limit > 0
 
     query = get_filtered_query(
-        is_killer,
+        ifk,
         manual_checks,
         default_cols=(
             [
@@ -80,7 +80,7 @@ def get_labels(
                 Labels.player_id,
                 Labels.date_modified,
                 Labels.user_id,
-                Labels.extractor_id,
+                Labels.extr_id,
             ]
             + labels_model_to_labeled_predictables(Labels)
             + labels_model_to_checks(Labels)
@@ -231,7 +231,7 @@ def update_labels(
 
     new_info["date_modified"] = datetime.now()
     new_info["user_id"] = 1  # TODO: dynamic
-    new_info["extractor_id"] = 1  # TODO: dynamic
+    new_info["extr_id"] = 1  # TODO: dynamic
 
     filter_query.update(new_info, synchronize_session=False)
     db.commit()
