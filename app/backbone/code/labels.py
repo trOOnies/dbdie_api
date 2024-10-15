@@ -68,13 +68,7 @@ def get_filtered_query(
 ):
     options = [(Labels.player_id, ifk)]
     if manual_checks is not None and manual_checks.is_init:
-        options += [
-            (col, chk)
-            for chk, col in zip(
-                manual_checks.checks,
-                manual_checks.model_to_cols(Labels),
-            )
-        ]
+        options += manual_checks.get_filters_conds(Labels)
 
     cols = fill_cols_custom(
         options,

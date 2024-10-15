@@ -140,6 +140,7 @@ def do_count(
 
 
 def get_image(
+    id: int | str,
     img_add_path: str,
     model_str: str,
     folder_path: "PathToFolder",
@@ -169,13 +170,13 @@ def get_icon(
     model_str = endpoint[:-plural_len] if plural_len > 0 else endpoint
     model_str = model_str.capitalize()
 
-    return get_image(img_add_path, model_str, ICONS_FOLDER)
+    return get_image(id, img_add_path, model_str, ICONS_FOLDER)
 
 
 def get_match_img(filename: str) -> FileResponse:
     """Base get match image function."""
     assert "." not in filename[:-4]
-    return get_image(filename, "Match", absp(CROPPED_IMG_FD_RP))
+    return get_image(filename, filename, "Match", absp(CROPPED_IMG_FD_RP))
 
 
 def get_id(

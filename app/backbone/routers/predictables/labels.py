@@ -60,7 +60,8 @@ def count_labels(
     return query.count()
 
 
-@router.get("", response_model=list[LabelsOut])
+# TODO: Debug the filter so that it is more helpful and convenient
+@router.post("/filter-many", response_model=list[LabelsOut])
 def get_labels(
     ifk: bool | None = None,
     manual_checks: ManualChecksIn | None = None,

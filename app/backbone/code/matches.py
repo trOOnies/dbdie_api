@@ -4,7 +4,7 @@ import os
 import re
 import shutil
 from typing import TYPE_CHECKING
-from dbdie_classes.version import DBDVersion
+from dbdie_classes.schemas.helpers import DBDVersionOut
 from dbdie_classes.paths import absp, IMG_MAIN_FD_RP
 
 from backbone.endpoints import dbd_version_str_to_id, getr, postr
@@ -23,7 +23,7 @@ def form_match(match: "MatchCreate") -> dict:
     if new_match["dbd_version"] is None:
         new_match["dbdv_id"] = None
     else:
-        dbdv = str(DBDVersion(**new_match["dbd_version"]))
+        dbdv = str(DBDVersionOut(**new_match["dbd_version"]))
 
         new_match["dbdv_id"] = dbd_version_str_to_id(dbdv)
 
@@ -34,7 +34,7 @@ def form_match(match: "MatchCreate") -> dict:
 def get_versioned_fd_data(
     v_folder: "VersionedFolderUpload",
 ) -> tuple[list["Filename"], "PathToFolder", "PathToFolder"]:
-    """Get necessary objects for a certain DBDVersion."""
+    """Get necessary objects for a certain DBDVersionOut."""
     src_main_fd = absp(IMG_MAIN_FD_RP)
 
     src_fd = os.path.join(src_main_fd, f"versioned/{str(v_folder.dbd_version)}")
@@ -53,7 +53,7 @@ def upload_dbdv_matches(
     dst_fd: "PathToFolder",
     v_folder: "VersionedFolderUpload",
 ) -> list["MatchOut"]:
-    """Upload loop for matches of a certain DBDVersion."""
+    """Upload loop for matches of a certain DBDVersionOut."""
     matches = []
     dates = [DATE_PATT.search(f).group() for f in filenames]
 

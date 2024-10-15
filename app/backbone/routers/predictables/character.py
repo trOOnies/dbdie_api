@@ -2,6 +2,8 @@
 
 from typing import TYPE_CHECKING
 
+from dbdie_classes.options.MODEL_TYPE import CHARACTER
+from dbdie_classes.options.NULL_IDS import INT_IDS as NULL_INT_IDS
 from dbdie_classes.schemas.groupings import (
     FullCharacterCreate,
     FullCharacterOut,
@@ -82,20 +84,27 @@ def get_full_character(id: int, db: "Session" = Depends(get_db)):
     if character is None:
         raise ItemNotFoundException("Character", id)
 
+    is_null_id = id in NULL_INT_IDS[CHARACTER]
+    is_killer = (character.ifk is not None) and character.ifk
+
+    power = (
+        db.query(Item).filter(Item.id == character.power_id).first()
+        if (not is_null_id) and is_killer else None
+    )
+
     return {
         "character": character,
-        "power": (
-            db.query(Item).filter(Item.character_id).first()
-            if character.ifk.value
-            else None
+        "power": power,
+        "perks": (
+            db.query(Perk).filter(Perk.character_id == id).limit(3).all()
+            if not is_null_id else None
         ),
-        "perks": db.query(Perk).filter(Perk.character_id == id).limit(3).all(),
         "addons": (
-            db.query(Addon).filter(Addon.character_id == id).all()
-            if character.ifk.value
-            else None
+            db.query(Addon).filter(Addon.item_id == power.id).limit(20).all()
+            if power is not None else None
         ),
     }
+
 
 
 @router.post("", response_model=CharacterOut)

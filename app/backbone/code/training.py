@@ -98,7 +98,7 @@ def train_extractor(
                 "cps_name": cps_name,
                 "fmts": {
                     fmt: {
-                        "model_id": models_ids[fmt],
+                        "id": models_ids[fmt],
                         "fmt": fmt,
                         "total_classes": total_classes,
                         "cps_name": cps_name,

@@ -22,7 +22,6 @@ from backbone.options import ENDPOINTS as EP
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
-
 router = APIRouter()
 
 

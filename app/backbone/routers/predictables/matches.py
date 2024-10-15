@@ -67,14 +67,6 @@ def get_match_image(id: int):
 def get_match(id: int, db: "Session" = Depends(get_db)):
     m = filter_one(db, Match, id, "Match")[0]
     m = object_as_dict(m)
-
-    dbdv_id = m["dbdv_id"]
-    m["dbd_version"] = (
-        None if dbdv_id is None
-        else getr(f"{EP.DBD_VERSION}/{dbdv_id}")
-    )
-    del m["dbdv_id"]
-
     m = MatchOut(**m)
     return m
 
