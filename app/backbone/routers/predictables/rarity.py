@@ -1,11 +1,12 @@
 """Router for item ratity."""
 
 from dbdie_classes.schemas.types import RarityOut
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 from typing import TYPE_CHECKING
 
 from backbone.database import get_db
 from backbone.endpoints import (
+    delete_one,
     do_count,
     filter_one,
     get_many,
@@ -39,3 +40,8 @@ def get_items(
 @router.get("/{id}", response_model=RarityOut)
 def get_item(id: int, db: "Session" = Depends(get_db)):
     return filter_one(db, Rarity, id)[0]
+
+
+@router.delete("/{id}", status_code=status.HTTP_200_OK)
+def delete_rarity(id: int, db: "Session" = Depends(get_db)):
+    return delete_one(db, Rarity, "Rarity", id)

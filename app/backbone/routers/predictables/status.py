@@ -4,12 +4,13 @@ from typing import TYPE_CHECKING
 
 import requests
 from dbdie_classes.schemas.predictables import StatusCreate, StatusOut
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 
 from backbone.database import get_db
 from backbone.endpoints import (
     NOT_WS_PATT,
     add_commit_refresh,
+    delete_one,
     do_count,
     endp,
     get_icon,
@@ -69,7 +70,7 @@ def get_status_icon(id: int):
     return get_icon("statuses", id, plural_len=2)
 
 
-@router.post("", response_model=StatusOut)
+@router.post("", response_model=StatusOut, status_code=status.HTTP_201_CREATED)
 def create_status(status: StatusCreate, db: "Session" = Depends(get_db)):
     if NOT_WS_PATT.search(status.name) is None:
         raise ValidationException("Status name can't be empty")
@@ -83,3 +84,8 @@ def create_status(status: StatusCreate, db: "Session" = Depends(get_db)):
     add_commit_refresh(db, new_status)
 
     return get_req(EP.STATUS, new_status.id)
+
+
+@router.delete("/{id}", status_code=status.HTTP_200_OK)
+def delete_status(id: int, db: "Session" = Depends(get_db)):
+    return delete_one(db, Status, "Status", id)

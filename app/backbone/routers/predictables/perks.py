@@ -11,7 +11,8 @@ from backbone.database import get_db
 from backbone.endpoints import (
     NOT_WS_PATT,
     add_commit_refresh,
-    dbd_version_str_to_id,
+    dbdv_str_to_id,
+    delete_one,
     do_count,
     endp,
     get_icon,
@@ -80,7 +81,7 @@ def get_perk_icon(id: int):
     return get_icon("perks", id)
 
 
-@router.post("", response_model=PerkOut)
+@router.post("", response_model=PerkOut, status_code=status.HTTP_201_CREATED)
 def create_perk(perk: PerkCreate, db: "Session" = Depends(get_db)):
     """Create a DBD perk."""
     if NOT_WS_PATT.search(perk.name) is None:
@@ -93,11 +94,11 @@ def create_perk(perk: PerkCreate, db: "Session" = Depends(get_db)):
 
     new_perk = {"id": requests.get(endp(f"{EP.PERKS}/count")).json()} | perk.model_dump()
     new_perk["dbdv_id"] = (
-        dbd_version_str_to_id(new_perk["dbd_version_str"])
-        if new_perk["dbd_version_str"] is not None
+        dbdv_str_to_id(new_perk["dbdv_str"])
+        if new_perk["dbdv_str"] is not None
         else None
     )
-    del new_perk["dbd_version_str"]
+    del new_perk["dbdv_str"]
     new_perk = Perk(**new_perk)
 
     add_commit_refresh(db, new_perk)
@@ -149,3 +150,8 @@ def change_perk_id(id: int, new_id: int, db: "Session" = Depends(get_db)):
 def update_perk(id: int, perk: PerkCreate, db: "Session" = Depends(get_db)):
     """Update the information of a DBD perk."""
     return update_one(db, perk, Perk, "Perk", id)
+
+
+@router.delete("/{id}", status_code=status.HTTP_200_OK)
+def delete_perk(id: int, db: "Session" = Depends(get_db)):
+    return delete_one(db, Perk, "Perk", id)

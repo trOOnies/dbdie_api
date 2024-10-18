@@ -3,12 +3,13 @@
 from typing import TYPE_CHECKING
 from dbdie_classes.schemas.predictables import ItemCreate, ItemOut
 from dbdie_classes.schemas.types import ItemTypeOut
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 
 from backbone.database import get_db
 from backbone.endpoints import (
     NOT_WS_PATT,
     add_commit_refresh,
+    delete_one,
     do_count,
     filter_one,
     get_icon,
@@ -61,7 +62,7 @@ def get_item_icon(id: int):
     return get_icon("items", id)
 
 
-@router.post("", response_model=ItemOut)
+@router.post("", response_model=ItemOut, status_code=status.HTTP_201_CREATED)
 def create_item(item: ItemCreate, db: "Session" = Depends(get_db)):
     if NOT_WS_PATT.search(item.name) is None:
         raise ValidationException("Item name can't be empty")
@@ -74,3 +75,8 @@ def create_item(item: ItemCreate, db: "Session" = Depends(get_db)):
     add_commit_refresh(db, new_item)
 
     return get_req(EP.ITEM, new_item.id)
+
+
+@router.delete("/{id}", status_code=status.HTTP_200_OK)
+def delete_item(id: int, db: "Session" = Depends(get_db)):
+    return delete_one(db, Item, "Item", id)

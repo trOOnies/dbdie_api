@@ -9,6 +9,7 @@ from backbone.database import get_db
 from backbone.endpoints import (
     NOT_WS_PATT,
     add_commit_refresh,
+    delete_one,
     do_count,
     filter_one,
     get_many,
@@ -55,7 +56,7 @@ def get_extractor(id: int, db: "Session" = Depends(get_db)):
     return ExtractorOut.from_sqla(extractor)
 
 
-@router.post("/{id}", response_model=ExtractorOut)
+@router.post("/{id}", response_model=ExtractorOut, status_code=status.HTTP_201_CREATED)
 def create_extractor(
     id: int,
     extractor: ExtractorCreate,
@@ -85,3 +86,8 @@ def update_extractor(
     """Update the information of an InfoExtractor in the database."""
     # TODO: Update its config as well, and only allow sensible modifications.
     return update_one(db, extractor, Extractor, "Extractor", id)
+
+
+@router.delete("/{id}", status_code=status.HTTP_200_OK)
+def delete_extractor(id: int, db: "Session" = Depends(get_db)):
+    return delete_one(db, Extractor, "Extractor", id)

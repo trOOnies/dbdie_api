@@ -50,7 +50,7 @@ def get_model(id: int, db: "Session" = Depends(get_db)):
     return filter_one(db, Model, id)[0]
 
 
-@router.post("/{id}", response_model=ModelOut)
+@router.post("/{id}", response_model=ModelOut, status_code=status.HTTP_201_CREATED)
 def create_model(
     id: int,
     model: ModelCreate,

@@ -48,6 +48,7 @@ def get_req(endpoint: "Endpoint", id: int) -> dict:
 def parse_or_raise(resp, exp_status_code: int = status.HTTP_200_OK):
     """Parse Response as JSON or raise error as exception, depending on status code."""
     if resp.status_code != exp_status_code:
+        print(f"WRONG STATUS CODE: {resp.status_code} (expected: {exp_status_code})")
         raise HTTPException(
             status_code=resp.status_code,
             detail=resp.reason,
@@ -55,25 +56,28 @@ def parse_or_raise(resp, exp_status_code: int = status.HTTP_200_OK):
     return resp.json()
 
 
-def getr(endpoint: "Endpoint", **kwargs):
+def getr(endpoint: "Endpoint", ml: bool = False, **kwargs):
     """Include the boilerplate for a GET request."""
+    f = mlendp if ml else endp
     return parse_or_raise(
-        requests.get(endp(endpoint), **kwargs)
+        requests.get(f(endpoint), **kwargs)
     )
 
 
-def postr(endpoint: "Endpoint", **kwargs):
+def postr(endpoint: "Endpoint", ml: bool = False, **kwargs):
     """Include the boilerplate for a POST request."""
+    f = mlendp if ml else endp
     return parse_or_raise(
-        requests.post(endp(endpoint), **kwargs),
+        requests.post(f(endpoint), **kwargs),
         exp_status_code=status.HTTP_201_CREATED,
     )
 
 
-def putr(endpoint: "Endpoint", **kwargs):
+def putr(endpoint: "Endpoint", ml: bool = False, **kwargs):
     """Include the boilerplate for a PUT request."""
+    f = mlendp if ml else endp
     return parse_or_raise(
-        requests.put(endp(endpoint), **kwargs)
+        requests.put(f(endpoint), **kwargs)
     )
 
 
@@ -235,12 +239,25 @@ def add_commit_refresh(db: "Session", model) -> None:
     db.refresh(model)
 
 
+def delete_one(
+    db: "Session",
+    model,
+    model_str: str,  # TODO: Get from model
+    id: int,
+) -> Response:
+    """Base delete one (item) function."""
+    item, _ = filter_one(model, model_str, id, db)
+    db.delete(item)
+    db.commit()
+    return Response(status_code=status.HTTP_200_OK)
+
+
 # * Specific endpoint functions
 
 
-def dbd_version_str_to_id(s: str) -> int:
+def dbdv_str_to_id(s: str) -> int:
     """Converts a DBDVersion string to a DBDVersion id."""
-    return getr(f"{EP.DBD_VERSION}/id", params={"dbd_version_str": s})
+    return getr(f"{EP.DBD_VERSION}/id", params={"dbdv_str": s})
 
 
 def get_types(db: "Session", type_sqla_model):

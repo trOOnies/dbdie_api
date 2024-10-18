@@ -71,7 +71,7 @@ def get_match(id: int, db: "Session" = Depends(get_db)):
     return m
 
 
-@router.post("", response_model=MatchOut)
+@router.post("", response_model=MatchOut, status_code=status.HTTP_201_CREATED)
 def create_match(match_create: MatchCreate, db: "Session" = Depends(get_db)):
     if NOT_WS_PATT.search(match_create.filename) is None:
         raise ValidationException("Match filename can't be empty")
@@ -96,7 +96,11 @@ def create_match(match_create: MatchCreate, db: "Session" = Depends(get_db)):
     return resp
 
 
-@router.post("/vfd", response_model=list[VersionedMatchOut])
+@router.post(
+    "/vfd",
+    response_model=list[VersionedMatchOut],
+    status_code=status.HTTP_201_CREATED,
+)
 def upload_versioned_folder(v_folder: VersionedFolderUpload):
     """Upload DBD-versioned folder that resides in the folder 'versioned',
     and move its matches to 'pending' folder.
@@ -106,7 +110,7 @@ def upload_versioned_folder(v_folder: VersionedFolderUpload):
     # Assert DBD version already exists
     getr(
         f"{EP.DBD_VERSION}/id",
-        params={"dbd_version_str": str(v_folder.dbd_version)},
+        params={"dbdv_str": str(v_folder.dbdv)},
     )
 
     matches = upload_dbdv_matches(fs, src_fd, dst_fd, v_folder)
@@ -122,12 +126,12 @@ def update_match(id: int, match_create: MatchCreate, db: "Session" = Depends(get
 
     new_info = {"id": id} | match_create.model_dump()
 
-    del new_info["dbd_version"]
+    del new_info["dbdv"]
     new_info["dbdv_id"] = (
-        None if match_create.dbd_version is None
+        None if match_create.dbdv is None
         else getr(
             f"{EP.DBD_VERSION}/id",
-            params={"dbd_version_str": str(match_create.dbd_version)},
+            params={"dbdv_str": str(match_create.dbdv)},
         )
     )
 

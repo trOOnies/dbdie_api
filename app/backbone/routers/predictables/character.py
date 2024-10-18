@@ -12,7 +12,7 @@ from dbdie_classes.schemas.predictables import (
     CharacterCreate,
     CharacterOut,
 )
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 import requests
 
 from backbone.code.characters import (
@@ -24,7 +24,8 @@ from backbone.database import get_db
 from backbone.endpoints import (
     NOT_WS_PATT,
     add_commit_refresh,
-    dbd_version_str_to_id,
+    dbdv_str_to_id,
+    delete_one,
     do_count,
     endp,
     filter_one,
@@ -107,7 +108,7 @@ def get_full_character(id: int, db: "Session" = Depends(get_db)):
 
 
 
-@router.post("", response_model=CharacterOut)
+@router.post("", response_model=CharacterOut, status_code=status.HTTP_201_CREATED)
 def create_character(
     character: CharacterCreate,
     db: "Session" = Depends(get_db),
@@ -120,11 +121,11 @@ def create_character(
         "id": requests.get(endp(f"{EP.CHARACTER}/count")).json()
     } | character.model_dump()
 
-    if new_character["dbd_version_str"] is not None:
-        new_character["dbdv_id"] = dbd_version_str_to_id(
-            new_character["dbd_version_str"]
+    if new_character["dbdv_str"] is not None:
+        new_character["dbdv_id"] = dbdv_str_to_id(
+            new_character["dbdv_str"]
         )
-    del new_character["dbd_version_str"]
+    del new_character["dbdv_str"]
 
     new_character = Character(**new_character)
     add_commit_refresh(db, new_character)
@@ -133,13 +134,13 @@ def create_character(
     return resp
 
 
-@router.post("/full", response_model=FullCharacterOut)
+@router.post("/full", response_model=FullCharacterOut, status_code=status.HTTP_201_CREATED)
 def create_character_full(character: FullCharacterCreate):
     """Create a DBD character in full (with its perks and addons, if applies)."""
     payload = {
         "name": character.name,
         "ifk": character.ifk,
-        "dbd_version_str": str(character.dbd_version),
+        "dbdv_str": str(character.dbdv),
         "base_char_id": None,
     }
     character_only = postr(EP.CHARACTER, json=payload)
@@ -150,3 +151,8 @@ def create_character_full(character: FullCharacterCreate):
         "perks": create_perks(character_only, character.perk_names),
         "addons": create_addons(character_only, character.addon_names),
     }
+
+
+@router.delete("/{id}", status_code=status.HTTP_200_OK)
+def delete_character(id: int, db: "Session" = Depends(get_db)):
+    return delete_one(db, Character, "Character", id)

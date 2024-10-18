@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 
 from dbdie_classes.schemas.objects import CropperSwarmCreate, CropperSwarmOut
 from fastapi import APIRouter, Depends, status
-import requests
 
 from backbone.database import get_db
 from backbone.endpoints import (
@@ -14,8 +13,7 @@ from backbone.endpoints import (
     filter_one,
     get_many,
     get_req,
-    mlendp,
-    parse_or_raise,
+    postr,
     update_one,
 )
 from backbone.exceptions import ValidationException
@@ -54,7 +52,7 @@ def get_cropper_swarm(id: int, db: "Session" = Depends(get_db)):
     return filter_one(db, CropperSwarm, id)[0]
 
 
-@router.post("/{id}", response_model=CropperSwarmOut)
+@router.post("/{id}", response_model=CropperSwarmOut, status_code=status.HTTP_201_CREATED)
 def create_cropper_swarm(
     id: int,
     cropper_swarm: CropperSwarmCreate,
@@ -71,13 +69,7 @@ def create_cropper_swarm(
 
     resp = get_req(EP.CROPPER_SWARM, new_cropper_swarm.id)
 
-    parse_or_raise(
-        requests.post(
-            mlendp("/crop/register"),
-            json=resp,
-        ),
-        exp_status_code=status.HTTP_201_CREATED,
-    )
+    postr("/crop/register", ml=True, json=resp)
 
     return resp
 

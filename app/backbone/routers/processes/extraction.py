@@ -3,9 +3,8 @@
 from dbdie_classes.base import PathToFolder
 from dbdie_classes.options import MODEL_TYPE as MT
 from fastapi import APIRouter, status
-import requests
 
-from backbone.endpoints import parse_or_raise, postr
+from backbone.endpoints import postr
 from backbone.options import ENDPOINTS as EP
 from backbone.options import ML_ENDPOINTS as MLEP
 
@@ -18,15 +17,13 @@ def batch_extract(
     # fmts: list[FullModelType] | None = None,  # TODO
 ):
     """IMPORTANT. If doing partial uploads, please use 'fmts'."""
-    resp = parse_or_raise(
-        requests.post(
-            f"{MLEP.EXTRACT}/batch",
-            json={
-                "ie_folder_path": ie_folder_path,
-                # "fmts": fmts,
-            },
-        ),
-        exp_status_code=status.HTTP_201_CREATED,
+    resp = postr(
+        f"{MLEP.EXTRACT}/batch",
+        ml=True,
+        json={
+            "ie_folder_path": ie_folder_path,
+            # "fmts": fmts,
+        },
     )
 
     preds_dict = resp["preds_dict"]

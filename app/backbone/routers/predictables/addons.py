@@ -3,13 +3,14 @@
 from typing import TYPE_CHECKING
 from dbdie_classes.schemas.predictables import AddonCreate, AddonOut
 from dbdie_classes.schemas.types import AddonTypeOut
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 
 from backbone.database import get_db
 from backbone.endpoints import (
     NOT_WS_PATT,
     add_commit_refresh,
-    dbd_version_str_to_id,
+    dbdv_str_to_id,
+    delete_one,
     do_count,
     filter_one,
     get_icon,
@@ -62,7 +63,7 @@ def get_addon_icon(id: int):
     return get_icon("addons", id)
 
 
-@router.post("", response_model=AddonOut)
+@router.post("", response_model=AddonOut, status_code=status.HTTP_201_CREATED)
 def create_addon(addon: AddonCreate, db: "Session" = Depends(get_db)):
     if NOT_WS_PATT.search(addon.name) is None:
         raise ValidationException("Addon name can't be empty")
@@ -72,13 +73,18 @@ def create_addon(addon: AddonCreate, db: "Session" = Depends(get_db)):
 
     new_addon = {"id": getr(f"{EP.ADDONS}/count")} | addon.model_dump()
     new_addon["dbdv_id"] = (
-        dbd_version_str_to_id(new_addon["dbd_version_str"])
-        if new_addon["dbd_version_str"] is not None
+        dbdv_str_to_id(new_addon["dbdv_str"])
+        if new_addon["dbdv_str"] is not None
         else None
     )
-    del new_addon["dbd_version_str"]
+    del new_addon["dbdv_str"]
     new_addon = Addon(**new_addon)
 
     add_commit_refresh(db, new_addon)
 
     return get_req(EP.ADDONS, new_addon.id)
+
+
+@router.delete("/{id}", status_code=status.HTTP_200_OK)
+def delete_addon(id: int, db: "Session" = Depends(get_db)):
+    return delete_one(db, Addon, "Addon", id)

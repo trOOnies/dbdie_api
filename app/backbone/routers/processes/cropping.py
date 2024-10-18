@@ -1,9 +1,8 @@
 """Endpoint for cropping related purposes."""
 
 from fastapi import APIRouter, status
-import requests
 
-from backbone.endpoints import parse_or_raise, mlendp
+from backbone.endpoints import postr
 from backbone.options import ML_ENDPOINTS as MLEP
 
 router = APIRouter()
@@ -26,16 +25,15 @@ def batch_crop(
     - use_croppers: Filter cropping using Cropper names (level=Cropper).
     - use_fmt: Filter cropping using FullModelTypes names (level=crop type).
     """
-    return parse_or_raise(
-        requests.post(
-            mlendp(f"{MLEP.CROP}/batch"),
-            params={
-                "cropper_swarm_name": cropper_swarm_name,
-                "move": move,
-            },
-            json={
-                "use_croppers": use_croppers,
-                "use_fmts": use_fmts,
-            },
-        )
+    return postr(
+        f"{MLEP.CROP}/batch",
+        ml=True,
+        params={
+            "cropper_swarm_name": cropper_swarm_name,
+            "move": move,
+        },
+        json={
+            "use_croppers": use_croppers,
+            "use_fmts": use_fmts,
+        },
     )

@@ -26,7 +26,7 @@ class Match(Base):
 
     match_date   = C(Date, nullable=True)
     dbdv_id      = C(Int, FK(f"{TN.DBD_VERSION}.id"), nullable=True)
-    dbd_version  = rel("DBDVersion")
+    dbdv         = rel("DBDVersion")
 
     special_mode = C(Bool,     nullable=True)
     kills        = C(SmallInt, nullable=True)

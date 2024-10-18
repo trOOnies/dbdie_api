@@ -19,7 +19,7 @@ from backbone.endpoints import EP, getr
 router = APIRouter()
 
 
-@router.post("/batch", status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED)
 def batch_train(
     extr_id: int | None = None,
     extr_name: str | None = None,
@@ -50,13 +50,18 @@ def batch_train(
         extr_info["id"],
         extr_info["name"],
         cps_name,
-        {fmt: minfo["id"] for fmt, minfo in models_info.items()},
-        fmts_with_counts,
+        models_ids={fmt: minfo["id"] for fmt, minfo in models_info.items()},
+        fmts_with_counts=fmts_with_counts,
     )
-    extr_out    = extr_info   if extr_exists else (extr_out | extr_info)
-    models_out  = models_info if extr_exists else (models_out | models_info)
 
-    extr_info, models_info = set_today(extr_info, models_info)
+    extr_out = extr_info if extr_exists else (extr_out | extr_info)
+    models_out = (
+        models_info
+        if extr_exists
+        else {fmt: (models_out[fmt] | models_info[fmt]) for fmt in models_out}
+    )
 
-    update_models(extr_exists, extr_info["models_ids"], models_info)
-    update_extractor(extr_exists, extr_info, extr_id_)
+    extr_out, models_out = set_today(extr_out, models_out)
+
+    update_models(extr_exists, extr_out["models_ids"], models_out)
+    update_extractor(extr_exists, extr_out, extr_id_)

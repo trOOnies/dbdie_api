@@ -5,12 +5,10 @@ import datetime as dt
 from dbdie_classes.groupings import PredictableTuples
 from dbdie_classes.options import KILLER_FMT
 from dbdie_classes.options import SURV_FMT
-from dbdie_classes.options.MODEL_TYPE import CHARACTER
-from dbdie_classes.schemas.objects import ExtractorOut
-import requests
+from dbdie_classes.options.FMT import ALL as ALL_FMTS_ORDERED
 from typing import TYPE_CHECKING
 
-from backbone.endpoints import mlendp, parse_or_raise, getr, postr, putr
+from backbone.endpoints import getr, postr, putr
 from backbone.options import ENDPOINTS as EP
 from backbone.options import ML_ENDPOINTS as MLEP
 
@@ -88,29 +86,28 @@ def train_extractor(
     cps_name: str,
     models_ids: dict["FullModelType", int],
     fmts_with_counts: dict["FullModelType", int],
-) -> ExtractorOut:
-    return parse_or_raise(
-        requests.post(
-            mlendp(f"{MLEP.TRAIN}/batch"),
-            json={
-                "id": extr_id,
-                "name": extr_name,
-                "cps_name": cps_name,
-                "fmts": {
-                    fmt: {
-                        "id": models_ids[fmt],
-                        "fmt": fmt,
-                        "total_classes": total_classes,
-                        "cps_name": cps_name,
-                        "trained_model": None,  # TODO: Probably separate TrainModel from a train API schema
-                    }
-                    for fmt, total_classes in fmts_with_counts.items()
-                },
-                "custom_dbdvr": None,  # TODO
+) -> tuple[dict, dict]:
+    resp = postr(
+        MLEP.TRAIN,
+        ml=True,
+        json={
+            "id": extr_id,
+            "name": extr_name,
+            "cps_name": cps_name,
+            "fmts": {
+                fmt: {
+                    "id": models_ids[fmt],
+                    "fmt": fmt,
+                    "total_classes": total_classes,
+                    "cps_name": cps_name,
+                    "trained_model": None,  # TODO: Probably separate TrainModel from a train API schema
+                }
+                for fmt, total_classes in fmts_with_counts.items()
             },
-        ),
-        exp_status_code=201,  # Created
+            "custom_dbdvr": None,  # TODO
+        },
     )
+    return resp["extractor"], resp["models"]
 
 
 def set_today(extr_info, models_info):
@@ -127,11 +124,15 @@ def update_models(
     models_info,
 ) -> None:
     if extr_exists:
-        for mid, mjson in zip(models_ids.values(), models_info.values()):
-            putr(f"{EP.MODELS}/{mid}", json=mjson)
+        for fmt_id, fmt in enumerate(ALL_FMTS_ORDERED):
+            mid = models_ids[f"mid_{fmt_id}"]
+            if mid is not None:
+                putr(f"{EP.MODELS}/{mid}", json=models_info[fmt])
     else:
-        for mid, mjson in zip(models_ids.values(), models_info.values()):
-            postr(f"{EP.MODELS}/{mid}", json=mjson)
+        for fmt_id, fmt in enumerate(ALL_FMTS_ORDERED):
+            mid = models_ids[f"mid_{fmt_id}"]
+            if mid is not None:
+                postr(f"{EP.MODELS}/{mid}", json=models_info[fmt])
 
 
 def update_extractor(

@@ -61,7 +61,11 @@ def count_labels(
 
 
 # TODO: Debug the filter so that it is more helpful and convenient
-@router.post("/filter-many", response_model=list[LabelsOut])
+@router.post(
+    "/filter-many",
+    response_model=list[LabelsOut],
+    status_code=status.HTTP_200_OK,
+)
 def get_labels(
     ifk: bool | None = None,
     manual_checks: ManualChecksIn | None = None,
@@ -120,7 +124,7 @@ def get_label(
     return labels
 
 
-@router.post("", response_model=LabelsOut)
+@router.post("", response_model=LabelsOut, status_code=status.HTTP_201_CREATED)
 def create_labels(
     labels: LabelsCreate,
     db: "Session" = Depends(get_db),
