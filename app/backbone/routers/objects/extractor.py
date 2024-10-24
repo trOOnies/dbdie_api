@@ -12,6 +12,7 @@ from backbone.endpoints import (
     delete_one,
     do_count,
     filter_one,
+    get_id,
     get_many,
     get_req,
     update_one,
@@ -43,10 +44,16 @@ def get_extractors(
 ):
     """Query many Extractors."""
     extractors = get_many(db, limit, Extractor, skip)
-    return [
-        ExtractorOut.from_sqla(ext)
-        for ext in extractors
-    ]
+    return [ExtractorOut.from_sqla(ext) for ext in extractors]
+
+
+@router.get("/id", response_model=int)
+def get_extractor_id(
+    extr_name: str,
+    db: "Session" = Depends(get_db),
+):
+    """Get Extractor id from its name."""
+    return get_id(db, Extractor, "Extractor", extr_name)
 
 
 @router.get("/{id}", response_model=ExtractorOut)

@@ -26,31 +26,47 @@ router = APIRouter()
 
 
 @router.get("/count", response_model=int)
-def count_dbdvs(text: str = "", db: "Session" = Depends(get_db)):
+def count_dbdvs(
+    text: str = "",
+    db: "Session" = Depends(get_db),
+):
     """Count DBD versions."""
     return do_count(db, DBDVersion, text=text)
 
 
 @router.get("", response_model=list[DBDVersionOut])
-def get_dbdvs(limit: int = 10, skip: int = 0, db: "Session" = Depends(get_db)):
+def get_dbdvs(
+    limit: int = 10, 
+    skip: int = 0,
+    db: "Session" = Depends(get_db),
+):
     """Get many DBD versions."""
     return get_many(db, limit, DBDVersion, skip)
 
 
 @router.get("/id", response_model=int)
-def get_dbdv_id(dbdv_str: str, db: "Session" = Depends(get_db)):
+def get_dbdv_id(
+    dbdv_str: str,
+    db: "Session" = Depends(get_db),
+):
     """Get DBD version id from its string form."""
     return get_id(db, DBDVersion, "DBD version", dbdv_str)
 
 
 @router.get("/{id}", response_model=DBDVersionOut)
-def get_dbdv(id: int, db: "Session" = Depends(get_db)):
+def get_dbdv(
+    id: int,
+    db: "Session" = Depends(get_db),
+):
     """Get a certain DBD version with its id."""
     return filter_one(db, DBDVersion, id, "DBD version")[0]
 
 
 @router.post("", response_model=DBDVersionOut, status_code=status.HTTP_201_CREATED)
-def create_dbdv(dbdv: DBDVersionCreate, db: "Session" = Depends(get_db)):
+def create_dbdv(
+    dbdv: DBDVersionCreate,
+    db: "Session" = Depends(get_db),
+):
     """Create DBD version."""
     if NOT_WS_PATT.search(dbdv.name) is None:
         raise ValidationException("DBD version name can't be empty")

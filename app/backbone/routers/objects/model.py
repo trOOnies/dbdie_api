@@ -9,8 +9,10 @@ from backbone.database import get_db
 from backbone.endpoints import (
     NOT_WS_PATT,
     add_commit_refresh,
+    delete_one,
     do_count,
     filter_one,
+    get_id,
     get_many,
     get_req,
     update_one,
@@ -42,6 +44,15 @@ def get_models(
 ):
     """Query many Models."""
     return get_many(db, limit, Model, skip)
+
+
+@router.get("/id", response_model=int)
+def get_model_id(
+    model_name: str,
+    db: "Session" = Depends(get_db),
+):
+    """Get Model id from its name."""
+    return get_id(db, Model, "Model", model_name)
 
 
 @router.get("/{id}", response_model=ModelOut)
@@ -78,3 +89,8 @@ def update_model(
     """Update the information of an IEModel in the database."""
     # TODO: Update its config as well, and only allow sensible modifications.
     return update_one(db, model, Model, "Model", id)
+
+
+@router.delete("/{id}", status_code=status.HTTP_200_OK)
+def delete_model(id: int, db: "Session" = Depends(get_db)):
+    return delete_one(db, Model, "Model", id)

@@ -232,6 +232,28 @@ def update_many(
     db.commit()
 
 
+def update_one_strict(
+    db: "Session",
+    model,
+    model_str: str,  # TODO: Get from model
+    id: int,
+    updatable_cols: list[str],
+    user_key: str,
+    user_value,
+) -> Response:
+    """Base update one (item) function, but only allows to edit a single column."""
+    assert updatable_cols
+    assert user_key in updatable_cols
+
+    _, select_query = filter_one(model, model_str, id, db)
+
+    new_info = {user_key: user_value}
+    select_query.update(new_info, synchronize_session=False)
+    db.commit()
+
+    return Response(status_code=status.HTTP_200_OK)
+
+
 def add_commit_refresh(db: "Session", model) -> None:
     """Add and commit a sqlalchemy change, and then refresh."""
     db.add(model)

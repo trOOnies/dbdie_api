@@ -4,7 +4,10 @@ import os
 from typing import TYPE_CHECKING
 
 from datetime import datetime
+from fastapi import APIRouter, Depends, Response, status
+from fastapi.exceptions import HTTPException
 import pandas as pd
+
 from dbdie_classes.base import FullModelType
 from dbdie_classes.code.groupings import (
     labels_model_to_checks,
@@ -12,6 +15,9 @@ from dbdie_classes.code.groupings import (
 )
 from dbdie_classes.options import KILLER_FMT, SURV_FMT
 from dbdie_classes.options.FMT import ALL as ALL_FMT
+from dbdie_classes.options.FMT import from_fmt
+from dbdie_classes.options.SQL_COLS import ALL_FLATTENED as ALL_SQL_COLS
+from dbdie_classes.options.SQL_COLS import MT_TO_COLS
 from dbdie_classes.paths import LABELS_FD_RP, absp
 from dbdie_classes.schemas.groupings import (
     LabelsCreate,
@@ -19,8 +25,6 @@ from dbdie_classes.schemas.groupings import (
     ManualChecksIn,
     PlayerIn,
 )
-from fastapi import APIRouter, Depends, Response, status
-from fastapi.exceptions import HTTPException
 
 from backbone.code.labels import (
     concat_player_types,
@@ -199,6 +203,52 @@ def batch_create_labels(fmts: list[FullModelType], filename: str):
     post_labels(joined_df)
 
     return Response(status_code=status.HTTP_201_CREATED)
+
+
+@router.put("/predictable/strict", status_code=status.HTTP_200_OK)
+def update_extractor_strict(
+    match_id: int,
+    player_id: int,
+    fmt: "FullModelType",
+    value,
+    user_id: int,
+    extr_id: int,
+    db: "Session" = Depends(get_db),
+):
+    mt, _, _ = from_fmt(fmt)
+    key = MT_TO_COLS[mt]
+    key = key[0] if len(key) == 1 else ...  # TODO
+    if len(key) != 1:
+        raise NotImplementedError  # TODO: handle perks and addons (plurality)
+    assert key in ALL_SQL_COLS, f"'{key}' not in updatable cols."
+
+    filter_query = (
+        db.query(Labels)
+        .filter(Labels.match_id == match_id)
+        .filter(Labels.player_id == player_id)
+    )
+    new_info = filter_query.first()
+    if new_info is None:
+        print("NOT FOUND")
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            f"Labels with the id ({match_id}, {player_id}) were not found",
+        )
+
+    updated_info = {
+        key: value,
+        "date_modified": datetime.now(),
+        "user_id": user_id,
+        "extr_id": extr_id,
+        f"{mt}_mckd": False,
+    }
+
+    filter_query.update(updated_info, synchronize_session=False)
+    db.commit()
+
+    print(new_info.match_id, new_info.player_id, updated_info)
+
+    return Response(status_code=status.HTTP_200_OK)
 
 
 @router.put("/predictable", status_code=status.HTTP_200_OK)

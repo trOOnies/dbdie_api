@@ -19,6 +19,7 @@ from backbone.code.matches import (
 from backbone.database import get_db
 from backbone.endpoints import (
     NOT_WS_PATT,
+    delete_one,
     do_count,
     filter_one,
     get_id,
@@ -39,7 +40,10 @@ router = APIRouter()
 
 
 @router.get("/count", response_model=int)
-def count_matches(text: str = "", db: "Session" = Depends(get_db)):
+def count_matches(
+    text: str = "",
+    db: "Session" = Depends(get_db),
+):
     return do_count(db, Match, text=text)
 
 
@@ -53,7 +57,10 @@ def get_matches(
 
 
 @router.get("/id", response_model=int)
-def get_match_id(filename: str, db: "Session" = Depends(get_db)):
+def get_match_id(
+    filename: str,
+    db: "Session" = Depends(get_db),
+):
     return get_id(db, Match, "Match", filename, name_col="filename")
 
 
@@ -72,7 +79,10 @@ def get_match(id: int, db: "Session" = Depends(get_db)):
 
 
 @router.post("", response_model=MatchOut, status_code=status.HTTP_201_CREATED)
-def create_match(match_create: MatchCreate, db: "Session" = Depends(get_db)):
+def create_match(
+    match_create: MatchCreate,
+    db: "Session" = Depends(get_db),
+):
     if NOT_WS_PATT.search(match_create.filename) is None:
         raise ValidationException("Match filename can't be empty")
 
@@ -120,7 +130,11 @@ def upload_versioned_folder(v_folder: VersionedFolderUpload):
 
 
 @router.put("/{id}", status_code=status.HTTP_200_OK)
-def update_match(id: int, match_create: MatchCreate, db: "Session" = Depends(get_db)):
+def update_match(
+    id: int,
+    match_create: MatchCreate,
+    db: "Session" = Depends(get_db),
+):
     """Update the information of a DBD match."""
     _, select_query = filter_one(db, Match, id, "Match")
 
@@ -141,3 +155,8 @@ def update_match(id: int, match_create: MatchCreate, db: "Session" = Depends(get
     db.commit()
 
     return Response(status_code=status.HTTP_200_OK)
+
+
+@router.delete("/{id}", status_code=status.HTTP_200_OK)
+def delete_match(id: int, db: "Session" = Depends(get_db)):
+    return delete_one(db, Match, "Match", id)
