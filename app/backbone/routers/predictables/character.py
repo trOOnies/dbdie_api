@@ -118,7 +118,7 @@ def create_character(
         raise ValidationException("Character name can't be empty")
 
     new_character = {
-        "id": requests.get(endp(f"{EP.CHARACTER}/count")).json()
+        "id": requests.get(endp(f"{EP.CHARACTER}/count"))
     } | character.model_dump()
 
     if new_character["dbdv_str"] is not None:

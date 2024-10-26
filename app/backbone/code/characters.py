@@ -1,12 +1,17 @@
 """Extra code for the '/character' endpoints."""
 
+from typing import TYPE_CHECKING
+
 from backbone.endpoints import postr
 from backbone.options import ENDPOINTS as EP
+
+if TYPE_CHECKING:
+    from dbdie_classes.base import LabelName
 
 ADDON_TYPE_ID = 1
 
 
-def create_perks(character: dict, perk_names: list[str]) -> list[dict]:
+def create_perks(character: dict, perk_names: list["LabelName"]) -> list[dict]:
     """Perks creation for use in FullCharacterCreate."""
     perks = []
     for perk_name in perk_names:
@@ -25,7 +30,7 @@ def create_perks(character: dict, perk_names: list[str]) -> list[dict]:
 
 def create_addons(
     character: dict,
-    addon_names: list[str] | None,
+    addon_names: list["LabelName"] | None,
 ) -> list[dict] | None:
     """Addons creation for use in FullCharacterCreate."""
     if addon_names is None:
@@ -47,7 +52,7 @@ def create_addons(
     return addons
 
 
-def create_killer_power(power_name: str | None) -> dict | None:
+def create_killer_power(power_name: "LabelName" | None) -> dict | None:
     """Killer power creation for use in FullCharacterCreate."""
     return (
         None if power_name is None

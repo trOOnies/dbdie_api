@@ -1,12 +1,14 @@
 """Router code for DBD version"""
 
 from typing import TYPE_CHECKING
-from dbdie_classes.schemas.helpers import DBDVersionCreate, DBDVersionOut
 from fastapi import APIRouter, Depends, Response, status
+
+from dbdie_classes.schemas.helpers import DBDVersionCreate, DBDVersionOut
 
 from backbone.database import get_db
 from backbone.endpoints import (
     add_commit_refresh,
+    delete_one,
     do_count,
     filter_one,
     get_id,
@@ -93,3 +95,8 @@ def update_dbdv(
     db.commit()
 
     return Response(status_code=status.HTTP_200_OK)
+
+
+@router.delete("/{id}", status_code=status.HTTP_200_OK)
+def delete_dbdv(id: int, db: "Session" = Depends(get_db)):
+    return delete_one(db, DBDVersion, "DBD version", id)

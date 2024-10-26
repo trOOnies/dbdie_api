@@ -2,23 +2,53 @@
 
 from typing import TYPE_CHECKING
 
-from dbdie_classes.schemas.groupings import ManualChecksIn
+from fastapi import status
+from fastapi.exceptions import HTTPException
+import os
 import pandas as pd
-import requests
 
-from backbone.endpoints import endp, postr
+from dbdie_classes.options.FMT import from_fmt
+from dbdie_classes.options.SQL_COLS import ALL_FLATTENED as ALL_SQL_COLS
+from dbdie_classes.options.SQL_COLS import MT_TO_COLS
+from dbdie_classes.paths import LABELS_FD_RP, absp
+from dbdie_classes.schemas.groupings import ManualChecksIn
+
+from backbone.endpoints import getr, postr
 from backbone.models.groupings import Labels
 from backbone.options import ENDPOINTS as EP
 from backbone.sqla import fill_cols_custom, soft_bool_filter
 
 if TYPE_CHECKING:
-    from dbdie_classes.base import FullModelType
+    from dbdie_classes.base import (
+        Filename, FullModelType, IsForKiller, ModelType
+    )
     from sqlalchemy.orm import Session
+
+
+def filter_one_labels_row(
+    db: "Session",
+    match_id: int,
+    player_id: int,
+):
+    """Labels' `filter_one` equivalent function."""
+    filter_query = (
+        db.query(Labels)
+        .filter(Labels.match_id == match_id)
+        .filter(Labels.player_id == player_id)
+    )
+    item = filter_query.first()
+    if item is None:
+        print("NOT FOUND")
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            f"Labels with the id ({match_id}, {player_id}) were not found",
+        )
+    return item, filter_query
 
 
 def additional_filters(
     query,
-    ifk: bool | None = None,
+    ifk: "IsForKiller" = None,
     manual_checks: ManualChecksIn | None = None,
 ):
     if ifk is not None:
@@ -60,7 +90,7 @@ def player_to_labels(player: dict) -> dict:
 
 
 def get_filtered_query(
-    ifk: bool | None,
+    ifk: "IsForKiller",
     manual_checks: ManualChecksIn | None,
     default_cols: list,
     force_prepend_default_cols: bool,
@@ -119,11 +149,25 @@ def handle_mpp_crops(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def get_dfs_dict(
+    fmts: list["FullModelType"],
+    filename: "Filename",
+) -> dict["FullModelType", pd.DataFrame]:
+    labels_fd = absp(LABELS_FD_RP)
+    return {
+        fmt: pd.read_csv(
+            os.path.join(labels_fd, f"{fmt}/{filename}"),
+            usecols=["name", "label_id"],
+        )
+        for fmt in fmts
+    }
+
+
 def concat_player_types(
-    dfs: dict[str, pd.DataFrame],
+    dfs: dict["FullModelType", pd.DataFrame],
     fmt_1: "FullModelType",
     fmt_2: "FullModelType",
-    new_fmt: str,
+    new_fmt: "FullModelType",
 ) -> None:
     """Concatenate 2 different FullModelTypes.
     Used for concatenating 2 fmts that come from killer and survivor.
@@ -134,7 +178,7 @@ def concat_player_types(
         del dfs[fmt_1], dfs[fmt_2]
 
 
-def join_dfs(dfs: dict[str, pd.DataFrame]) -> pd.DataFrame:
+def join_dfs(dfs: dict["FullModelType", pd.DataFrame]) -> pd.DataFrame:
     """Join DataFrames that have the same kind of index."""
     is_first = True
     fmts = list(dfs.keys())
@@ -151,11 +195,9 @@ def join_dfs(dfs: dict[str, pd.DataFrame]) -> pd.DataFrame:
 
 def process_joined_df(joined_df: pd.DataFrame) -> pd.DataFrame:
     joined_df = joined_df.reset_index(drop=False)
+
     joined_df["match_id"] = joined_df["name"].map(
-        lambda f: requests.get(
-            endp(f"{EP.MATCHES}/id"),
-            params={"filename": f},
-        ).json(),
+        lambda f: getr(f"{EP.MATCHES}/id", params={"filename": f})
     )
     joined_df = joined_df.drop("name", axis=1)
     return joined_df
@@ -164,16 +206,13 @@ def process_joined_df(joined_df: pd.DataFrame) -> pd.DataFrame:
 def post_labels(joined_df: pd.DataFrame) -> None:
     joined_df = joined_df.astype(
         {
-            k: int
-            for k in [
-                "match_id",
-                "player_id",
-                "character",
-                "perks_0",
-                "perks_1",
-                "perks_2",
-                "perks_3",
-            ]
+            "match_id": int,
+            "player_id": int,
+            "character": int,
+            "perks_0": int,
+            "perks_1": int,
+            "perks_2": int,
+            "perks_3": int,
         }
     )
     for _, row in joined_df.iterrows():
@@ -193,3 +232,14 @@ def post_labels(joined_df: pd.DataFrame) -> None:
                 },
             },
         )
+
+
+def process_fmt_strict(fmt: "FullModelType") -> tuple["ModelType", str]:
+    """Process full model type for the strict update endpoint."""
+    mt, _, _ = from_fmt(fmt)
+    key = MT_TO_COLS[mt]
+    key = key[0] if len(key) == 1 else ...  # TODO
+    if len(key) != 1:
+        raise NotImplementedError  # TODO: handle perks and addons (plurality)
+    assert key in ALL_SQL_COLS, f"'{key}' not in updatable cols."
+    return mt, key

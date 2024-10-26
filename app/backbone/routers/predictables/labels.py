@@ -1,24 +1,17 @@
 """Router code for DBD match labels."""
 
-import os
 from typing import TYPE_CHECKING
 
 from datetime import datetime
 from fastapi import APIRouter, Depends, Response, status
-from fastapi.exceptions import HTTPException
-import pandas as pd
 
-from dbdie_classes.base import FullModelType
+from dbdie_classes.base import Filename, FullModelType
 from dbdie_classes.code.groupings import (
     labels_model_to_checks,
     labels_model_to_labeled_predictables,
 )
 from dbdie_classes.options import KILLER_FMT, SURV_FMT
 from dbdie_classes.options.FMT import ALL as ALL_FMT
-from dbdie_classes.options.FMT import from_fmt
-from dbdie_classes.options.SQL_COLS import ALL_FLATTENED as ALL_SQL_COLS
-from dbdie_classes.options.SQL_COLS import MT_TO_COLS
-from dbdie_classes.paths import LABELS_FD_RP, absp
 from dbdie_classes.schemas.groupings import (
     LabelsCreate,
     LabelsOut,
@@ -28,18 +21,22 @@ from dbdie_classes.schemas.groupings import (
 
 from backbone.code.labels import (
     concat_player_types,
+    filter_one_labels_row,
+    get_dfs_dict,
     get_filtered_query,
     handle_mpp_crops,
     handle_opp_crops,
     join_dfs,
     player_to_labels,
     post_labels,
+    process_fmt_strict,
     process_joined_df,
 )
 from backbone.database import get_db
 from backbone.endpoints import add_commit_refresh, getr
 from backbone.models.groupings import Labels
 from backbone.options import ENDPOINTS as EP
+from backbone.sqla import limit_and_skip
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -97,10 +94,7 @@ def get_labels(
         force_prepend_default_cols=True,
         db=db,
     )
-    if skip == 0:
-        labels = query.limit(limit).all()
-    else:
-        labels = query.limit(limit).offset(skip).all()
+    labels = limit_and_skip(query, limit, skip).all()
 
     labels = [LabelsOut.from_labels(lbl) for lbl in labels]
     return labels
@@ -113,17 +107,7 @@ def get_label(
     db: "Session" = Depends(get_db),
 ):
     """Get player-centered labels with (match_id, player_id)."""
-    labels = (
-        db.query(Labels)
-        .filter(Labels.match_id == match_id)
-        .filter(Labels.player_id == player_id)
-        .first()
-    )
-    if labels is None:
-        raise HTTPException(
-            status.HTTP_404_NOT_FOUND,
-            f"Labels with the id ({match_id}, {player_id}) were not found",
-        )
+    labels, _ = filter_one_labels_row(db, match_id, player_id)
     labels = LabelsOut.from_labels(labels)
     return labels
 
@@ -151,9 +135,9 @@ def create_labels(
 
 
 @router.post("/batch", status_code=status.HTTP_201_CREATED)
-def batch_create_labels(fmts: list[FullModelType], filename: str):
+def batch_create_labels(fmts: list[FullModelType], filename: Filename):
     """Create player-centered labels from label CSVs."""
-    assert fmts, "Full model types can't be empty"
+    assert fmts, "Full model types can't be empty."
     assert all(fmt in ALL_FMT for fmt in fmts)
 
     # TODO
@@ -164,14 +148,7 @@ def batch_create_labels(fmts: list[FullModelType], filename: str):
         for fmt in fmts
     )
 
-    labels_fd = absp(LABELS_FD_RP)
-    dfs = {
-        fmt: pd.read_csv(
-            os.path.join(labels_fd, f"{fmt}/{filename}"),
-            usecols=["name", "label_id"],
-        )
-        for fmt in fmts
-    }
+    dfs = get_dfs_dict(fmts, filename)
 
     for c in [SURV_FMT.CHARACTER, KILLER_FMT.CHARACTER]:
         if c in dfs:
@@ -194,7 +171,8 @@ def batch_create_labels(fmts: list[FullModelType], filename: str):
     )
 
     dfs = {
-        fmt: df.set_index(["name", "player_id"], drop=True) for fmt, df in dfs.items()
+        fmt: df.set_index(["name", "player_id"], drop=True)
+        for fmt, df in dfs.items()
     }
 
     joined_df = join_dfs(dfs)
@@ -206,35 +184,18 @@ def batch_create_labels(fmts: list[FullModelType], filename: str):
 
 
 @router.put("/predictable/strict", status_code=status.HTTP_200_OK)
-def update_extractor_strict(
+def update_labels_strict(
     match_id: int,
     player_id: int,
-    fmt: "FullModelType",
+    fmt: FullModelType,
     value,
     user_id: int,
     extr_id: int,
     db: "Session" = Depends(get_db),
 ):
-    mt, _, _ = from_fmt(fmt)
-    key = MT_TO_COLS[mt]
-    key = key[0] if len(key) == 1 else ...  # TODO
-    if len(key) != 1:
-        raise NotImplementedError  # TODO: handle perks and addons (plurality)
-    assert key in ALL_SQL_COLS, f"'{key}' not in updatable cols."
+    mt, key = process_fmt_strict(fmt)
 
-    filter_query = (
-        db.query(Labels)
-        .filter(Labels.match_id == match_id)
-        .filter(Labels.player_id == player_id)
-    )
-    new_info = filter_query.first()
-    if new_info is None:
-        print("NOT FOUND")
-        raise HTTPException(
-            status.HTTP_404_NOT_FOUND,
-            f"Labels with the id ({match_id}, {player_id}) were not found",
-        )
-
+    new_info, filter_query = filter_one_labels_row(db, match_id, player_id)
     updated_info = {
         key: value,
         "date_modified": datetime.now(),
@@ -251,6 +212,7 @@ def update_extractor_strict(
     return Response(status_code=status.HTTP_200_OK)
 
 
+# TODO: Deprecate this strict implementation if the previous one is more correct
 @router.put("/predictable", status_code=status.HTTP_200_OK)
 def update_labels(
     match_id: int,
@@ -263,18 +225,7 @@ def update_labels(
     if strict:
         assert len(fps) == 1
 
-    filter_query = (
-        db.query(Labels)
-        .filter(Labels.match_id == match_id)
-        .filter(Labels.player_id == player.id)
-    )
-    new_info = filter_query.first()
-    if new_info is None:
-        print("NOT FOUND")
-        raise HTTPException(
-            status.HTTP_404_NOT_FOUND,
-            f"Labels with the id ({match_id}, {player.id}) were not found",
-        )
+    new_info, filter_query = filter_one_labels_row(db, match_id, player.id)
 
     new_info = LabelsOut.from_labels(new_info)
     sql_player = new_info.player
@@ -291,4 +242,16 @@ def update_labels(
     filter_query.update(new_info, synchronize_session=False)
     db.commit()
 
+    return Response(status_code=status.HTTP_200_OK)
+
+
+@router.delete("/", status_code=status.HTTP_200_OK)
+def delete_labels(
+    match_id: int,
+    player_id: int,
+    db: "Session" = Depends(get_db),
+):
+    item, _ = filter_one_labels_row(db, match_id, player_id)
+    db.delete(item)
+    db.commit()
     return Response(status_code=status.HTTP_200_OK)

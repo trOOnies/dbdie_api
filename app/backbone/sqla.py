@@ -16,12 +16,10 @@ def soft_bool_filter(col, cond: bool):
 
 
 def join_and_filter_ifk(query: "Query", model, mt_type, ifk: bool) -> "Query":
+    """Join with model-type type, and filter with ifk (killer boolean)."""
     if (mt_type is not None) and (ifk is not None):
         query = query.join(mt_type)
-        if model.__tablename__ in {TN.OFFERING, TN.PERKS, TN.STATUS}:
-            query = query.filter(soft_bool_filter(mt_type.ifk, ifk))
-        else:
-            query = query.filter(soft_bool_filter(mt_type.ifk, ifk))
+        query = query.filter(soft_bool_filter(mt_type.ifk, ifk))
     elif model.__tablename__ == TN.CHARACTER:
         query = query.filter(soft_bool_filter(model.ifk, ifk))
 
@@ -45,12 +43,13 @@ def filter_with_text(query: "Query", model, search_text: str) -> "Query":
 
     search_text = search_text.lower()
 
-    if model.__tablename__ in TN.NAME_FILTERED_TABLENAMES:
+    tname = model.__tablename__
+    if tname in TN.NAME_FILTERED_TABLENAMES:
         return query.filter(func.lower(model.name).contains(search_text))
-    elif model.__tablename__ == TN.MATCHES:
+    elif tname == TN.MATCHES:
         return query.filter(func.lower(model.filename).contains(search_text))
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"Table '{tname}' has no name-column implemented.")
 
 
 def get_items_query(

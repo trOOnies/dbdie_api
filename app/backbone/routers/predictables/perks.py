@@ -87,12 +87,9 @@ def create_perk(perk: PerkCreate, db: "Session" = Depends(get_db)):
     if NOT_WS_PATT.search(perk.name) is None:
         raise ValidationException("Perk name can't be empty")
 
-    assert (
-        requests.get(endp(f"{EP.CHARACTER}/{perk.character_id}")).status_code
-        == status.HTTP_200_OK
-    )
+    getr(f"{EP.CHARACTER}/{perk.character_id}")
 
-    new_perk = {"id": requests.get(endp(f"{EP.PERKS}/count")).json()} | perk.model_dump()
+    new_perk = {"id": requests.get(endp(f"{EP.PERKS}/count"))} | perk.model_dump()
     new_perk["dbdv_id"] = (
         dbdv_str_to_id(new_perk["dbdv_str"])
         if new_perk["dbdv_str"] is not None
@@ -107,7 +104,11 @@ def create_perk(perk: PerkCreate, db: "Session" = Depends(get_db)):
 
 
 @router.put("/{id}/change_id", response_model=PerkOut)
-def change_perk_id(id: int, new_id: int, db: "Session" = Depends(get_db)):
+def change_perk_id(
+    id: int,
+    new_id: int,
+    db: "Session" = Depends(get_db),
+):
     assert new_id >= 0, "The new ID cannot be negative."
     perk = getr(f"{EP.PERKS}/{id}")
 

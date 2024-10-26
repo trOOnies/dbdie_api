@@ -84,20 +84,26 @@ def putr(endpoint: "Endpoint", ml: bool = False, **kwargs):
 # * Base endpoint functions
 
 
-def filter_one(db: "Session", model, id: int, model_str: str | None = None):
+def filter_one(
+    db: "Session",
+    model,
+    id: int,
+    model_str: str | None = None,
+):
     """Base get one (item) function.
 
-    'model' is the sqlalchemy model, and model_str
+    `model` is the SQLAlchemy model, and `model_str`
     is its string name (also capitalized).
     """
     assert id >= 0, "ID can't be negative"
     filter_query = db.query(model).filter(model.id == id)
     item = filter_query.first()
     if item is None:
-        raise ItemNotFoundException(
-            (model_str if model_str is not None else model.__tablename__.capitalize()),
-            id,
+        item_type = (
+            model_str if model_str is not None
+            else model.__tablename__.capitalize()
         )
+        raise ItemNotFoundException(item_type, id)
     return item, filter_query
 
 

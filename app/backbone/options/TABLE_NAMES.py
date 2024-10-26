@@ -1,25 +1,30 @@
 """Table names as seen in the DBDIE database."""
 
-ADDONS           = "addons"
-ADDONS_TYPES     = "addons_types"
-CHARACTER        = "character"
-CROPPER_SWARM    = "cropper_swarm"
-DBD_VERSION      = "dbd_version"
-EXTRACTOR        = "extractor"
-FULL_MODEL_TYPES = "full_model_types"
-ITEM             = "item"
-ITEM_TYPES       = "item_types"
-LABELS           = "labels"
-MATCHES          = "matches"
-MODEL            = "model"
-OFFERING         = "offering"
-OFFERING_TYPES   = "offering_types"
-PERKS            = "perks"
-RARITY           = "rarity"
-STATUS           = "status"
-USER             = "user"
+from typing import TYPE_CHECKING
 
-PREDICTABLES = [
+if TYPE_CHECKING:
+    from dbdie_classes.base import TableName
+
+ADDONS           : "TableName" = "addons"
+ADDONS_TYPES     : "TableName" = "addons_types"
+CHARACTER        : "TableName" = "character"
+CROPPER_SWARM    : "TableName" = "cropper_swarm"
+DBD_VERSION      : "TableName" = "dbd_version"
+EXTRACTOR        : "TableName" = "extractor"
+FULL_MODEL_TYPES : "TableName" = "full_model_types"
+ITEM             : "TableName" = "item"
+ITEM_TYPES       : "TableName" = "item_types"
+LABELS           : "TableName" = "labels"
+MATCHES          : "TableName" = "matches"
+MODEL            : "TableName" = "model"
+OFFERING         : "TableName" = "offering"
+OFFERING_TYPES   : "TableName" = "offering_types"
+PERKS            : "TableName" = "perks"
+RARITY           : "TableName" = "rarity"
+STATUS           : "TableName" = "status"
+USER             : "TableName" = "user"
+
+PREDICTABLES: list["TableName"] = [
     ADDONS,
     CHARACTER,
     ITEM,
@@ -28,20 +33,20 @@ PREDICTABLES = [
     STATUS,
 ]
 
-PREDICTABLE_TYPES = [
+PREDICTABLE_TYPES: list["TableName"] = [
     ADDONS_TYPES,
     ITEM_TYPES,
     OFFERING_TYPES,
 ]
 
-DBDIE_OBJECTS = [
+DBDIE_OBJECTS: list["TableName"] = [
     CROPPER_SWARM,
     EXTRACTOR,
     MODEL,
     USER,
 ]
 
-NAME_FILTERED_TABLENAMES = {
+NAME_FILTERED_TABLENAMES: set["TableName"] = {
     ADDONS,
     CHARACTER,
     DBD_VERSION,

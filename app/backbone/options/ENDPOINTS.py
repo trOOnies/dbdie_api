@@ -6,21 +6,21 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from dbdie_classes.base import Endpoint, ModelType
 
-ADDONS      : "Endpoint" = "/addons"
-CHARACTER   : "Endpoint" = "/character"
-ITEM        : "Endpoint" = "/item"
-OFFERING    : "Endpoint" = "/offering"
-PERKS       : "Endpoint" = "/perks"
-POINTS      : "Endpoint" = "/points"
-PRESTIGE    : "Endpoint" = "/prestige"
-STATUS      : "Endpoint" = "/status"
-RARITY      : "Endpoint" = "/rarity"
+ADDONS        : "Endpoint" = "/addons"
+CHARACTER     : "Endpoint" = "/character"
+ITEM          : "Endpoint" = "/item"
+OFFERING      : "Endpoint" = "/offering"
+PERKS         : "Endpoint" = "/perks"
+POINTS        : "Endpoint" = "/points"
+PRESTIGE      : "Endpoint" = "/prestige"
+STATUS        : "Endpoint" = "/status"
+RARITY        : "Endpoint" = "/rarity"
 
 # Groupings
-DBD_VERSION : "Endpoint" = "/dbd-version"
-MATCHES     : "Endpoint" = "/matches"
-PLAYERS     : "Endpoint" = "/players"
-LABELS      : "Endpoint" = "/labels"
+DBD_VERSION   : "Endpoint" = "/dbd-version"
+MATCHES       : "Endpoint" = "/matches"
+PLAYERS       : "Endpoint" = "/players"
+LABELS        : "Endpoint" = "/labels"
 
 # DBDIE objects
 CROPPER_SWARM : "Endpoint" = "/cropper-swarm"
@@ -29,10 +29,10 @@ MODELS        : "Endpoint" = "/models"
 FMT           : "Endpoint" = "/fmt"
 
 # Processes
-CROP        : "Endpoint" = "/crop"
-EXTRACT     : "Endpoint" = "/extract"
-BACKUP      : "Endpoint" = "/backup"
-TRAIN       : "Endpoint" = "/train"
+CROP          : "Endpoint" = "/crop"
+EXTRACT       : "Endpoint" = "/extract"
+BACKUP        : "Endpoint" = "/backup"
+TRAIN         : "Endpoint" = "/train"
 
 MT_TO_ENDPOINT: dict["ModelType", "Endpoint"] = {
     MT.ADDONS: ADDONS,

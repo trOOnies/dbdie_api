@@ -2,11 +2,11 @@
 
 from copy import deepcopy
 import datetime as dt
-from dbdie_classes.groupings import PredictableTuples
-from dbdie_classes.options import KILLER_FMT
-from dbdie_classes.options import SURV_FMT
-from dbdie_classes.options.FMT import ALL as ALL_FMTS_ORDERED
 from typing import TYPE_CHECKING
+
+from dbdie_classes.groupings import PredictableTuples
+from dbdie_classes.options.FMT import ALL as ALL_FMTS_ORDERED
+from dbdie_classes.options.IMPLEMENTED import FMTS as IMPLEMENTED_FMTS
 
 from backbone.endpoints import getr, postr, putr
 from backbone.options import ENDPOINTS as EP
@@ -43,17 +43,13 @@ def goi_not_existing(
     extr_name: str,
     fmts: list["FullModelType"] | None,
     cps_id: int,
-):
+) -> tuple[
+    dict[str, int | str],
+    dict["FullModelType", dict[str, int]],
+    PredictableTuples,
+]:
     """Get objects info when Extractor doesn't exist yet."""
-    fmts_ = deepcopy(fmts) if fmts is not None else [
-        KILLER_FMT.CHARACTER,
-        SURV_FMT.CHARACTER,
-        KILLER_FMT.ITEM,
-        SURV_FMT.ITEM,
-        KILLER_FMT.PERKS,
-        SURV_FMT.PERKS,
-        SURV_FMT.STATUS,
-    ]
+    fmts_ = deepcopy(fmts) if fmts is not None else IMPLEMENTED_FMTS
 
     model_count = getr(f"{EP.MODELS}/count")
 
@@ -110,7 +106,10 @@ def train_extractor(
     return resp["extractor"], resp["models"]
 
 
-def set_today(extr_info, models_info):
+def set_today(
+    extr_info: dict,
+    models_info: dict,
+) -> tuple[dict, dict["FullModelType", dict]]:
     today = dt.date.today().strftime("%Y-%m-%d")
     extr_info["date_last_trained"] = today
     for fmt in models_info:
@@ -121,7 +120,7 @@ def set_today(extr_info, models_info):
 def update_models(
     extr_exists: bool,
     models_ids: dict,
-    models_info,
+    models_info: dict["FullModelType", dict],
 ) -> None:
     if extr_exists:
         for fmt_id, fmt in enumerate(ALL_FMTS_ORDERED):
@@ -137,7 +136,7 @@ def update_models(
 
 def update_extractor(
     extr_exists: bool,
-    extr_info,
+    extr_info: dict,
     extr_id: int,
 ) -> None:
     if extr_exists:

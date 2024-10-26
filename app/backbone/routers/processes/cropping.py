@@ -2,6 +2,8 @@
 
 from fastapi import APIRouter, status
 
+from dbdie_classes.base import FullModelType
+
 from backbone.endpoints import postr
 from backbone.options import ML_ENDPOINTS as MLEP
 
@@ -13,7 +15,7 @@ def batch_crop(
     cropper_swarm_name: str,
     move: bool = True,
     use_croppers: list[str] | None = None,
-    use_fmts: list[str] | None = None,
+    use_fmts: list[FullModelType] | None = None,
 ):
     """[NEW] Run all Croppers iterating on images first.
 

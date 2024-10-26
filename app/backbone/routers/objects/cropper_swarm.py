@@ -1,4 +1,4 @@
-"""Router code for DBDIE CropperSwarm."""
+"""Router code for DBDIE `CropperSwarm`."""
 
 from typing import TYPE_CHECKING
 
@@ -9,6 +9,7 @@ from backbone.database import get_db
 from backbone.endpoints import (
     NOT_WS_PATT,
     add_commit_refresh,
+    delete_one,
     do_count,
     filter_one,
     get_many,
@@ -83,3 +84,8 @@ def update_cropper_swarm(
     """Update the information of an InfoCropperSwarm in the database."""
     # TODO: Update its config as well, and only allow sensible modifications.
     return update_one(db, cropper_swarm, CropperSwarm, "CropperSwarm", id)
+
+
+@router.delete("/{id}", status_code=status.HTTP_200_OK)
+def delete_cropper_swarm(id: int, db: "Session" = Depends(get_db)):
+    return delete_one(db, CropperSwarm, "CropperSwarm", id)

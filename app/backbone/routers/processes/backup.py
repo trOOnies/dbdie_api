@@ -1,3 +1,5 @@
+"""Endpoint for backup related processes."""
+
 from fastapi import APIRouter, status
 from backbone.code.backup import (
     backup_crops,

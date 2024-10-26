@@ -4,6 +4,7 @@ import os
 import re
 import shutil
 from typing import TYPE_CHECKING
+
 from dbdie_classes.schemas.helpers import DBDVersionOut
 from dbdie_classes.paths import absp, IMG_MAIN_FD_RP
 
@@ -24,7 +25,6 @@ def form_match(match: "MatchCreate") -> dict:
         new_match["dbdv_id"] = None
     else:
         dbdv = str(DBDVersionOut(**new_match["dbdv"]))
-
         new_match["dbdv_id"] = dbdv_str_to_id(dbdv)
 
     del new_match["dbdv"]

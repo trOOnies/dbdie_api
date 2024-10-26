@@ -2,11 +2,13 @@
 
 from typing import TYPE_CHECKING
 
+from fastapi import APIRouter, Depends, status
+
 from dbdie_classes.schemas.objects import FullModelTypeOut
-from fastapi import APIRouter, Depends
 
 from backbone.database import get_db
 from backbone.endpoints import (
+    delete_one,
     do_count,
     filter_one,
     get_many,
@@ -43,3 +45,8 @@ def get_fmts(
 def get_fmt(id: int, db: "Session" = Depends(get_db)):
     """Get a FullModelType with an ID."""
     return filter_one(db, FullModelType, id)[0]
+
+
+@router.delete("/{id}", status_code=status.HTTP_200_OK)
+def delete_fmt(id: int, db: "Session" = Depends(get_db)):
+    return delete_one(db, FullModelType, "Full model type", id)
