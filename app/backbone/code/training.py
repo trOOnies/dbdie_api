@@ -20,7 +20,7 @@ def get_extr_id(
     extr_id: int | None,
     extr_exists: bool,
 ) -> tuple[int]:
-    return extr_id if extr_exists else (getr(f"{EP.EXTRACTOR}/count") + 1)
+    return extr_id if extr_exists else getr(f"{EP.EXTRACTOR}/count")
 
 
 def goi_existing(extr_id: str):
@@ -82,6 +82,7 @@ def train_extractor(
     cps_name: str,
     models_ids: dict["FullModelType", int],
     fmts_with_counts: dict["FullModelType", int],
+    stratify_fallback: bool,
 ) -> tuple[dict, dict]:
     resp = postr(
         MLEP.TRAIN,
@@ -100,6 +101,7 @@ def train_extractor(
                 }
                 for fmt, total_classes in fmts_with_counts.items()
             },
+            "stratify_fallback": stratify_fallback,
             "custom_dbdvr": None,  # TODO
         },
     )

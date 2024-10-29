@@ -2,8 +2,9 @@
 
 from fastapi import APIRouter, status
 from fastapi.exceptions import HTTPException
+import requests
 
-from backbone.endpoints import getr, postr, putr
+from backbone.endpoints import endp, getr, postr
 from backbone.options import ENDPOINTS as EP
 from backbone.options import ML_ENDPOINTS as MLEP
 
@@ -36,8 +37,16 @@ def batch_extract(
 
     for fmt, d in resp.items():
         for mid, pid, pred in zip(d["match_ids"], d["player_ids"], d["preds"]):
-            putr(
-                f"{EP.LABELS}/predictable/strict",
+            print({
+                    "match_id": mid,
+                    "player_id": pid,
+                    "fmt": fmt,
+                    "value": pred,
+                    "user_id": 1,  # TODO
+                    "extr_id": extr_id,
+                })
+            resp = requests.put(
+                endp(f"{EP.LABELS}/predictable/strict"),
                 params={
                     "match_id": mid,
                     "player_id": pid,
@@ -47,3 +56,4 @@ def batch_extract(
                     "extr_id": extr_id,
                 },
             )
+            assert resp.status_code == status.HTTP_200_OK

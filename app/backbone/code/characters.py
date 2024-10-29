@@ -1,6 +1,6 @@
 """Extra code for the '/character' endpoints."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from backbone.endpoints import postr
 from backbone.options import ENDPOINTS as EP
@@ -52,7 +52,7 @@ def create_addons(
     return addons
 
 
-def create_killer_power(power_name: "LabelName" | None) -> dict | None:
+def create_killer_power(power_name: Optional["LabelName"]) -> dict | None:
     """Killer power creation for use in FullCharacterCreate."""
     return (
         None if power_name is None

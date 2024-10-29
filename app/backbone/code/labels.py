@@ -234,12 +234,9 @@ def post_labels(joined_df: pd.DataFrame) -> None:
         )
 
 
-def process_fmt_strict(fmt: "FullModelType") -> tuple["ModelType", str]:
+def process_fmt_strict(fmt: "FullModelType") -> tuple["ModelType", list[str]]:
     """Process full model type for the strict update endpoint."""
     mt, _, _ = from_fmt(fmt)
-    key = MT_TO_COLS[mt]
-    key = key[0] if len(key) == 1 else ...  # TODO
-    if len(key) != 1:
-        raise NotImplementedError  # TODO: handle perks and addons (plurality)
-    assert key in ALL_SQL_COLS, f"'{key}' not in updatable cols."
-    return mt, key
+    keys = MT_TO_COLS[mt]
+    assert all(k in ALL_SQL_COLS for k in keys), f"Some keys of '{keys}' not in updatable cols."
+    return mt, keys

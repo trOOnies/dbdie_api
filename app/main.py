@@ -29,10 +29,10 @@ app = FastAPI(
 
 # TODO
 if True:
-    app.include_router(cropper_swarm.router,    prefix=EP.CROPPER_SWARM, tags=[OBJ])
-    app.include_router(extractor.router,        prefix=EP.EXTRACTOR,     tags=[OBJ])
-    app.include_router(full_model_types.router, prefix=EP.FMT,           tags=[OBJ])
-    app.include_router(model.router,            prefix=EP.MODELS,        tags=[OBJ])
+    app.include_router(cropper_swarm.router,    prefix=EP.CROPPER_SWARM, tags=[OBJ, "cropper_swarm"])
+    app.include_router(extractor.router,        prefix=EP.EXTRACTOR,     tags=[OBJ, "extractor"])
+    app.include_router(full_model_types.router, prefix=EP.FMT,           tags=[OBJ, "fmts"])
+    app.include_router(model.router,            prefix=EP.MODELS,        tags=[OBJ, "model"])
 
 # TODO
 if True:

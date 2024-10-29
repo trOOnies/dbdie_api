@@ -56,6 +56,9 @@ def parse_or_raise(resp, exp_status_code: int = status.HTTP_200_OK):
     return resp.json()
 
 
+# * Simpler HTTP requests
+
+
 def getr(endpoint: "Endpoint", ml: bool = False, **kwargs):
     """Include the boilerplate for a GET request."""
     f = mlendp if ml else endp
@@ -215,7 +218,7 @@ def update_one(
     new_id: int | None = None,
 ) -> Response:
     """Base update one (item) function."""
-    _, select_query = filter_one(model, model_str, id, db)
+    _, select_query = filter_one(db, model, id, model_str)
 
     new_info = {"id": new_id if new_id is not None else id} | schema_create.model_dump()
 
@@ -251,7 +254,7 @@ def update_one_strict(
     assert updatable_cols
     assert user_key in updatable_cols
 
-    _, select_query = filter_one(model, model_str, id, db)
+    _, select_query = filter_one(db, model, id, model_str)
 
     new_info = {user_key: user_value}
     select_query.update(new_info, synchronize_session=False)
@@ -274,7 +277,7 @@ def delete_one(
     id: int,
 ) -> Response:
     """Base delete one (item) function."""
-    item, _ = filter_one(model, model_str, id, db)
+    item, _ = filter_one(db, model, id, model_str)
     db.delete(item)
     db.commit()
     return Response(status_code=status.HTTP_200_OK)

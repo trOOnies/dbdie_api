@@ -193,11 +193,12 @@ def update_labels_strict(
     extr_id: int,
     db: "Session" = Depends(get_db),
 ):
-    mt, key = process_fmt_strict(fmt)
+    mt, keys = process_fmt_strict(fmt)
+    keys = keys[0]  # TODO: Fix plurality of addons and perks (right now it's labeling the first value)
 
     new_info, filter_query = filter_one_labels_row(db, match_id, player_id)
     updated_info = {
-        key: value,
+        keys: value,
         "date_modified": datetime.now(),
         "user_id": user_id,
         "extr_id": extr_id,
@@ -237,7 +238,7 @@ def update_labels(
 
     new_info["date_modified"] = datetime.now()
     new_info["user_id"] = 1  # TODO: dynamic
-    new_info["extr_id"] = 1  # TODO: dynamic
+    new_info["extr_id"] = 0  # TODO: dynamic
 
     filter_query.update(new_info, synchronize_session=False)
     db.commit()
@@ -245,7 +246,7 @@ def update_labels(
     return Response(status_code=status.HTTP_200_OK)
 
 
-@router.delete("/", status_code=status.HTTP_200_OK)
+@router.delete("", status_code=status.HTTP_200_OK)
 def delete_labels(
     match_id: int,
     player_id: int,

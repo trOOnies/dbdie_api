@@ -15,9 +15,11 @@ from backbone.endpoints import (
     get_id,
     get_many,
     get_req,
+    update_many,
     update_one,
 )
 from backbone.exceptions import ValidationException
+from backbone.models.groupings import Labels
 from backbone.models.objects import Extractor
 from backbone.options import ENDPOINTS as EP
 
@@ -97,4 +99,15 @@ def update_extractor(
 
 @router.delete("/{id}", status_code=status.HTTP_200_OK)
 def delete_extractor(id: int, db: "Session" = Depends(get_db)):
+    # TODO: Delete from DBDIE ML API as well (make endpoint first)
+    # TODO: Delete models as well (ML API and DB)
+    def update_labels_f(record) -> None:
+        setattr(record, "extr_id", None)
+
+    update_many(
+        db,
+        Labels,
+        filter=(Labels.extr_id == id),
+        update_f=update_labels_f,
+    )
     return delete_one(db, Extractor, "Extractor", id)

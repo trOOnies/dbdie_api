@@ -24,6 +24,7 @@ def batch_train(
     extr_id: int | None = None,
     extr_name: str | None = None,
     cps_id: int | None = None,
+    stratify_fallback: bool = False,
     fmts: list[FullModelType] | None = None,
 ):
     """IMPORTANT. If doing partial training, please use 'fmts'."""
@@ -52,6 +53,7 @@ def batch_train(
         cps_name,
         models_ids={fmt: minfo["id"] for fmt, minfo in models_info.items()},
         fmts_with_counts=fmts_with_counts,
+        stratify_fallback=stratify_fallback,
     )
 
     extr_out = extr_info if extr_exists else (extr_out | extr_info)
