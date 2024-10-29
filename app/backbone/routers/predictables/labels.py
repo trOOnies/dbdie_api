@@ -12,6 +12,7 @@ from dbdie_classes.code.groupings import (
 )
 from dbdie_classes.options import KILLER_FMT, SURV_FMT
 from dbdie_classes.options.FMT import ALL as ALL_FMT
+from dbdie_classes.options.MODEL_TYPE import MULTIPLE_PER_PLAYER
 from dbdie_classes.schemas.groupings import (
     LabelsCreate,
     LabelsOut,
@@ -191,14 +192,18 @@ def update_labels_strict(
     value,
     user_id: int,
     extr_id: int,
+    item_id: int | None = None,
     db: "Session" = Depends(get_db),
 ):
     mt, keys = process_fmt_strict(fmt)
-    keys = keys[0]  # TODO: Fix plurality of addons and perks (right now it's labeling the first value)
 
-    new_info, filter_query = filter_one_labels_row(db, match_id, player_id)
+    cond = item_id is not None
+    assert cond == (mt in MULTIPLE_PER_PLAYER)
+    key = keys[item_id if cond else 0]
+
+    _, filter_query = filter_one_labels_row(db, match_id, player_id)
     updated_info = {
-        keys: value,
+        key: value,
         "date_modified": datetime.now(),
         "user_id": user_id,
         "extr_id": extr_id,
@@ -207,8 +212,6 @@ def update_labels_strict(
 
     filter_query.update(updated_info, synchronize_session=False)
     db.commit()
-
-    print(new_info.match_id, new_info.player_id, updated_info)
 
     return Response(status_code=status.HTTP_200_OK)
 

@@ -8,7 +8,6 @@ import os
 import pandas as pd
 
 from dbdie_classes.options.FMT import from_fmt
-from dbdie_classes.options.SQL_COLS import ALL_FLATTENED as ALL_SQL_COLS
 from dbdie_classes.options.SQL_COLS import MT_TO_COLS
 from dbdie_classes.paths import LABELS_FD_RP, absp
 from dbdie_classes.schemas.groupings import ManualChecksIn
@@ -20,7 +19,11 @@ from backbone.sqla import fill_cols_custom, soft_bool_filter
 
 if TYPE_CHECKING:
     from dbdie_classes.base import (
-        Filename, FullModelType, IsForKiller, ModelType
+        Filename,
+        FullModelType,
+        IsForKiller,
+        ModelType,
+        SQLColumn,
     )
     from sqlalchemy.orm import Session
 
@@ -234,9 +237,7 @@ def post_labels(joined_df: pd.DataFrame) -> None:
         )
 
 
-def process_fmt_strict(fmt: "FullModelType") -> tuple["ModelType", list[str]]:
+def process_fmt_strict(fmt: "FullModelType") -> tuple["ModelType", list["SQLColumn"]]:
     """Process full model type for the strict update endpoint."""
     mt, _, _ = from_fmt(fmt)
-    keys = MT_TO_COLS[mt]
-    assert all(k in ALL_SQL_COLS for k in keys), f"Some keys of '{keys}' not in updatable cols."
-    return mt, keys
+    return mt, MT_TO_COLS[mt]

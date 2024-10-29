@@ -36,20 +36,18 @@ def batch_extract(
     )
 
     for fmt, d in resp.items():
-        for mid, pid, pred in zip(d["match_ids"], d["player_ids"], d["preds"]):
-            print({
-                    "match_id": mid,
-                    "player_id": pid,
-                    "fmt": fmt,
-                    "value": pred,
-                    "user_id": 1,  # TODO
-                    "extr_id": extr_id,
-                })
+        item_ids = (
+            d["item_ids"] if d["item_ids"] is not None
+            else len(d["match_ids"]) * [None]
+        )
+        zipped = zip(d["match_ids"], d["player_ids"], item_ids, d["preds"])
+        for mid, pid, iid, pred in zipped:
             resp = requests.put(
                 endp(f"{EP.LABELS}/predictable/strict"),
                 params={
                     "match_id": mid,
                     "player_id": pid,
+                    "item_id": iid,
                     "fmt": fmt,
                     "value": pred,
                     "user_id": 1,  # TODO
