@@ -1,10 +1,10 @@
 """Endpoint for extraction related processes."""
 
 from fastapi import APIRouter, status
-from fastapi.exceptions import HTTPException
 import requests
 
-from backbone.endpoints import endp, getr, postr
+from backbone.code.extract import get_extr_id, get_zip
+from backbone.endpoints import endp, postr
 from backbone.options import ENDPOINTS as EP
 from backbone.options import ML_ENDPOINTS as MLEP
 
@@ -14,36 +14,27 @@ router = APIRouter()
 @router.post("", status_code=status.HTTP_201_CREATED)
 def batch_extract(
     extr_name: str,
+    use_dbdvr: bool = True,
     # fmts: list[FullModelType] | None = None,  # TODO
 ):
     """IMPORTANT. If doing partial uploads, please use 'fmts'."""
-    try:
-        extr_id = getr(f"{EP.EXTRACTOR}/id", params={"extr_name": extr_name})
-    except HTTPException as e:
-        if e.status_code == status.HTTP_404_NOT_FOUND:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Extractor '{extr_name}' was not found",
-            ) from e
-
+    extr_id = get_extr_id(extr_name)
     resp = postr(
         f"{MLEP.EXTRACT}/batch",
         ml=True,
         params={
             "extr_name": extr_name,
+            "use_dbdvr": use_dbdvr,
             # "fmts": fmts,
         },
     )
 
+    put_endp = endp(f"{EP.LABELS}/predictable/strict")
     for fmt, d in resp.items():
-        item_ids = (
-            d["item_ids"] if d["item_ids"] is not None
-            else len(d["match_ids"]) * [None]
-        )
-        zipped = zip(d["match_ids"], d["player_ids"], item_ids, d["preds"])
+        zipped = get_zip(d)
         for mid, pid, iid, pred in zipped:
             resp = requests.put(
-                endp(f"{EP.LABELS}/predictable/strict"),
+                put_endp,
                 params={
                     "match_id": mid,
                     "player_id": pid,

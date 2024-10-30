@@ -5,11 +5,12 @@ from dbdie_classes.base import FullModelType
 from fastapi import APIRouter, status
 
 from backbone.code.training import (
+    extr_existance,
     get_extr_id,
     get_fmts_with_counts,
     goi_existing,
     goi_not_existing,
-    set_today,
+    patch_objects_info,
     train_extractor,
     update_extractor,
     update_models,
@@ -28,11 +29,7 @@ def batch_train(
     fmts: list[FullModelType] | None = None,
 ):
     """IMPORTANT. If doing partial training, please use 'fmts'."""
-    extr_exists = extr_id is not None
-    if extr_exists:
-        assert extr_name is None, "No name is needed if the extractor already exists."
-        assert cps_id is None,  "No cps_id is needed if the extractor already exists."
-
+    extr_exists = extr_existance(extr_id, extr_name, cps_id)
     extr_id_ = get_extr_id(extr_id, extr_exists)
 
     if extr_exists:
@@ -55,15 +52,13 @@ def batch_train(
         fmts_with_counts=fmts_with_counts,
         stratify_fallback=stratify_fallback,
     )
-
-    extr_out = extr_info if extr_exists else (extr_out | extr_info)
-    models_out = (
-        models_info
-        if extr_exists
-        else {fmt: (models_out[fmt] | models_info[fmt]) for fmt in models_out}
+    extr_out, models_out = patch_objects_info(
+        extr_out,
+        extr_info,
+        models_out,
+        models_info,
+        extr_exists,
     )
-
-    extr_out, models_out = set_today(extr_out, models_out)
 
     update_models(extr_exists, extr_out["models_ids"], models_out)
     update_extractor(extr_exists, extr_out, extr_id_)

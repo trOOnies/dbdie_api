@@ -227,7 +227,7 @@ def post_labels(joined_df: pd.DataFrame) -> None:
                     "id": int(row["player_id"]),
                     "character_id": int(row["character"]),
                     "perk_ids": [int(row[f"perks_{i}"]) for i in range(4)],
-                    "item_id": None,
+                    "item_id": None,  # TODO: What?
                     "addon_ids": None,
                     "offering_id": None,
                     "status_id": None,

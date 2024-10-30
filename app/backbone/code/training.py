@@ -16,6 +16,18 @@ if TYPE_CHECKING:
     from dbdie_classes.base import FullModelType
 
 
+def extr_existance(
+    extr_id: int | None,
+    extr_name: str | None,
+    cps_id: int | None,
+) -> bool:
+    extr_exists = extr_id is not None
+    if extr_exists:
+        assert extr_name is None, "No name is needed if the extractor already exists."
+        assert cps_id is None,  "No cps_id is needed if the extractor already exists."
+    return extr_exists
+
+
 def get_extr_id(
     extr_id: int | None,
     extr_exists: bool,
@@ -23,7 +35,11 @@ def get_extr_id(
     return extr_id if extr_exists else getr(f"{EP.EXTRACTOR}/count")
 
 
-def goi_existing(extr_id: str):
+def goi_existing(extr_id: str) -> tuple[
+    dict[str, int | str],
+    dict["FullModelType", dict[str, int]],
+    PredictableTuples,
+]:
     """Get objects info when Extractor already exist."""
     extr_info = getr(f"{EP.EXTRACTOR}/{extr_id}")
 
@@ -108,15 +124,26 @@ def train_extractor(
     return resp["extractor"], resp["models"]
 
 
-def set_today(
+def patch_objects_info(
+    extr_out: dict,
     extr_info: dict,
+    models_out: dict,
     models_info: dict,
+    extr_exists: bool,
 ) -> tuple[dict, dict["FullModelType", dict]]:
+    extr_out = extr_info if extr_exists else (extr_out | extr_info)
+    models_out = (
+        models_info
+        if extr_exists
+        else {fmt: (models_out[fmt] | models_info[fmt]) for fmt in models_out}
+    )
+
     today = dt.date.today().strftime("%Y-%m-%d")
-    extr_info["date_last_trained"] = today
-    for fmt in models_info:
-        models_info[fmt]["date_last_trained"] = today
-    return extr_info, models_info
+    extr_out["date_last_trained"] = today
+    for fmt in models_out:
+        models_out[fmt]["date_last_trained"] = today
+
+    return extr_out, models_out
 
 
 def update_models(
