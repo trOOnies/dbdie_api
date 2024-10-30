@@ -8,10 +8,10 @@ from dbdie_classes.schemas.groupings import (
     MatchCreate,
     MatchOut,
     VersionedFolderUpload,
-    VersionedMatchOut,
 )
 from fastapi import APIRouter, Depends, Response, status
 from fastapi.exceptions import HTTPException
+from traceback import print_exc
 
 from backbone.code.matches import (
     form_match, get_versioned_fd_data, upload_dbdv_matches
@@ -93,6 +93,7 @@ def create_match(
     try:
         db.commit()
     except Exception as e:
+        print_exc(e)
         raise HTTPException(
             status.HTTP_500_INTERNAL_SERVER_ERROR,
             (
@@ -108,22 +109,28 @@ def create_match(
 
 @router.post(
     "/vfd",
-    response_model=list[VersionedMatchOut],
+    response_model=list[MatchOut],
     status_code=status.HTTP_201_CREATED,
 )
 def upload_versioned_folder(v_folder: VersionedFolderUpload):
     """Upload DBD-versioned folder that resides in the folder 'versioned',
     and move its matches to 'pending' folder.
     """
-    fs, src_fd, dst_fd = get_versioned_fd_data(v_folder)
-
     # Assert DBD version already exists
-    getr(
+    dbdv_id = getr(
         f"{EP.DBD_VERSION}/id",
-        params={"dbdv_str": str(v_folder.dbdv)},
+        params={"dbdv_str": v_folder.dbdv_name},
     )
 
-    matches = upload_dbdv_matches(fs, src_fd, dst_fd, v_folder)
+    fs, src_fd, dst_fd = get_versioned_fd_data(v_folder.dbdv_name)
+
+    matches = upload_dbdv_matches(
+        fs,
+        src_fd,
+        dst_fd,
+        dbdv_id=dbdv_id,
+        special_mode=v_folder.special_mode,
+    )
     os.rmdir(src_fd)
 
     return matches
