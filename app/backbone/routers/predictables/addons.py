@@ -68,16 +68,10 @@ def create_addon(addon: AddonCreate, db: "Session" = Depends(get_db)):
     if NOT_WS_PATT.search(addon.name) is None:
         raise ValidationException("Addon name can't be empty")
 
-    get_req(EP.CHARACTER, addon.user_id)
+    get_req(EP.ITEM, addon.item_id)
     # TODO: assert type_id exists
 
     new_addon = {"id": getr(f"{EP.ADDONS}/count")} | addon.model_dump()
-    new_addon["dbdv_id"] = (
-        dbdv_str_to_id(new_addon["dbdv_str"])
-        if new_addon["dbdv_str"] is not None
-        else None
-    )
-    del new_addon["dbdv_str"]
     new_addon = Addon(**new_addon)
 
     add_commit_refresh(db, new_addon)

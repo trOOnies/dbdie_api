@@ -1,5 +1,6 @@
 """Router code for DBD match labels."""
 
+import os
 from typing import TYPE_CHECKING
 
 from datetime import datetime
@@ -13,6 +14,7 @@ from dbdie_classes.code.groupings import (
 from dbdie_classes.options import KILLER_FMT, SURV_FMT
 from dbdie_classes.options.FMT import ALL as ALL_FMT
 from dbdie_classes.options.MODEL_TYPE import MULTIPLE_PER_PLAYER
+from dbdie_classes.paths import CROPPED_IMG_FD_RP, absp
 from dbdie_classes.schemas.groupings import (
     LabelsCreate,
     LabelsOut,
@@ -35,7 +37,8 @@ from backbone.code.labels import (
 )
 from backbone.database import get_db
 from backbone.endpoints import add_commit_refresh, getr
-from backbone.models.groupings import Labels
+from backbone.exceptions import HTTPException
+from backbone.models.groupings import Labels, Match
 from backbone.options import ENDPOINTS as EP
 from backbone.sqla import limit_and_skip
 
@@ -135,9 +138,50 @@ def create_labels(
     )
 
 
+@router.post("/init-empty", status_code=status.HTTP_201_CREATED)
+def create_empty_labels(db: "Session" = Depends(get_db)):
+    """Create empty labels for crops that exist but aren't registered yet.
+    This is useful so that they can later be manually or automatically labeled.
+    """
+    # TODO: Later on it could be useful to add another folder after 'cropped', named 'registered'
+
+    # Get all filenames from the folder 'cropped'
+    fs = [f for f in os.listdir(absp(CROPPED_IMG_FD_RP)) if f.endswith(".png")]
+    if not fs:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No match image was found in the 'cropped' folder.",
+        )
+
+    # Fetch all match_ids & filenames that are present in 'matches' but have no labels in 'labels'
+    found_ms = (
+        db.query(
+            Match.id,
+        )
+        .join(Labels)
+        .distinct()
+        .all()
+    )
+    found_ms = set(m[0] for m in found_ms)
+    
+
+    # With that information, loop the matches/crops that match those filenames and upload with POST
+    # TODO: Implement
+    for m in ms:
+        for fmt in fmts:
+            ...
+
+    return Response(status_code=status.HTTP_201_CREATED)
+
+
 @router.post("/batch", status_code=status.HTTP_201_CREATED)
 def batch_create_labels(fmts: list[FullModelType], filename: Filename):
-    """Create player-centered labels from label CSVs."""
+    """Create player-centered labels from label CSVs ('filename').
+
+    NOTE: This is not an image nor crop filename, but a CSV with labels.
+    It is pretty much deprecated and could be deleted in the short future,
+    but it may be transformed to a new batch create with a new CSV schema.
+    """
     assert fmts, "Full model types can't be empty."
     assert all(fmt in ALL_FMT for fmt in fmts)
 

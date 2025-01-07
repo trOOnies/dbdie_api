@@ -73,7 +73,7 @@ def create_dbdv(
     if NOT_WS_PATT.search(dbdv.name) is None:
         raise ValidationException("DBD version name can't be empty")
 
-    new_dbdv = {"id": getr(f"{EP.DBD_VERSION}/count")} | dbdv.model_dump()
+    new_dbdv = {"id": getr(f"{EP.DBD_VERSION}/count") + 1} | dbdv.model_dump()
     new_dbdv = DBDVersion(**new_dbdv)
 
     add_commit_refresh(db, new_dbdv)

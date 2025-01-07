@@ -2,7 +2,6 @@
 
 from typing import TYPE_CHECKING
 
-import requests
 from dbdie_classes.schemas.predictables import PerkCreate, PerkOut
 from fastapi import APIRouter, Depends, status
 from sqlalchemy import or_
@@ -11,10 +10,8 @@ from backbone.database import get_db
 from backbone.endpoints import (
     NOT_WS_PATT,
     add_commit_refresh,
-    dbdv_str_to_id,
     delete_one,
     do_count,
-    endp,
     get_icon,
     get_many,
     get_req,
@@ -89,13 +86,7 @@ def create_perk(perk: PerkCreate, db: "Session" = Depends(get_db)):
 
     getr(f"{EP.CHARACTER}/{perk.character_id}")
 
-    new_perk = {"id": requests.get(endp(f"{EP.PERKS}/count"))} | perk.model_dump()
-    new_perk["dbdv_id"] = (
-        dbdv_str_to_id(new_perk["dbdv_str"])
-        if new_perk["dbdv_str"] is not None
-        else None
-    )
-    del new_perk["dbdv_str"]
+    new_perk = {"id": getr(f"{EP.PERKS}/count")} | perk.model_dump()
     new_perk = Perk(**new_perk)
 
     add_commit_refresh(db, new_perk)

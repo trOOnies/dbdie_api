@@ -13,7 +13,6 @@ from dbdie_classes.schemas.predictables import (
     CharacterOut,
 )
 from fastapi import APIRouter, Depends, status
-import requests
 
 from backbone.code.characters import (
     create_addons,
@@ -24,14 +23,13 @@ from backbone.database import get_db
 from backbone.endpoints import (
     NOT_WS_PATT,
     add_commit_refresh,
-    dbdv_str_to_id,
     delete_one,
     do_count,
-    endp,
     filter_one,
     get_icon,
     get_many,
     get_req,
+    getr,
     postr,
 )
 from backbone.exceptions import ItemNotFoundException, ValidationException
@@ -118,14 +116,12 @@ def create_character(
         raise ValidationException("Character name can't be empty")
 
     new_character = {
-        "id": requests.get(endp(f"{EP.CHARACTER}/count"))
+        "id": (
+            getr(f"{EP.CHARACTER}/count", params={"ifk": True})
+            + getr(f"{EP.CHARACTER}/count", params={"ifk": False})
+            - 1  # TODO: Fix character count so that it is more intuitive
+        ),
     } | character.model_dump()
-
-    if new_character["dbdv_str"] is not None:
-        new_character["dbdv_id"] = dbdv_str_to_id(
-            new_character["dbdv_str"]
-        )
-    del new_character["dbdv_str"]
 
     new_character = Character(**new_character)
     add_commit_refresh(db, new_character)
@@ -140,16 +136,23 @@ def create_character_full(character: FullCharacterCreate):
     payload = {
         "name": character.name,
         "ifk": character.ifk,
-        "dbdv_str": str(character.dbdv),
         "base_char_id": None,
+        "dbdv_id": character.dbdv_id,
+        "common_name": character.common_name,
+        "emoji": character.emoji,
+        "power_id": None,
     }
     character_only = postr(EP.CHARACTER, json=payload)
 
+    power = create_killer_power(character_only, character.power_name)
+    power_id = power["id"] if power is not None else None
+    # TODO: Update killer's power_id (if ifk)
+
     return {
         "character": character_only,
-        "power": create_killer_power(character.power_name),
+        "power": power,
         "perks": create_perks(character_only, character.perk_names),
-        "addons": create_addons(character_only, character.addon_names),
+        "addons": create_addons(character_only, character.addon_names, power_id),
     }
 
 
