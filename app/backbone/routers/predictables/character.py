@@ -132,7 +132,9 @@ def create_character(
 
 @router.post("/full", response_model=FullCharacterOut, status_code=status.HTTP_201_CREATED)
 def create_character_full(character: FullCharacterCreate):
-    """Create a DBD character in full (with its perks and addons, if applies)."""
+    """Create a DBD character in full (with its perks and addons, if applies).
+    If it has addons, it's assumed that they are ordered from least rare (common) to most rare (iri).
+    """
     payload = {
         "name": character.name,
         "ifk": character.ifk,

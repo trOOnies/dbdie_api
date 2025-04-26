@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from dbdie_classes.base import LabelName
 
 ADDON_TYPE_ID = 1
+ADDONS_RARITIES = [0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4]
 
 
 def create_killer_power(character: dict, power_name: Optional["LabelName"]) -> dict | None:
@@ -55,7 +56,7 @@ def create_addons(
         addons = None
     else:
         addons = []
-        for addon_name in addon_names:
+        for addon_name, rarity_id in zip(addon_names, ADDONS_RARITIES):
             a = postr(
                 EP.ADDONS,
                 json={
@@ -63,7 +64,7 @@ def create_addons(
                     "type_id": ADDON_TYPE_ID,
                     "dbdv_id": character["dbdv_id"],
                     "item_id": power_id,
-                    "rarity_id": None,
+                    "rarity_id": rarity_id,
                 },
             )
             addons.append(a)

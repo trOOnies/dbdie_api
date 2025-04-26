@@ -4,6 +4,12 @@ Dead By Daylight's Information Extraction (DBDIE) FastAPI API. Extracts match in
 
 Development currently in progress.
 
+## Usage
+
+```bash
+make api
+```
+
 ## See also
 
 - [DBDIE UI](https://github.com/trOOnies/dbdie_ui)
