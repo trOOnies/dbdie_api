@@ -14,7 +14,7 @@ from dbdie_classes.schemas.groupings import ManualChecksIn
 
 from backbone.endpoints import getr, postr
 from backbone.models.groupings import Labels
-from backbone.options import ENDPOINTS as EP
+from backbone.options import ENDPOINT as EP
 from backbone.sqla import fill_cols_custom, soft_bool_filter
 
 if TYPE_CHECKING:

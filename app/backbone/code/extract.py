@@ -4,7 +4,7 @@ from fastapi import status
 from fastapi.exceptions import HTTPException
 
 from backbone.endpoints import getr
-from backbone.options import ENDPOINTS as EP
+from backbone.options import ENDPOINT as EP
 
 
 def get_extr_id(extr_name: str) -> int:

@@ -4,7 +4,7 @@ from backbone.routers.predictables import character, item, offering, status
 from fastapi import FastAPI
 # from fastapi.middleware.cors import CORSMiddleware
 
-from backbone.options import ENDPOINTS as EP
+from backbone.options import ENDPOINT as EP
 from backbone.routers.helpers import dbd_version
 from backbone.routers.objects import cropper_swarm, extractor, full_model_types, model
 from backbone.routers.predictables import (

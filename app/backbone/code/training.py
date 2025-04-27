@@ -9,8 +9,8 @@ from dbdie_classes.options.FMT import ALL as ALL_FMTS_ORDERED
 from dbdie_classes.options.IMPLEMENTED import FMTS as IMPLEMENTED_FMTS
 
 from backbone.endpoints import getr, postr, putr
-from backbone.options import ENDPOINTS as EP
-from backbone.options import ML_ENDPOINTS as MLEP
+from backbone.options import ENDPOINT as EP
+from backbone.options import ML_ENDPOINT as MLEP
 
 if TYPE_CHECKING:
     from dbdie_classes.base import FullModelType

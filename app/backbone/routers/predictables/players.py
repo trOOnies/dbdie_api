@@ -4,7 +4,7 @@ from backbone.endpoints import get_req
 from dbdie_classes.schemas.groupings import PlayerIn, PlayerOut
 from fastapi import APIRouter
 
-from backbone.options import ENDPOINTS as EP
+from backbone.options import ENDPOINT as EP
 
 router = APIRouter()
 

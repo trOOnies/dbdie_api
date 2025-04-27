@@ -30,7 +30,7 @@ from backbone.endpoints import (
 )
 from backbone.exceptions import ValidationException
 from backbone.models.groupings import Match
-from backbone.options import ENDPOINTS as EP
+from backbone.options import ENDPOINT as EP
 from backbone.sqla import object_as_dict
 
 if TYPE_CHECKING:

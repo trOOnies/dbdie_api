@@ -39,7 +39,7 @@ from backbone.database import get_db
 from backbone.endpoints import add_commit_refresh, getr
 from backbone.exceptions import HTTPException
 from backbone.models.groupings import Labels, Match
-from backbone.options import ENDPOINTS as EP
+from backbone.options import ENDPOINT as EP
 from backbone.sqla import limit_and_skip
 
 if TYPE_CHECKING:

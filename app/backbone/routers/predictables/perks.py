@@ -23,7 +23,7 @@ from backbone.endpoints import (
 from backbone.exceptions import ItemNotFoundException, ValidationException
 from backbone.models.groupings import Labels
 from backbone.models.predictables import Character, Perk
-from backbone.options import ENDPOINTS as EP
+from backbone.options import ENDPOINT as EP
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session

@@ -5,8 +5,8 @@ import requests
 
 from backbone.code.extract import get_extr_id, get_zip
 from backbone.endpoints import endp, postr
-from backbone.options import ENDPOINTS as EP
-from backbone.options import ML_ENDPOINTS as MLEP
+from backbone.options import ENDPOINT as EP
+from backbone.options import ML_ENDPOINT as MLEP
 
 router = APIRouter()
 

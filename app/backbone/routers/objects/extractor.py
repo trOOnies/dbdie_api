@@ -21,7 +21,7 @@ from backbone.endpoints import (
 from backbone.exceptions import ValidationException
 from backbone.models.groupings import Labels
 from backbone.models.objects import Extractor
-from backbone.options import ENDPOINTS as EP
+from backbone.options import ENDPOINT as EP
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session

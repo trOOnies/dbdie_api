@@ -6,7 +6,7 @@ from sqlalchemy import Integer as Int
 from sqlalchemy import String as Str
 
 from backbone.database import Base
-from backbone.options import TABLE_NAMES as TN
+from backbone.options import TABLE_NAME as TN
 
 
 class DBDVersion(Base):

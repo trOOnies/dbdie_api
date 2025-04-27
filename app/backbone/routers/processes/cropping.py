@@ -5,7 +5,7 @@ from fastapi import APIRouter, status
 from dbdie_classes.base import FullModelType
 
 from backbone.endpoints import postr
-from backbone.options import ML_ENDPOINTS as MLEP
+from backbone.options import ML_ENDPOINT as MLEP
 
 router = APIRouter()
 

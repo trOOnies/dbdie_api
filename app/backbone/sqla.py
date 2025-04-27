@@ -3,7 +3,7 @@
 from sqlalchemy import func, inspect, or_
 from typing import TYPE_CHECKING
 
-from backbone.options import TABLE_NAMES as TN
+from backbone.options import TABLE_NAME as TN
 
 if TYPE_CHECKING:
     from sqlalchemy import Column

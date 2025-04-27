@@ -16,7 +16,7 @@ from backbone.models.types import (
     Rarity,  # noqa: F401
 )
 from backbone.models.helpers import DBDVersion  # noqa: F401
-from backbone.options import TABLE_NAMES as TN
+from backbone.options import TABLE_NAME as TN
 
 
 class Item(Base):

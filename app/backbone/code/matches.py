@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from dbdie_classes.paths import absp, IMG_MAIN_FD_RP
 
 from backbone.endpoints import getr, postr
-from backbone.options import ENDPOINTS as EP
+from backbone.options import ENDPOINT as EP
 
 if TYPE_CHECKING:
     from dbdie_classes.base import Filename, PathToFolder

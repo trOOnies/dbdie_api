@@ -13,8 +13,8 @@ import requests
 
 from backbone.config import ST
 from backbone.exceptions import ItemNotFoundException, NameNotFoundException
-from backbone.options import ENDPOINTS as EP
-from backbone.options import TABLE_NAMES as TN
+from backbone.options import ENDPOINT as EP
+from backbone.options import TABLE_NAME as TN
 from backbone.sqla import get_items_query
 from constants import ICONS_FOLDER
 

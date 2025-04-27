@@ -13,7 +13,7 @@ from sqlalchemy.sql.sqltypes import TIMESTAMP
 
 from backbone.database import Base
 from backbone.models.helpers import DBDVersion  # noqa: F401
-from backbone.options import TABLE_NAMES as TN
+from backbone.options import TABLE_NAME as TN
 
 
 class User(Base):

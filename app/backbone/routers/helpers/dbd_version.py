@@ -19,7 +19,7 @@ from backbone.endpoints import (
 )
 from backbone.exceptions import ValidationException
 from backbone.models.helpers import DBDVersion
-from backbone.options import ENDPOINTS as EP
+from backbone.options import ENDPOINT as EP
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session

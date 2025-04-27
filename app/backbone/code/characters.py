@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING, Optional
 
 from backbone.endpoints import postr
-from backbone.options import ENDPOINTS as EP
+from backbone.options import ENDPOINT as EP
 
 if TYPE_CHECKING:
     from dbdie_classes.base import LabelName
