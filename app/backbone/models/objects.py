@@ -29,7 +29,7 @@ class CropperSwarm(Base):
     __tablename__ = TN.CROPPER_SWARM
 
     id   = C(SmallInt, nullable=False, primary_key=True)
-    name = C(Str, nullable=False)
+    name = C(Str, nullable=False, unique=True)
 
     user_id       = C(SmallInt, FK(f"{TN.USER}.id"),        nullable=False)
     img_width     = C(SmallInt, nullable=False)
@@ -49,7 +49,7 @@ class FullModelType(Base):
     __tablename__ = TN.FULL_MODEL_TYPES
 
     id   = C(SmallInt, nullable=False, primary_key=True)
-    name = C(Str, nullable=False)
+    name = C(Str, nullable=False, unique=True)
     mt   = C(Str, nullable=False)
     ifk  = C(Bool, nullable=True)
 
@@ -59,7 +59,7 @@ class Model(Base):
     __tablename__ = TN.MODEL
 
     id   = C(SmallInt, nullable=False, primary_key=True)
-    name = C(Str, nullable=False)
+    name = C(Str, nullable=False, unique=True)
 
     user_id       = C(SmallInt, FK(f"{TN.USER}.id"),             nullable=False)
     fmt_id        = C(SmallInt, FK(f"{TN.FULL_MODEL_TYPES}.id"), nullable=False)
@@ -90,7 +90,7 @@ class Extractor(Base):
     __tablename__ = TN.EXTRACTOR
 
     id   = C(SmallInt, nullable=False, primary_key=True)
-    name = C(Str, nullable=False)
+    name = C(Str, nullable=False, unique=True)
 
     user_id       = C(SmallInt, FK(f"{TN.USER}.id"),          nullable=False)
     dbdv_min_id   = C(Int,      FK(f"{TN.DBD_VERSION}.id"),   nullable=False)

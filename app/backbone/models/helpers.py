@@ -14,7 +14,7 @@ class DBDVersion(Base):
     __tablename__ = TN.DBD_VERSION
 
     id   = C(Int, nullable=False, primary_key=True)
-    name = C(Str, nullable=False)
+    name = C(Str, nullable=False, unique=True)
 
     release_date = C(Date, nullable=True)
     common_name  = C(Str,  nullable=True)

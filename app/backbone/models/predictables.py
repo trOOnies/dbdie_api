@@ -40,7 +40,7 @@ class Character(Base):
     __tablename__ = TN.CHARACTER
 
     id   = C(SmallInt, nullable=False, primary_key=True)
-    name = C(Str,      nullable=False)  # TODO: add unique (and with alembic)
+    name = C(Str,      nullable=False, unique=True)
 
     ifk          = C(Bool,     nullable=True)
     base_char_id = C(SmallInt, nullable=True)
@@ -77,7 +77,7 @@ class Perk(Base):
     __tablename__ = TN.PERKS
 
     id   = C(SmallInt, nullable=False, primary_key=True)
-    name = C(Str,      nullable=False)
+    name = C(Str,      nullable=False, unique=True)
 
     character_id = C(SmallInt, FK(f"{TN.CHARACTER}.id"),   nullable=False)
     dbdv_id      = C(Int,      FK(f"{TN.DBD_VERSION}.id"), nullable=True)
@@ -109,7 +109,7 @@ class Status(Base):
     __tablename__ = TN.STATUS
 
     id   = C(SmallInt, nullable=False, primary_key=True)
-    name = C(Str,      nullable=False)
+    name = C(Str,      nullable=False, unique=True)
 
     character_id = C(SmallInt, FK(f"{TN.CHARACTER}.id"),  nullable=False)
     is_dead      = C(Bool, nullable=True)

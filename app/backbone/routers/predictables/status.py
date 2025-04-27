@@ -13,12 +13,13 @@ from backbone.endpoints import (
     delete_one,
     do_count,
     endp,
+    filter_one,
     get_icon,
     get_many,
     get_req,
     getr,
 )
-from backbone.exceptions import ItemNotFoundException, ValidationException
+from backbone.exceptions import ValidationException
 from backbone.models.predictables import Character, Status
 from backbone.options import ENDPOINT as EP
 
@@ -30,6 +31,7 @@ router = APIRouter()
 
 @router.get("/count", response_model=int)
 def count_statuses(text: str = "", db: "Session" = Depends(get_db)):
+    """Count endgame statuses."""
     return do_count(db, Status, text=text)
 
 
@@ -40,38 +42,25 @@ def get_statuses(
     ifk: bool | None = None,
     db: "Session" = Depends(get_db),
 ):
+    """Get many endgame statuses."""
     return get_many(db, limit, Status, skip, ifk, Character)
 
 
 @router.get("/{id}", response_model=StatusOut)
 def get_status(id: int, db: "Session" = Depends(get_db)):
-    # TODO: Replace with base function
-    status_ = (
-        db.query(
-            Status.id,
-            Status.name,
-            Status.character_id,
-            Status.is_dead,
-            Status.dbdv_id,
-            Status.emoji,
-            Character.ifk,
-        )
-        .join(Character)
-        .filter(Status.id == id)
-        .first()
-    )
-    if status_ is None:
-        raise ItemNotFoundException("Status", id)
-    return status_
+    """Get an endgame statuses with a certain ID."""
+    return filter_one(db, Status, id)[0]
 
 
 @router.get("/{id}/icon")
 def get_status_icon(id: int):
+    """Get an endgame status icon."""
     return get_icon("statuses", id, plural_len=2)
 
 
 @router.post("", response_model=StatusOut, status_code=status.HTTP_201_CREATED)
 def create_status(status: StatusCreate, db: "Session" = Depends(get_db)):
+    """Create an endgame status."""
     if NOT_WS_PATT.search(status.name) is None:
         raise ValidationException("Status name can't be empty")
 
@@ -88,4 +77,5 @@ def create_status(status: StatusCreate, db: "Session" = Depends(get_db)):
 
 @router.delete("/{id}", status_code=status.HTTP_200_OK)
 def delete_status(id: int, db: "Session" = Depends(get_db)):
+    """Delete an endgame status."""
     return delete_one(db, Status, id)

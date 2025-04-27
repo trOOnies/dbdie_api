@@ -14,7 +14,7 @@ class ItemType(Base):
     __tablename__ = TN.ITEM_TYPES
 
     id    = C(SmallInt, nullable=False, primary_key=True)
-    name  = C(Str,      nullable=False)
+    name  = C(Str,      nullable=False, unique=True)
     emoji = C(Str,      nullable=True)
     ifk   = C(Bool,     nullable=True)
 
@@ -24,7 +24,7 @@ class AddonType(Base):
     __tablename__ = TN.ADDONS_TYPES
 
     id    = C(SmallInt, nullable=False, primary_key=True)
-    name  = C(Str,      nullable=False)
+    name  = C(Str,      nullable=False, unique=True)
     emoji = C(Str,      nullable=True)
     ifk   = C(Bool,     nullable=True)
 
@@ -34,7 +34,7 @@ class OfferingType(Base):
     __tablename__ = TN.OFFERING_TYPES
 
     id    = C(SmallInt, nullable=False, primary_key=True)
-    name  = C(Str,      nullable=False)
+    name  = C(Str,      nullable=False, unique=True)
     emoji = C(Str,      nullable=True)
     ifk   = C(Bool,     nullable=True)
 

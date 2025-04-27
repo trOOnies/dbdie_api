@@ -88,4 +88,5 @@ def create_offering(offering: OfferingCreate, db: "Session" = Depends(get_db)):
 
 @router.delete("/{id}", status_code=status.HTTP_200_OK)
 def delete_offering(id: int, db: "Session" = Depends(get_db)):
+    """Create a DBD offering."""
     return delete_one(db, Offering, id)
