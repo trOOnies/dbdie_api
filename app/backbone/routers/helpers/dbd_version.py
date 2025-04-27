@@ -52,7 +52,7 @@ def get_dbdv_id(
     db: "Session" = Depends(get_db),
 ):
     """Get DBD version id from its string form."""
-    return get_id(db, DBDVersion, "DBD version", dbdv_str)
+    return get_id(db, DBDVersion, dbdv_str)
 
 
 @router.get("/{id}", response_model=DBDVersionOut)
@@ -61,7 +61,7 @@ def get_dbdv(
     db: "Session" = Depends(get_db),
 ):
     """Get a certain DBD version with its id."""
-    return filter_one(db, DBDVersion, id, "DBD version")[0]
+    return filter_one(db, DBDVersion, id)[0]
 
 
 @router.post("", response_model=DBDVersionOut, status_code=status.HTTP_201_CREATED)
@@ -88,7 +88,7 @@ def update_dbdv(
     db: "Session" = Depends(get_db),
 ):
     """Update a DBD version."""
-    _, dbdv_query = filter_one(db, DBDVersion, id, "DBD version")
+    _, dbdv_query = filter_one(db, DBDVersion, id)
 
     new_info = {"id": id} | dbdv.model_dump()
     dbdv_query.update(new_info, synchronize_session=False)
@@ -99,4 +99,4 @@ def update_dbdv(
 
 @router.delete("/{id}", status_code=status.HTTP_200_OK)
 def delete_dbdv(id: int, db: "Session" = Depends(get_db)):
-    return delete_one(db, DBDVersion, "DBD version", id)
+    return delete_one(db, DBDVersion, id)

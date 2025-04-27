@@ -85,4 +85,4 @@ def create_offering(offering: OfferingCreate, db: "Session" = Depends(get_db)):
 
 @router.delete("/{id}", status_code=status.HTTP_200_OK)
 def delete_offering(id: int, db: "Session" = Depends(get_db)):
-    return delete_one(db, Offering, "Offering", id)
+    return delete_one(db, Offering, id)

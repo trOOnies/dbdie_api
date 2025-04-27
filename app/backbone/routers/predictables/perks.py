@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING
 
 from dbdie_classes.schemas.predictables import PerkCreate, PerkOut
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy import or_
 
 from backbone.database import get_db
@@ -16,8 +16,8 @@ from backbone.endpoints import (
     get_many,
     get_req,
     getr,
-    update_one,
-    update_one_new,
+    update_with_creation_schema,
+    update_with_out_dict,
     update_many,
 )
 from backbone.exceptions import ItemNotFoundException, ValidationException
@@ -95,7 +95,7 @@ def create_perk(perk: PerkCreate, db: "Session" = Depends(get_db)):
     return get_req(EP.PERKS, new_perk.id)
 
 
-@router.put("/{id}/change_id", response_model=PerkOut)
+@router.put("/{id}/change_id", status_code=status.HTTP_200_OK)
 def change_perk_id(
     id: int,
     new_id: int,
@@ -112,7 +112,8 @@ def change_perk_id(
     else:
         raise AssertionError(f"New id '{new_id}' already exists.")
 
-    modified_perk = update_one_new(db, Perk, "Perk", perk, new_id=new_id)
+    u_resp = update_with_out_dict(db, Perk, perk, new_id=new_id)
+    assert u_resp.status_code == status.HTTP_200_OK, "Failed to update perk ID"
 
     def update_cols(record) -> None:
         for col_name in ["perks_0", "perks_1", "perks_2", "perks_3"]:
@@ -134,15 +135,15 @@ def change_perk_id(
     # TODO: Deprecate perk models and extractors that use them
     # ...
 
-    return modified_perk
+    return Response(status_code=status.HTTP_200_OK)
 
 
 @router.put("/{id}", status_code=status.HTTP_200_OK)
 def update_perk(id: int, perk: PerkCreate, db: "Session" = Depends(get_db)):
     """Update the information of a DBD perk."""
-    return update_one(db, perk, Perk, "Perk", id)
+    return update_with_creation_schema(db, Perk, id, perk)
 
 
 @router.delete("/{id}", status_code=status.HTTP_200_OK)
 def delete_perk(id: int, db: "Session" = Depends(get_db)):
-    return delete_one(db, Perk, "Perk", id)
+    return delete_one(db, Perk, id)

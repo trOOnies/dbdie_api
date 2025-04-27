@@ -85,29 +85,18 @@ def putr(endpoint: "Endpoint", ml: bool = False, **kwargs):
     )
 
 
-# * Base endpoint functions
+# * GET base functions
 
 
-def filter_one(
-    db: "Session",
-    model,
-    id: int,
-    model_str: str | None = None,
-):
+def filter_one(db: "Session", model, id: int):
     """Base get one (item) function.
-
-    `model` is the SQLAlchemy model, and `model_str`
-    is its string name (also capitalized).
+    'model' is the SQLAlchemy model.
     """
     assert id >= 0, "ID can't be negative"
     filter_query = db.query(model).filter(model.id == id)
     item = filter_query.first()
     if item is None:
-        item_type = (
-            model_str if model_str is not None
-            else model.__tablename__.capitalize()
-        )
-        raise ItemNotFoundException(item_type, id)
+        raise ItemNotFoundException(model.__name__, id)
     return item, filter_query
 
 
@@ -196,7 +185,6 @@ def get_match_img(filename: str) -> FileResponse:
 def get_id(
     db: "Session",
     model,
-    model_str: str,  # TODO: Get from model
     name: str,
     name_col: str = "name",
 ) -> int:
@@ -206,22 +194,43 @@ def get_id(
     assert name_col in {"name", "filename"}
     item = db.query(model).filter(getattr(model, name_col) == name).first()
     if item is None:
-        raise NameNotFoundException(model_str, name)
+        raise NameNotFoundException(model.__name__, name)
     return item.id
 
 
-def update_one(
+# * UPDATE base functions
+
+
+def update_with_out_dict(
     db: "Session",
-    schema_create,
     model,
-    model_str: str,  # TODO: Get from model
-    id: int,
+    schema_out_dict: dict[str, Any],
     new_id: int | None = None,
 ) -> Response:
-    """Base update one (item) function."""
-    _, select_query = filter_one(db, model, id, model_str)
+    """[NEW] Base update one (item) function, from 'schema_out_dict'."""
+    _, select_query = filter_one(db, model, schema_out_dict["id"])
 
-    new_info = {"id": new_id if new_id is not None else id} | schema_create.model_dump()
+    new_info = deepcopy(schema_out_dict)
+    if new_id is not None:
+        new_info["id"] = new_id
+
+    select_query.update(new_info, synchronize_session=False)
+    db.commit()
+
+    return Response(status_code=status.HTTP_200_OK)
+
+
+def update_with_creation_schema(
+    db: "Session",
+    model,
+    id: int,
+    creation_schema,
+    new_id: int | None = None,
+) -> Response:
+    """Base update one (item) function, from 'creation_schema'."""
+    _, select_query = filter_one(db, model, id)
+
+    new_info = creation_schema.model_dump() | {"id": new_id if new_id is not None else id}
 
     select_query.update(new_info, synchronize_session=False)
     db.commit()
@@ -245,7 +254,6 @@ def update_many(
 def update_one_strict(
     db: "Session",
     model,
-    model_str: str,  # TODO: Get from model
     id: int,
     updatable_cols: list[str],
     user_key: str,
@@ -255,35 +263,13 @@ def update_one_strict(
     assert updatable_cols
     assert user_key in updatable_cols
 
-    _, select_query = filter_one(db, model, id, model_str)
+    _, select_query = filter_one(db, model, id)
 
     new_info = {user_key: user_value}
     select_query.update(new_info, synchronize_session=False)
     db.commit()
 
     return Response(status_code=status.HTTP_200_OK)
-
-
-def update_one_new(
-    db: "Session",
-    model,
-    model_str: str,  # TODO: Get from model
-    schema_out_dict: dict[str, Any],
-    new_id: int | None = None,
-) -> dict[str, Any]:
-    """[NEW] Base update one (item) function.
-    If success, returns the updated item.
-    """
-    _, select_query = filter_one(db, model, schema_out_dict["id"], model_str)
-
-    new_info = deepcopy(schema_out_dict)
-    if new_id is not None:
-        new_info["id"] = new_id
-
-    select_query.update(new_info, synchronize_session=False)
-    db.commit()
-
-    return new_info
 
 
 def add_commit_refresh(db: "Session", model) -> None:
@@ -293,14 +279,16 @@ def add_commit_refresh(db: "Session", model) -> None:
     db.refresh(model)
 
 
+# * DELETE base functions
+
+
 def delete_one(
     db: "Session",
     model,
-    model_str: str,  # TODO: Get from model
     id: int,
 ) -> Response:
     """Base delete one (item) function."""
-    item, _ = filter_one(db, model, id, model_str)
+    item, _ = filter_one(db, model, id)
     db.delete(item)
     db.commit()
     return Response(status_code=status.HTTP_200_OK)

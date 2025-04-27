@@ -79,4 +79,4 @@ def create_item(item: ItemCreate, db: "Session" = Depends(get_db)):
 
 @router.delete("/{id}", status_code=status.HTTP_200_OK)
 def delete_item(id: int, db: "Session" = Depends(get_db)):
-    return delete_one(db, Item, "Item", id)
+    return delete_one(db, Item, id)

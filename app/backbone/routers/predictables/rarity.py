@@ -47,4 +47,4 @@ def get_item(id: int, db: "Session" = Depends(get_db)):
 
 @router.delete("/{id}", status_code=status.HTTP_200_OK)
 def delete_rarity(id: int, db: "Session" = Depends(get_db)):
-    return delete_one(db, Rarity, "Rarity", id)
+    return delete_one(db, Rarity, id)

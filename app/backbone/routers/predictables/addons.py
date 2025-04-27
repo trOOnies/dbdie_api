@@ -9,7 +9,6 @@ from backbone.database import get_db
 from backbone.endpoints import (
     NOT_WS_PATT,
     add_commit_refresh,
-    dbdv_str_to_id,
     delete_one,
     do_count,
     filter_one,
@@ -55,7 +54,7 @@ def get_addons_types(db: "Session" = Depends(get_db)):
 
 @router.get("/{id}", response_model=AddonOut)
 def get_addon(id: int, db: "Session" = Depends(get_db)):
-    return filter_one(db, Addon, id, "Addon")[0]
+    return filter_one(db, Addon, id)[0]
 
 
 @router.get("/{id}/icon")
@@ -81,4 +80,4 @@ def create_addon(addon: AddonCreate, db: "Session" = Depends(get_db)):
 
 @router.delete("/{id}", status_code=status.HTTP_200_OK)
 def delete_addon(id: int, db: "Session" = Depends(get_db)):
-    return delete_one(db, Addon, "Addon", id)
+    return delete_one(db, Addon, id)

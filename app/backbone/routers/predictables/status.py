@@ -88,4 +88,4 @@ def create_status(status: StatusCreate, db: "Session" = Depends(get_db)):
 
 @router.delete("/{id}", status_code=status.HTTP_200_OK)
 def delete_status(id: int, db: "Session" = Depends(get_db)):
-    return delete_one(db, Status, "Status", id)
+    return delete_one(db, Status, id)

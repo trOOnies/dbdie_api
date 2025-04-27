@@ -49,4 +49,4 @@ def get_fmt(id: int, db: "Session" = Depends(get_db)):
 
 @router.delete("/{id}", status_code=status.HTTP_200_OK)
 def delete_fmt(id: int, db: "Session" = Depends(get_db)):
-    return delete_one(db, FullModelType, "Full model type", id)
+    return delete_one(db, FullModelType, id)

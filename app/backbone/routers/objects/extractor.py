@@ -16,7 +16,7 @@ from backbone.endpoints import (
     get_many,
     get_req,
     update_many,
-    update_one,
+    update_with_creation_schema,
 )
 from backbone.exceptions import ValidationException
 from backbone.models.groupings import Labels
@@ -55,7 +55,7 @@ def get_extractor_id(
     db: "Session" = Depends(get_db),
 ):
     """Get Extractor id from its name."""
-    return get_id(db, Extractor, "Extractor", extr_name)
+    return get_id(db, Extractor, extr_name)
 
 
 @router.get("/{id}", response_model=ExtractorOut)
@@ -94,7 +94,7 @@ def update_extractor(
 ):
     """Update the information of an InfoExtractor in the database."""
     # TODO: Update its config as well, and only allow sensible modifications.
-    return update_one(db, extractor, Extractor, "Extractor", id)
+    return update_with_creation_schema(db, Extractor, id, extractor)
 
 
 @router.delete("/{id}", status_code=status.HTTP_200_OK)
@@ -110,4 +110,4 @@ def delete_extractor(id: int, db: "Session" = Depends(get_db)):
         filter=(Labels.extr_id == id),
         update_f=update_labels_f,
     )
-    return delete_one(db, Extractor, "Extractor", id)
+    return delete_one(db, Extractor, id)

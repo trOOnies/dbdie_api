@@ -31,7 +31,7 @@ from backbone.endpoints import (
     get_req,
     getr,
     postr,
-    update_one_new,
+    update_with_out_dict,
 )
 from backbone.exceptions import ItemNotFoundException, ValidationException
 from backbone.models.predictables import Addon, Character, Item, Perk
@@ -155,7 +155,8 @@ def create_character_full(
 
     if character.ifk:
         character_only["power_id"] = power_id
-        character_only = update_one_new(db, Character, "Character", character_only)
+        u_resp = update_with_out_dict(db, Character, character_only)
+        assert u_resp.status_code == status.HTTP_200_OK, "Failed to update killer's power ID"
 
     return {
         "character": character_only,
@@ -167,4 +168,4 @@ def create_character_full(
 
 @router.delete("/{id}", status_code=status.HTTP_200_OK)
 def delete_character(id: int, db: "Session" = Depends(get_db)):
-    return delete_one(db, Character, "Character", id)
+    return delete_one(db, Character, id)

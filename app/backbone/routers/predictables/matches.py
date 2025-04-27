@@ -61,7 +61,7 @@ def get_match_id(
     filename: str,
     db: "Session" = Depends(get_db),
 ):
-    return get_id(db, Match, "Match", filename, name_col="filename")
+    return get_id(db, Match, filename, name_col="filename")
 
 
 @router.get("/image/{id}")
@@ -72,7 +72,7 @@ def get_match_image(id: int):
 
 @router.get("/{id}", response_model=MatchOut)
 def get_match(id: int, db: "Session" = Depends(get_db)):
-    m = filter_one(db, Match, id, "Match")[0]
+    m = filter_one(db, Match, id)[0]
     m = object_as_dict(m)
     m = MatchOut(**m)
     return m
@@ -143,7 +143,7 @@ def update_match(
     db: "Session" = Depends(get_db),
 ):
     """Update the information of a DBD match."""
-    _, select_query = filter_one(db, Match, id, "Match")
+    _, select_query = filter_one(db, Match, id)
 
     new_info = {"id": id} | match_create.model_dump()
 
@@ -166,4 +166,4 @@ def update_match(
 
 @router.delete("/{id}", status_code=status.HTTP_200_OK)
 def delete_match(id: int, db: "Session" = Depends(get_db)):
-    return delete_one(db, Match, "Match", id)
+    return delete_one(db, Match, id)

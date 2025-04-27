@@ -15,7 +15,7 @@ from backbone.endpoints import (
     get_many,
     get_req,
     postr,
-    update_one,
+    update_with_creation_schema,
 )
 from backbone.exceptions import ValidationException
 from backbone.models.objects import CropperSwarm
@@ -83,9 +83,9 @@ def update_cropper_swarm(
 ):
     """Update the information of an InfoCropperSwarm in the database."""
     # TODO: Update its config as well, and only allow sensible modifications.
-    return update_one(db, cropper_swarm, CropperSwarm, "CropperSwarm", id)
+    return update_with_creation_schema(db, CropperSwarm, id, cropper_swarm)
 
 
 @router.delete("/{id}", status_code=status.HTTP_200_OK)
 def delete_cropper_swarm(id: int, db: "Session" = Depends(get_db)):
-    return delete_one(db, CropperSwarm, "CropperSwarm", id)
+    return delete_one(db, CropperSwarm, id)

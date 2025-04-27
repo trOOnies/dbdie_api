@@ -15,7 +15,7 @@ from backbone.endpoints import (
     get_id,
     get_many,
     get_req,
-    update_one,
+    update_with_creation_schema,
 )
 from backbone.exceptions import ValidationException
 from backbone.models.objects import Model
@@ -52,7 +52,7 @@ def get_model_id(
     db: "Session" = Depends(get_db),
 ):
     """Get Model id from its name."""
-    return get_id(db, Model, "Model", model_name)
+    return get_id(db, Model, model_name)
 
 
 @router.get("/{id}", response_model=ModelOut)
@@ -88,9 +88,9 @@ def update_model(
 ):
     """Update the information of an IEModel in the database."""
     # TODO: Update its config as well, and only allow sensible modifications.
-    return update_one(db, model, Model, "Model", id)
+    return update_with_creation_schema(db, Model, id, model)
 
 
 @router.delete("/{id}", status_code=status.HTTP_200_OK)
 def delete_model(id: int, db: "Session" = Depends(get_db)):
-    return delete_one(db, Model, "Model", id)
+    return delete_one(db, Model, id)
