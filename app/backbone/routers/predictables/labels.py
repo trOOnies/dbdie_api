@@ -163,7 +163,8 @@ def create_empty_labels(db: "Session" = Depends(get_db)):
         .all()
     )
     found_ms = set(m[0] for m in found_ms)
-    
+
+    raise NotImplementedError
 
     # With that information, loop the matches/crops that match those filenames and upload with POST
     # TODO: Implement

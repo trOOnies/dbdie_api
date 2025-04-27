@@ -1,8 +1,9 @@
 """Endpoints-related helper functions."""
 
+from copy import deepcopy
 import os
 import re
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from dbdie_classes.paths import CROPPED_IMG_FD_RP, absp
 from fastapi import Response, status
@@ -257,6 +258,26 @@ def update_one_strict(
     _, select_query = filter_one(db, model, id, model_str)
 
     new_info = {user_key: user_value}
+    select_query.update(new_info, synchronize_session=False)
+    db.commit()
+
+    return Response(status_code=status.HTTP_200_OK)
+
+
+def update_one_new(
+    db: "Session",
+    model,
+    model_str: str,  # TODO: Get from model
+    schema_out_dict: dict[str, Any],
+    new_id: int | None = None,
+) -> Response:
+    """[NEW] Base update one (item) function."""
+    _, select_query = filter_one(db, model, schema_out_dict["id"], model_str)
+
+    new_info = deepcopy(schema_out_dict)
+    if new_id is not None:
+        new_info["id"] = new_id
+
     select_query.update(new_info, synchronize_session=False)
     db.commit()
 

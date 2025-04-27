@@ -31,6 +31,7 @@ from backbone.endpoints import (
     get_req,
     getr,
     postr,
+    update_one_new,
 )
 from backbone.exceptions import ItemNotFoundException, ValidationException
 from backbone.models.predictables import Addon, Character, Item, Perk
@@ -131,7 +132,10 @@ def create_character(
 
 
 @router.post("/full", response_model=FullCharacterOut, status_code=status.HTTP_201_CREATED)
-def create_character_full(character: FullCharacterCreate):
+def create_character_full(
+    character: FullCharacterCreate,
+    db: "Session" = Depends(get_db),
+):
     """Create a DBD character in full (with its perks and addons, if applies).
     If it has addons, it's assumed that they are ordered from least rare (common) to most rare (iri).
     """
@@ -148,7 +152,11 @@ def create_character_full(character: FullCharacterCreate):
 
     power = create_killer_power(character_only, character.power_name)
     power_id = power["id"] if power is not None else None
-    # TODO: Update killer's power_id (if ifk)
+
+    if character.ifk:
+        character_only["power_id"] = power_id
+        u_resp = update_one_new(db, Character, "Character", character_only)
+        assert u_resp.status_code == status.HTTP_200_OK, "Failed to update character"
 
     return {
         "character": character_only,
