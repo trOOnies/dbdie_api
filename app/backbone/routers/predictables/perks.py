@@ -87,7 +87,7 @@ def create_perk(perk: PerkCreate, db: "Session" = Depends(get_db)):
 
     getr(f"{EP.CHARACTER}/{perk.character_id}")
 
-    new_perk = {"id": getr(f"{EP.PERKS}/count")} | perk.model_dump()
+    new_perk = perk.model_dump() | {"id": getr(f"{EP.PERKS}/count")}
     new_perk = Perk(**new_perk)
 
     add_commit_refresh(db, new_perk)

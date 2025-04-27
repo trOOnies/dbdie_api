@@ -71,7 +71,7 @@ def create_model(
     if NOT_WS_PATT.search(model.name) is None:
         raise ValidationException("Model name can't be empty.")
 
-    new_model = {"id": id} | model.model_dump()
+    new_model = model.model_dump() | {"id": id}
 
     new_model = Model(**new_model)
     add_commit_refresh(db, new_model)

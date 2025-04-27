@@ -75,7 +75,7 @@ def create_offering(offering: OfferingCreate, db: "Session" = Depends(get_db)):
 
     # TODO: assert type_id and user_id exists
 
-    new_offering = {"id": getr(f"{EP.OFFERING}/count")} | offering.model_dump()
+    new_offering = offering.model_dump() | {"id": getr(f"{EP.OFFERING}/count")}
     new_offering = Offering(**new_offering)
 
     add_commit_refresh(db, new_offering)

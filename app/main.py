@@ -42,7 +42,7 @@ if True:
     app.include_router(status.router,      prefix=EP.STATUS,      tags=[EP.STATUS[1:]]    )
     app.include_router(rarity.router,      prefix=EP.RARITY,      tags=[EP.RARITY[1:]]    )
     app.include_router(players.router,     prefix=EP.PLAYERS,     tags=[EP.PLAYERS[1:]]   )
-    app.include_router(dbd_version.router, prefix=EP.DBD_VERSION, tags=[HELP]                    )
+    app.include_router(dbd_version.router, prefix=EP.DBD_VERSION, tags=[HELP]             )
     app.include_router(matches.router,     prefix=EP.MATCHES,     tags=[EP.MATCHES[1:]]   )
     app.include_router(labels.router,      prefix=EP.LABELS,      tags=[EP.LABELS[1:]]    )
 

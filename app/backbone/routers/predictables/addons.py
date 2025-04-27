@@ -70,7 +70,7 @@ def create_addon(addon: AddonCreate, db: "Session" = Depends(get_db)):
     get_req(EP.ITEM, addon.item_id)
     # TODO: assert type_id exists
 
-    new_addon = {"id": getr(f"{EP.ADDONS}/count")} | addon.model_dump()
+    new_addon = addon.model_dump() | {"id": getr(f"{EP.ADDONS}/count")}
     new_addon = Addon(**new_addon)
 
     add_commit_refresh(db, new_addon)

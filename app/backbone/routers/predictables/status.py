@@ -78,7 +78,7 @@ def create_status(status: StatusCreate, db: "Session" = Depends(get_db)):
     resp = requests.get(endp(f"{EP.CHARACTER}/{status.character_id}"))
     assert resp.status_code == 200
 
-    new_status = {"id": getr(f"{EP.STATUS}/count")} | status.model_dump()
+    new_status = status.model_dump() | {"id": getr(f"{EP.STATUS}/count")}
     new_status = Status(**new_status)
 
     add_commit_refresh(db, new_status)

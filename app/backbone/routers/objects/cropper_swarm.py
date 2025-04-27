@@ -63,7 +63,7 @@ def create_cropper_swarm(
     if NOT_WS_PATT.search(cropper_swarm.name) is None:
         raise ValidationException("CropperSwarm name can't be empty.")
 
-    new_cropper_swarm = {"id": id} | cropper_swarm.model_dump()
+    new_cropper_swarm = cropper_swarm.model_dump() | {"id": id}
 
     new_cropper_swarm = CropperSwarm(**new_cropper_swarm)
     add_commit_refresh(db, new_cropper_swarm)

@@ -75,7 +75,7 @@ def create_extractor(
     if NOT_WS_PATT.search(extractor.name) is None:
         raise ValidationException("Extractor name can't be empty.")
 
-    new_extractor = {"id": id} | extractor.model_dump()
+    new_extractor = extractor.model_dump() | {"id": id}
     del new_extractor["models_ids"]
     new_extractor = new_extractor | extractor.models_ids.to_sql_cols()
 
