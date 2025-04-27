@@ -28,15 +28,6 @@ if TYPE_CHECKING:
 router = APIRouter()
 
 
-@router.get("/count", response_model=int)
-def count_items(
-    ifk: bool | None = None,
-    text: str = "",
-    db: "Session" = Depends(get_db),
-):
-    return do_count(db, Item, text=text, ifk=ifk, mt_type=ItemType)
-
-
 @router.get("", response_model=list[ItemOut])
 def get_items(
     limit: int = 10,
@@ -47,14 +38,13 @@ def get_items(
     return get_many(db, limit, Item, skip, ifk, ItemType)
 
 
-@router.get("/{id}", response_model=ItemOut)
-def get_item(id: int, db: "Session" = Depends(get_db)):
-    return filter_one(db, Item, id)[0]
-
-
-@router.get("/{id}/icon")
-def get_item_icon(id: int):
-    return get_icon("items", id)
+@router.get("/count", response_model=int)
+def count_items(
+    ifk: bool | None = None,
+    text: str = "",
+    db: "Session" = Depends(get_db),
+):
+    return do_count(db, Item, text=text, ifk=ifk, mt_type=ItemType)
 
 
 @router.get("/types", response_model=list[ItemTypeOut])
@@ -65,6 +55,16 @@ def get_item_types(db: "Session" = Depends(get_db)):
 @router.get("/types/{id}", response_model=ItemTypeOut)
 def get_item_type(id: int, db: "Session" = Depends(get_db)):
     return filter_one(db, ItemType, id)[0]
+
+
+@router.get("/{id}/icon")
+def get_item_icon(id: int):
+    return get_icon("items", id)
+
+
+@router.get("/{id}", response_model=ItemOut)
+def get_item(id: int, db: "Session" = Depends(get_db)):
+    return filter_one(db, Item, id)[0]
 
 
 @router.post("", response_model=ItemOut, status_code=status.HTTP_201_CREATED)

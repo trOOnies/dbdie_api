@@ -29,12 +29,6 @@ if TYPE_CHECKING:
 router = APIRouter()
 
 
-@router.get("/count", response_model=int)
-def count_statuses(text: str = "", db: "Session" = Depends(get_db)):
-    """Count endgame statuses."""
-    return do_count(db, Status, text=text)
-
-
 @router.get("", response_model=list[StatusOut])
 def get_statuses(
     limit: int = 10,
@@ -46,16 +40,22 @@ def get_statuses(
     return get_many(db, limit, Status, skip, ifk, Character)
 
 
-@router.get("/{id}", response_model=StatusOut)
-def get_status(id: int, db: "Session" = Depends(get_db)):
-    """Get an endgame statuses with a certain ID."""
-    return filter_one(db, Status, id)[0]
+@router.get("/count", response_model=int)
+def count_statuses(text: str = "", db: "Session" = Depends(get_db)):
+    """Count endgame statuses."""
+    return do_count(db, Status, text=text)
 
 
 @router.get("/{id}/icon")
 def get_status_icon(id: int):
     """Get an endgame status icon."""
     return get_icon("statuses", id, plural_len=2)
+
+
+@router.get("/{id}", response_model=StatusOut)
+def get_status(id: int, db: "Session" = Depends(get_db)):
+    """Get an endgame statuses with a certain ID."""
+    return filter_one(db, Status, id)[0]
 
 
 @router.post("", response_model=StatusOut, status_code=status.HTTP_201_CREATED)

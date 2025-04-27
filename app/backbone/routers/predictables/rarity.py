@@ -25,15 +25,6 @@ if TYPE_CHECKING:
 router = APIRouter()
 
 
-@router.get("/count", response_model=int)
-def count_items(
-    ifk: bool | None = None,
-    text: str = "",
-    db: "Session" = Depends(get_db),
-):
-    return do_count(db, Rarity, text=text, ifk=ifk)
-
-
 @router.get("", response_model=list[RarityOut])
 def get_items(
     limit: int = 10,
@@ -41,6 +32,15 @@ def get_items(
     db: "Session" = Depends(get_db),
 ):
     return get_many(db, limit, Rarity, skip)
+
+
+@router.get("/count", response_model=int)
+def count_items(
+    ifk: bool | None = None,
+    text: str = "",
+    db: "Session" = Depends(get_db),
+):
+    return do_count(db, Rarity, text=text, ifk=ifk)
 
 
 @router.get("/{id}", response_model=RarityOut)

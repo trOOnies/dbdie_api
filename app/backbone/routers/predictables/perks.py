@@ -31,6 +31,17 @@ if TYPE_CHECKING:
 router = APIRouter()
 
 
+@router.get("", response_model=list[PerkOut])
+def get_perks(
+    limit: int = 10,
+    skip: int = 0,
+    ifk: bool | None = None,
+    db: "Session" = Depends(get_db),
+):
+    """Get many DBD perks."""
+    return get_many(db, limit, Perk, skip, ifk, Character)
+
+
 @router.get("/count", response_model=int)
 def count_perks(
     ifk: bool | None = None,
@@ -41,15 +52,10 @@ def count_perks(
     return do_count(db, Perk, text=text, ifk=ifk)
 
 
-@router.get("", response_model=list[PerkOut])
-def get_perks(
-    limit: int = 10,
-    skip: int = 0,
-    ifk: bool | None = None,
-    db: "Session" = Depends(get_db),
-):
-    """Get many DBD perks."""
-    return get_many(db, limit, Perk, skip, ifk, Character)
+@router.get("/{id}/icon")
+def get_perk_icon(id: int):
+    """Get a DBD perk icon."""
+    return get_icon("perks", id)
 
 
 @router.get("/{id}", response_model=PerkOut)
@@ -71,12 +77,6 @@ def get_perk(id: int, db: "Session" = Depends(get_db)):
     if perk is None:
         raise ItemNotFoundException("Perk", id)
     return perk
-
-
-@router.get("/{id}/icon")
-def get_perk_icon(id: int):
-    """Get a DBD perk icon."""
-    return get_icon("perks", id)
 
 
 @router.post("", response_model=PerkOut, status_code=status.HTTP_201_CREATED)

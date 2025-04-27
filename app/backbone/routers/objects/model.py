@@ -30,15 +30,6 @@ if TYPE_CHECKING:
 router = APIRouter()
 
 
-@router.get("/count", response_model=int)
-def count_models(
-    text: str = "",
-    db: "Session" = Depends(get_db),
-):
-    """Count Models."""
-    return do_count(db, Model, text=text)
-
-
 @router.get("", response_model=list[ModelOut])
 def get_models(
     limit: int = 10,
@@ -47,6 +38,15 @@ def get_models(
 ):
     """Query many Models."""
     return get_many(db, limit, Model, skip)
+
+
+@router.get("/count", response_model=int)
+def count_models(
+    text: str = "",
+    db: "Session" = Depends(get_db),
+):
+    """Count Models."""
+    return do_count(db, Model, text=text)
 
 
 @router.get("/id", response_model=int)

@@ -27,15 +27,6 @@ if TYPE_CHECKING:
 router = APIRouter()
 
 
-@router.get("/count", response_model=int)
-def count_dbdvs(
-    text: str = "",
-    db: "Session" = Depends(get_db),
-):
-    """Count DBD versions."""
-    return do_count(db, DBDVersion, text=text)
-
-
 @router.get("", response_model=list[DBDVersionOut])
 def get_dbdvs(
     limit: int = 10, 
@@ -44,6 +35,15 @@ def get_dbdvs(
 ):
     """Get many DBD versions."""
     return get_many(db, limit, DBDVersion, skip)
+
+
+@router.get("/count", response_model=int)
+def count_dbdvs(
+    text: str = "",
+    db: "Session" = Depends(get_db),
+):
+    """Count DBD versions."""
+    return do_count(db, DBDVersion, text=text)
 
 
 @router.get("/id", response_model=int)

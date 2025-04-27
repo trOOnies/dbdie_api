@@ -33,15 +33,6 @@ if TYPE_CHECKING:
 router = APIRouter()
 
 
-@router.get("/count", response_model=int)
-def count_extractors(
-    text: str = "",
-    db: "Session" = Depends(get_db),
-):
-    """Count Extractors."""
-    return do_count(db, Extractor, text=text)
-
-
 @router.get("", response_model=list[ExtractorOut])
 def get_extractors(
     limit: int = 10,
@@ -51,6 +42,15 @@ def get_extractors(
     """Query many Extractors."""
     extractors = get_many(db, limit, Extractor, skip)
     return [ExtractorOut.from_sqla(ext) for ext in extractors]
+
+
+@router.get("/count", response_model=int)
+def count_extractors(
+    text: str = "",
+    db: "Session" = Depends(get_db),
+):
+    """Count Extractors."""
+    return do_count(db, Extractor, text=text)
 
 
 @router.get("/id", response_model=int)

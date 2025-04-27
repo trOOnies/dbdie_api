@@ -65,6 +65,44 @@ def count_labels(
     return query.count()
 
 
+@router.get("/filter", response_model=LabelsOut)
+def get_label(
+    match_id: int,
+    player_id: int,
+    db: "Session" = Depends(get_db),
+):
+    """Get player-centered labels with (match_id, player_id)."""
+    labels, _ = filter_one_labels_row(db, match_id, player_id)
+    labels = LabelsOut.from_labels(labels)
+    return labels
+
+
+@router.post(
+    "",
+    response_model=LabelsOut,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_labels(
+    labels: LabelsCreate,
+    db: "Session" = Depends(get_db),
+):
+    """Create player-centered labels."""
+    new_labels = labels.model_dump()
+    new_labels = new_labels | player_to_labels(new_labels["player"])
+    del new_labels["player"]
+    new_labels = Labels(**new_labels)
+
+    add_commit_refresh(db, new_labels)
+
+    return getr(
+        f"{EP.LABELS}/filter",
+        params={
+            "match_id": new_labels.match_id,
+            "player_id": new_labels.player_id,
+        },
+    )
+
+
 # TODO: Debug the filter so that it is more helpful and convenient
 @router.post(
     "/filter-many",
@@ -102,40 +140,6 @@ def get_labels(
 
     labels = [LabelsOut.from_labels(lbl) for lbl in labels]
     return labels
-
-
-@router.get("/filter", response_model=LabelsOut)
-def get_label(
-    match_id: int,
-    player_id: int,
-    db: "Session" = Depends(get_db),
-):
-    """Get player-centered labels with (match_id, player_id)."""
-    labels, _ = filter_one_labels_row(db, match_id, player_id)
-    labels = LabelsOut.from_labels(labels)
-    return labels
-
-
-@router.post("", response_model=LabelsOut, status_code=status.HTTP_201_CREATED)
-def create_labels(
-    labels: LabelsCreate,
-    db: "Session" = Depends(get_db),
-):
-    """Create player-centered labels."""
-    new_labels = labels.model_dump()
-    new_labels = new_labels | player_to_labels(new_labels["player"])
-    del new_labels["player"]
-    new_labels = Labels(**new_labels)
-
-    add_commit_refresh(db, new_labels)
-
-    return getr(
-        f"{EP.LABELS}/filter",
-        params={
-            "match_id": new_labels.match_id,
-            "player_id": new_labels.player_id,
-        },
-    )
 
 
 @router.post("/init-empty", status_code=status.HTTP_201_CREATED)
@@ -229,38 +233,6 @@ def batch_create_labels(fmts: list[FullModelType], filename: Filename):
     return Response(status_code=status.HTTP_201_CREATED)
 
 
-@router.put("/predictable/strict", status_code=status.HTTP_200_OK)
-def update_labels_strict(
-    match_id: int,
-    player_id: int,
-    fmt: FullModelType,
-    value,
-    user_id: int,
-    extr_id: int,
-    item_id: int | None = None,
-    db: "Session" = Depends(get_db),
-):
-    mt, keys = process_fmt_strict(fmt)
-
-    cond = item_id is not None
-    assert cond == (mt in MULTIPLE_PER_PLAYER)
-    key = keys[item_id if cond else 0]
-
-    _, filter_query = filter_one_labels_row(db, match_id, player_id)
-    updated_info = {
-        key: value,
-        "date_modified": datetime.now(),
-        "user_id": user_id,
-        "extr_id": extr_id,
-        f"{mt}_mckd": False,
-    }
-
-    filter_query.update(updated_info, synchronize_session=False)
-    db.commit()
-
-    return Response(status_code=status.HTTP_200_OK)
-
-
 # TODO: Deprecate this strict implementation if the previous one is more correct
 @router.put("/predictable", status_code=status.HTTP_200_OK)
 def update_labels(
@@ -289,6 +261,38 @@ def update_labels(
     new_info["extr_id"] = 0  # TODO: dynamic
 
     filter_query.update(new_info, synchronize_session=False)
+    db.commit()
+
+    return Response(status_code=status.HTTP_200_OK)
+
+
+@router.put("/predictable/strict", status_code=status.HTTP_200_OK)
+def update_labels_strict(
+    match_id: int,
+    player_id: int,
+    fmt: FullModelType,
+    value,
+    user_id: int,
+    extr_id: int,
+    item_id: int | None = None,
+    db: "Session" = Depends(get_db),
+):
+    mt, keys = process_fmt_strict(fmt)
+
+    cond = item_id is not None
+    assert cond == (mt in MULTIPLE_PER_PLAYER)
+    key = keys[item_id if cond else 0]
+
+    _, filter_query = filter_one_labels_row(db, match_id, player_id)
+    updated_info = {
+        key: value,
+        "date_modified": datetime.now(),
+        "user_id": user_id,
+        "extr_id": extr_id,
+        f"{mt}_mckd": False,
+    }
+
+    filter_query.update(updated_info, synchronize_session=False)
     db.commit()
 
     return Response(status_code=status.HTTP_200_OK)

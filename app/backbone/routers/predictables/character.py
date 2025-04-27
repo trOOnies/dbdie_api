@@ -43,16 +43,6 @@ if TYPE_CHECKING:
 router = APIRouter()
 
 
-@router.get("/count", response_model=int)
-def count_characters(
-    ifk: bool | None = None,
-    text: str = "",
-    db: "Session" = Depends(get_db),
-):
-    """Count DBD characters."""
-    return do_count(db, Character, ifk, text=text)
-
-
 @router.get("", response_model=list[CharacterOut])
 def get_characters(
     ifk: bool | None = None,
@@ -64,16 +54,14 @@ def get_characters(
     return get_many(db, limit, Character, skip, ifk)
 
 
-@router.get("/{id}", response_model=CharacterOut)
-def get_character(id: int, db: "Session" = Depends(get_db)):
-    """Get a DBD character with an ID."""
-    return filter_one(db, Character, id)[0]
-
-
-@router.get("/{id}/icon")
-def get_character_icon(id: int):
-    """Get a DBD character icon."""
-    return get_icon("characters", id)
+@router.get("/count", response_model=int)
+def count_characters(
+    ifk: bool | None = None,
+    text: str = "",
+    db: "Session" = Depends(get_db),
+):
+    """Count DBD characters."""
+    return do_count(db, Character, ifk, text=text)
 
 
 @router.get("/full/{id}", response_model=FullCharacterOut)
@@ -105,6 +93,17 @@ def get_full_character(id: int, db: "Session" = Depends(get_db)):
         ),
     }
 
+
+@router.get("/{id}/icon")
+def get_character_icon(id: int):
+    """Get a DBD character icon."""
+    return get_icon("characters", id)
+
+
+@router.get("/{id}", response_model=CharacterOut)
+def get_character(id: int, db: "Session" = Depends(get_db)):
+    """Get a DBD character with an ID."""
+    return filter_one(db, Character, id)[0]
 
 
 @router.post("", response_model=CharacterOut, status_code=status.HTTP_201_CREATED)

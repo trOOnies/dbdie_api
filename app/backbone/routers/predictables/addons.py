@@ -28,15 +28,6 @@ if TYPE_CHECKING:
 router = APIRouter()
 
 
-@router.get("/count", response_model=int)
-def count_addons(
-    ifk: bool | None = None,
-    text: str = "",
-    db: "Session" = Depends(get_db),
-):
-    return do_count(db, Addon, text=text, ifk=ifk, mt_type=AddonType)
-
-
 @router.get("", response_model=list[AddonOut])
 def get_addons(
     limit: int = 10,
@@ -47,15 +38,13 @@ def get_addons(
     return get_many(db, limit, Addon, skip, ifk, AddonType)
 
 
-@router.get("/{id}", response_model=AddonOut)
-def get_addon(id: int, db: "Session" = Depends(get_db)):
-    return filter_one(db, Addon, id)[0]
-
-
-@router.get("/{id}/icon")
-def get_addon_icon(id: int):
-    return get_icon("addons", id)
-
+@router.get("/count", response_model=int)
+def count_addons(
+    ifk: bool | None = None,
+    text: str = "",
+    db: "Session" = Depends(get_db),
+):
+    return do_count(db, Addon, text=text, ifk=ifk, mt_type=AddonType)
 
 @router.get("/types", response_model=list[AddonTypeOut])
 def get_addons_types(db: "Session" = Depends(get_db)):
@@ -65,6 +54,16 @@ def get_addons_types(db: "Session" = Depends(get_db)):
 @router.get("/types/{id}", response_model=AddonTypeOut)
 def get_addon_type(id: int, db: "Session" = Depends(get_db)):
     return filter_one(db, AddonType, id)[0]
+
+
+@router.get("/{id}/icon")
+def get_addon_icon(id: int):
+    return get_icon("addons", id)
+
+
+@router.get("/{id}", response_model=AddonOut)
+def get_addon(id: int, db: "Session" = Depends(get_db)):
+    return filter_one(db, Addon, id)[0]
 
 
 @router.post("", response_model=AddonOut, status_code=status.HTTP_201_CREATED)

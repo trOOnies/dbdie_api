@@ -29,16 +29,6 @@ if TYPE_CHECKING:
 router = APIRouter()
 
 
-@router.get("/count", response_model=int)
-def count_offerings(
-    ifk: bool | None = None,
-    text: str = "",
-    db: "Session" = Depends(get_db),
-):
-    """Count DBD offerings."""
-    return do_count(db, Offering, text=text, ifk=ifk, mt_type=OfferingType)
-
-
 @router.get("", response_model=list[OfferingOut])
 def get_offerings(
     limit: int = 10,
@@ -50,16 +40,14 @@ def get_offerings(
     return get_many(db, limit, Offering, skip, ifk, Character)
 
 
-@router.get("/{id}", response_model=OfferingOut)
-def get_offering(id: int, db: "Session" = Depends(get_db)):
-    """Get a DBD offering with a certain ID."""
-    return filter_one(db, Offering, id)[0]
-
-
-@router.get("/{id}/icon")
-def get_offering_icon(id: int):
-    """Get a DBD offering icon."""
-    return get_icon("offerings", id)
+@router.get("/count", response_model=int)
+def count_offerings(
+    ifk: bool | None = None,
+    text: str = "",
+    db: "Session" = Depends(get_db),
+):
+    """Count DBD offerings."""
+    return do_count(db, Offering, text=text, ifk=ifk, mt_type=OfferingType)
 
 
 @router.get("/types", response_model=list[OfferingTypeOut])
@@ -70,6 +58,18 @@ def get_offering_types(db: "Session" = Depends(get_db)):
 @router.get("/types/{id}", response_model=OfferingTypeOut)
 def get_offering_type(id: int, db: "Session" = Depends(get_db)):
     return filter_one(db, OfferingType, id)[0]
+
+
+@router.get("/{id}/icon")
+def get_offering_icon(id: int):
+    """Get a DBD offering icon."""
+    return get_icon("offerings", id)
+
+
+@router.get("/{id}", response_model=OfferingOut)
+def get_offering(id: int, db: "Session" = Depends(get_db)):
+    """Get a DBD offering with a certain ID."""
+    return filter_one(db, Offering, id)[0]
 
 
 @router.post("", response_model=OfferingOut, status_code=status.HTTP_201_CREATED)

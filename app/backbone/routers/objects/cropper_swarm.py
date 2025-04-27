@@ -24,17 +24,7 @@ from backbone.options import ENDPOINT as EP
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
-
 router = APIRouter()
-
-
-@router.get("/count", response_model=int)
-def count_cropper_swarms(
-    text: str = "",
-    db: "Session" = Depends(get_db),
-):
-    """Count CropperSwarms."""
-    return do_count(db, CropperSwarm, text=text)
 
 
 @router.get("", response_model=list[CropperSwarmOut])
@@ -45,6 +35,15 @@ def get_cropper_swarms(
 ):
     """Query many CropperSwarms."""
     return get_many(db, limit, CropperSwarm, skip)
+
+
+@router.get("/count", response_model=int)
+def count_cropper_swarms(
+    text: str = "",
+    db: "Session" = Depends(get_db),
+):
+    """Count CropperSwarms."""
+    return do_count(db, CropperSwarm, text=text)
 
 
 @router.get("/{id}", response_model=CropperSwarmOut)

@@ -39,14 +39,6 @@ if TYPE_CHECKING:
 router = APIRouter()
 
 
-@router.get("/count", response_model=int)
-def count_matches(
-    text: str = "",
-    db: "Session" = Depends(get_db),
-):
-    return do_count(db, Match, text=text)
-
-
 @router.get("", response_model=list[MatchOut])
 def get_matches(
     limit: int = 10,
@@ -54,6 +46,14 @@ def get_matches(
     db: "Session" = Depends(get_db),
 ):
     return get_many(db, limit, Match, skip)
+
+
+@router.get("/count", response_model=int)
+def count_matches(
+    text: str = "",
+    db: "Session" = Depends(get_db),
+):
+    return do_count(db, Match, text=text)
 
 
 @router.get("/id", response_model=int)
@@ -78,7 +78,11 @@ def get_match(id: int, db: "Session" = Depends(get_db)):
     return m
 
 
-@router.post("", response_model=MatchOut, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=MatchOut,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_match(
     match_create: MatchCreate,
     db: "Session" = Depends(get_db),
