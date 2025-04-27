@@ -17,8 +17,6 @@ from backbone.routers.predictables import (
 )
 from backbone.routers.processes import backup, cropping, extraction, training
 from backbone.routers.tags import HELPERS as HELP
-from backbone.routers.tags import OBJECTS as OBJ
-from backbone.routers.tags import PREDICTABLES as PRED
 from backbone.routers.tags import PROCESSES as PROC
 
 app = FastAPI(
@@ -29,24 +27,24 @@ app = FastAPI(
 
 # TODO
 if True:
-    app.include_router(cropper_swarm.router,    prefix=EP.CROPPER_SWARM, tags=[OBJ, "cropper_swarm"])
-    app.include_router(extractor.router,        prefix=EP.EXTRACTOR,     tags=[OBJ, "extractor"])
-    app.include_router(full_model_types.router, prefix=EP.FMT,           tags=[OBJ, "fmts"])
-    app.include_router(model.router,            prefix=EP.MODELS,        tags=[OBJ, "model"])
+    app.include_router(cropper_swarm.router,    prefix=EP.CROPPER_SWARM, tags=["cropper_swarm"] )
+    app.include_router(extractor.router,        prefix=EP.EXTRACTOR,     tags=["extractor"]     )
+    app.include_router(full_model_types.router, prefix=EP.FMT,           tags=["fmts"]          )
+    app.include_router(model.router,            prefix=EP.MODELS,        tags=["model"]         )
 
 # TODO
 if True:
-    app.include_router(addons.router,      prefix=EP.ADDONS,      tags=[PRED, EP.ADDONS[1:]]     )
-    app.include_router(character.router,   prefix=EP.CHARACTER,   tags=[PRED, EP.CHARACTER[1:]]  )
-    app.include_router(item.router,        prefix=EP.ITEM,        tags=[PRED, EP.ITEM[1:]]       )
-    app.include_router(offering.router,    prefix=EP.OFFERING,    tags=[PRED, EP.OFFERING[1:]]   )
-    app.include_router(perks.router,       prefix=EP.PERKS,       tags=[PRED, EP.PERKS[1:]]      )
-    app.include_router(status.router,      prefix=EP.STATUS,      tags=[PRED, EP.STATUS[1:]]     )
-    app.include_router(rarity.router,      prefix=EP.RARITY,      tags=[PRED, EP.RARITY[1:]]     )
-    app.include_router(players.router,     prefix=EP.PLAYERS,     tags=[PRED, EP.PLAYERS[1:]]    )
+    app.include_router(addons.router,      prefix=EP.ADDONS,      tags=[EP.ADDONS[1:]]    )
+    app.include_router(character.router,   prefix=EP.CHARACTER,   tags=[EP.CHARACTER[1:]] )
+    app.include_router(item.router,        prefix=EP.ITEM,        tags=[EP.ITEM[1:]]      )
+    app.include_router(offering.router,    prefix=EP.OFFERING,    tags=[EP.OFFERING[1:]]  )
+    app.include_router(perks.router,       prefix=EP.PERKS,       tags=[EP.PERKS[1:]]     )
+    app.include_router(status.router,      prefix=EP.STATUS,      tags=[EP.STATUS[1:]]    )
+    app.include_router(rarity.router,      prefix=EP.RARITY,      tags=[EP.RARITY[1:]]    )
+    app.include_router(players.router,     prefix=EP.PLAYERS,     tags=[EP.PLAYERS[1:]]   )
     app.include_router(dbd_version.router, prefix=EP.DBD_VERSION, tags=[HELP]                    )
-    app.include_router(matches.router,     prefix=EP.MATCHES,     tags=[PRED, EP.MATCHES[1:]]    )
-    app.include_router(labels.router,      prefix=EP.LABELS,      tags=[PRED, EP.LABELS[1:]]     )
+    app.include_router(matches.router,     prefix=EP.MATCHES,     tags=[EP.MATCHES[1:]]   )
+    app.include_router(labels.router,      prefix=EP.LABELS,      tags=[EP.LABELS[1:]]    )
 
 # TODO
 if True:
