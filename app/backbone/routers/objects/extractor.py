@@ -3,7 +3,8 @@
 from typing import TYPE_CHECKING
 
 from dbdie_classes.schemas.objects import ExtractorCreate, ExtractorOut
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Response, status
+from requests import delete as req_delete
 
 from backbone.database import get_db
 from backbone.endpoints import (
@@ -11,10 +12,12 @@ from backbone.endpoints import (
     add_commit_refresh,
     delete_one,
     do_count,
+    endp,
     filter_one,
     get_id,
     get_many,
     get_req,
+    mlendp,
     update_many,
     update_with_creation_schema,
 )
@@ -22,6 +25,7 @@ from backbone.exceptions import ValidationException
 from backbone.models.groupings import Labels
 from backbone.models.objects import Extractor
 from backbone.options import ENDPOINT as EP
+from backbone.options import ML_ENDPOINT as MLEP
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -97,17 +101,38 @@ def update_extractor(
     return update_with_creation_schema(db, Extractor, id, extractor)
 
 
-@router.delete("/{id}", status_code=status.HTTP_200_OK)
-def delete_extractor(id: int, db: "Session" = Depends(get_db)):
-    # TODO: Delete from DBDIE ML API as well (make endpoint first)
-    # TODO: Delete models as well (ML API and DB)
-    def update_labels_f(record) -> None:
-        setattr(record, "extr_id", None)
+def update_labels_f(record) -> None:
+    setattr(record, "extr_id", None)
 
+
+@router.delete("/{id}", status_code=status.HTTP_200_OK)
+def delete_extractor(
+    id: int,
+    delete_models: bool = False,
+    db: "Session" = Depends(get_db),
+):
+    # Nullify extr_id in labels that used it for extraction
     update_many(
         db,
         Labels,
         filter=(Labels.extr_id == id),
         update_f=update_labels_f,
     )
-    return delete_one(db, Extractor, id)
+
+    if delete_models:
+        extr = get_req(EP.EXTRACTOR, id)
+
+    # Delete extractor
+    resp_extr = req_delete(mlendp(f"{MLEP.DELETE}/extractor/{id}"))
+    assert resp_extr.status_code == status.HTTP_200_OK, resp_extr.text
+    resp_extr = delete_one(db, Extractor, id)
+    assert resp_extr.status_code == status.HTTP_200_OK, resp_extr.text
+
+    # Delete models using this API (if requested)
+    if delete_models:
+        models_ids = [mid for mid in extr["models_ids"].values() if mid is not None]
+        for mid in models_ids:
+            resp_model = req_delete(endp(f"{EP.MODELS}/{mid}"))
+            assert resp_model.status_code == status.HTTP_200_OK, resp_model.text
+
+    return Response(status_code=status.HTTP_200_OK)

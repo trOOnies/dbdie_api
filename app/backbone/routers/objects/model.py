@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from dbdie_classes.schemas.objects import ModelCreate, ModelOut
 from fastapi import APIRouter, Depends, status
+from requests import delete as req_delete
 
 from backbone.database import get_db
 from backbone.endpoints import (
@@ -15,11 +16,13 @@ from backbone.endpoints import (
     get_id,
     get_many,
     get_req,
+    mlendp,
     update_with_creation_schema,
 )
 from backbone.exceptions import ValidationException
 from backbone.models.objects import Model
 from backbone.options import ENDPOINT as EP
+from backbone.options import ML_ENDPOINT as MLEP
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -93,4 +96,5 @@ def update_model(
 
 @router.delete("/{id}", status_code=status.HTTP_200_OK)
 def delete_model(id: int, db: "Session" = Depends(get_db)):
+    req_delete(mlendp(f"{MLEP.DELETE}/model/{id}"))
     return delete_one(db, Model, id)

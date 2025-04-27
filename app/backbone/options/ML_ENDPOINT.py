@@ -7,5 +7,5 @@ if TYPE_CHECKING:
 
 CROP    : "Endpoint" = "/crop"
 EXTRACT : "Endpoint" = "/extract"
-BACKUP  : "Endpoint" = "/backup"
 TRAIN   : "Endpoint" = "/train"
+DELETE  : "Endpoint" = "/delete"
