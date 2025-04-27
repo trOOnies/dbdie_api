@@ -47,11 +47,6 @@ def get_addons(
     return get_many(db, limit, Addon, skip, ifk, AddonType)
 
 
-@router.get("/types", response_model=list[AddonTypeOut])
-def get_addons_types(db: "Session" = Depends(get_db)):
-    return get_types(db, AddonType)
-
-
 @router.get("/{id}", response_model=AddonOut)
 def get_addon(id: int, db: "Session" = Depends(get_db)):
     return filter_one(db, Addon, id)[0]
@@ -62,13 +57,20 @@ def get_addon_icon(id: int):
     return get_icon("addons", id)
 
 
+@router.get("/types", response_model=list[AddonTypeOut])
+def get_addons_types(db: "Session" = Depends(get_db)):
+    return get_types(db, AddonType)
+
+
+@router.get("/types/{id}", response_model=AddonTypeOut)
+def get_addon_type(id: int, db: "Session" = Depends(get_db)):
+    return filter_one(db, AddonType, id)[0]
+
+
 @router.post("", response_model=AddonOut, status_code=status.HTTP_201_CREATED)
 def create_addon(addon: AddonCreate, db: "Session" = Depends(get_db)):
     if NOT_WS_PATT.search(addon.name) is None:
         raise ValidationException("Addon name can't be empty")
-
-    get_req(EP.ITEM, addon.item_id)
-    # TODO: assert type_id exists
 
     new_addon = addon.model_dump() | {"id": getr(f"{EP.ADDONS}/count")}
     new_addon = Addon(**new_addon)

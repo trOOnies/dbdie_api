@@ -50,11 +50,6 @@ def get_offerings(
     return get_many(db, limit, Offering, skip, ifk, Character)
 
 
-@router.get("/types", response_model=list[OfferingTypeOut])
-def get_offering_types(db: "Session" = Depends(get_db)):
-    return get_types(db, OfferingType)
-
-
 @router.get("/{id}", response_model=OfferingOut)
 def get_offering(id: int, db: "Session" = Depends(get_db)):
     """Get a DBD offering with a certain ID."""
@@ -67,13 +62,21 @@ def get_offering_icon(id: int):
     return get_icon("offerings", id)
 
 
+@router.get("/types", response_model=list[OfferingTypeOut])
+def get_offering_types(db: "Session" = Depends(get_db)):
+    return get_types(db, OfferingType)
+
+
+@router.get("/types/{id}", response_model=OfferingTypeOut)
+def get_offering_type(id: int, db: "Session" = Depends(get_db)):
+    return filter_one(db, OfferingType, id)[0]
+
+
 @router.post("", response_model=OfferingOut, status_code=status.HTTP_201_CREATED)
 def create_offering(offering: OfferingCreate, db: "Session" = Depends(get_db)):
     """Create a DBD offering."""
     if NOT_WS_PATT.search(offering.name) is None:
         raise ValidationException("Offering name can't be empty")
-
-    # TODO: assert type_id and user_id exists
 
     new_offering = offering.model_dump() | {"id": getr(f"{EP.OFFERING}/count")}
     new_offering = Offering(**new_offering)

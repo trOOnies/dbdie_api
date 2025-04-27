@@ -47,11 +47,6 @@ def get_items(
     return get_many(db, limit, Item, skip, ifk, ItemType)
 
 
-@router.get("/types", response_model=list[ItemTypeOut])
-def get_item_types(db: "Session" = Depends(get_db)):
-    return get_types(db, ItemType)
-
-
 @router.get("/{id}", response_model=ItemOut)
 def get_item(id: int, db: "Session" = Depends(get_db)):
     return filter_one(db, Item, id)[0]
@@ -62,12 +57,20 @@ def get_item_icon(id: int):
     return get_icon("items", id)
 
 
+@router.get("/types", response_model=list[ItemTypeOut])
+def get_item_types(db: "Session" = Depends(get_db)):
+    return get_types(db, ItemType)
+
+
+@router.get("/types/{id}", response_model=ItemTypeOut)
+def get_item_type(id: int, db: "Session" = Depends(get_db)):
+    return filter_one(db, ItemType, id)[0]
+
+
 @router.post("", response_model=ItemOut, status_code=status.HTTP_201_CREATED)
 def create_item(item: ItemCreate, db: "Session" = Depends(get_db)):
     if NOT_WS_PATT.search(item.name) is None:
         raise ValidationException("Item name can't be empty")
-
-    # TODO: assert type_id exists
 
     new_item = item.model_dump() | {"id": getr(f"{EP.ITEM}/count")}
     new_item = Item(**new_item)
