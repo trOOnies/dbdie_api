@@ -270,8 +270,10 @@ def update_one_new(
     model_str: str,  # TODO: Get from model
     schema_out_dict: dict[str, Any],
     new_id: int | None = None,
-) -> Response:
-    """[NEW] Base update one (item) function."""
+) -> dict[str, Any]:
+    """[NEW] Base update one (item) function.
+    If success, returns the updated item.
+    """
     _, select_query = filter_one(db, model, schema_out_dict["id"], model_str)
 
     new_info = deepcopy(schema_out_dict)
@@ -281,7 +283,7 @@ def update_one_new(
     select_query.update(new_info, synchronize_session=False)
     db.commit()
 
-    return Response(status_code=status.HTTP_200_OK)
+    return new_info
 
 
 def add_commit_refresh(db: "Session", model) -> None:

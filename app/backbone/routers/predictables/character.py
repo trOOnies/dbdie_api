@@ -155,8 +155,7 @@ def create_character_full(
 
     if character.ifk:
         character_only["power_id"] = power_id
-        u_resp = update_one_new(db, Character, "Character", character_only)
-        assert u_resp.status_code == status.HTTP_200_OK, "Failed to update character"
+        character_only = update_one_new(db, Character, "Character", character_only)
 
     return {
         "character": character_only,

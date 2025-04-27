@@ -17,6 +17,7 @@ from backbone.endpoints import (
     get_req,
     getr,
     update_one,
+    update_one_new,
     update_many,
 )
 from backbone.exceptions import ItemNotFoundException, ValidationException
@@ -111,8 +112,7 @@ def change_perk_id(
     else:
         raise AssertionError(f"New id '{new_id}' already exists.")
 
-    resp = update_one(db, perk, Perk, "Perk", id, new_id=new_id)
-    assert resp.status_code == status.HTTP_200_OK
+    modified_perk = update_one_new(db, Perk, "Perk", perk, new_id=new_id)
 
     def update_cols(record) -> None:
         for col_name in ["perks_0", "perks_1", "perks_2", "perks_3"]:
@@ -134,8 +134,7 @@ def change_perk_id(
     # TODO: Deprecate perk models and extractors that use them
     # ...
 
-    perk.id = new_id
-    return perk
+    return modified_perk
 
 
 @router.put("/{id}", status_code=status.HTTP_200_OK)
