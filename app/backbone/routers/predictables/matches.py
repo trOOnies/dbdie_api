@@ -19,9 +19,11 @@ from backbone.code.matches import (
 from backbone.database import get_db
 from backbone.endpoints import (
     NOT_WS_PATT,
+    count_with_dbdvr,
     delete_one,
     do_count,
     filter_one,
+    filter_with_dbdvr,
     get_id,
     get_many,
     get_match_img,
@@ -62,6 +64,24 @@ def get_match_id(
     db: "Session" = Depends(get_db),
 ):
     return get_id(db, Match, filename, name_col="filename")
+
+
+@router.get("/filter-with-dbdvr", response_model=list[MatchOut])
+def filter_matches_by_dbdvr(
+    dbdv_min_id: int,
+    dbdv_max_id: int | None = None,
+    db: "Session" = Depends(get_db),
+):
+    return filter_with_dbdvr(db, Match, dbdv_min_id, dbdv_max_id)
+
+
+@router.get("/filter-with-dbdvr/count", response_model=int)
+def count_matches_by_dbdvr(
+    dbdv_min_id: int,
+    dbdv_max_id: int | None = None,
+    db: "Session" = Depends(get_db),
+):
+    return count_with_dbdvr(db, Match, dbdv_min_id, dbdv_max_id)
 
 
 @router.get("/image/{id}")

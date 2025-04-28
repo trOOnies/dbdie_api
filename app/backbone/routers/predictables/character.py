@@ -23,9 +23,11 @@ from backbone.database import get_db
 from backbone.endpoints import (
     NOT_WS_PATT,
     add_commit_refresh,
+    count_with_dbdvr,
     delete_one,
     do_count,
     filter_one,
+    filter_with_dbdvr,
     get_icon,
     get_many,
     get_req,
@@ -62,6 +64,24 @@ def count_characters(
 ):
     """Count DBD characters."""
     return do_count(db, Character, ifk, text=text)
+
+
+@router.get("/filter-with-dbdvr", response_model=list[CharacterOut])
+def filter_characters_by_dbdvr(
+    dbdv_min_id: int,
+    dbdv_max_id: int | None = None,
+    db: "Session" = Depends(get_db),
+):
+    return filter_with_dbdvr(db, Character, dbdv_min_id, dbdv_max_id)
+
+
+@router.get("/filter-with-dbdvr/count", response_model=int)
+def count_characters_by_dbdvr(
+    dbdv_min_id: int,
+    dbdv_max_id: int | None = None,
+    db: "Session" = Depends(get_db),
+):
+    return count_with_dbdvr(db, Character, dbdv_min_id, dbdv_max_id)
 
 
 @router.get("/full/{id}", response_model=FullCharacterOut)

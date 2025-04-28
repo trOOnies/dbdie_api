@@ -306,3 +306,33 @@ def get_types(db: "Session", type_sqla_model):
     """Base get item types function."""
     assert type_sqla_model.__tablename__ in TN.PREDICTABLE_TYPES
     return get_many(db, 10_000, type_sqla_model)
+
+
+def filter_with_dbdvr(
+    db: "Session",
+    model,
+    dbdv_min_id: int,
+    dbdv_max_id: int | None = None,
+):
+    """Base get items filtering with DBDVersionRange."""
+    filter = [model.dbdv_id >= dbdv_min_id]
+    if dbdv_max_id is not None:
+        assert dbdv_min_id < dbdv_max_id
+        filter.append(model.dbdv_id < dbdv_max_id)
+    query = db.query(model.id).filter(*filter)
+    return query.all()
+
+
+def count_with_dbdvr(
+    db: "Session",
+    model,
+    dbdv_min_id: int,
+    dbdv_max_id: int | None = None,
+) -> int:
+    """Base count items filtering with DBDVersionRange."""
+    filter = [model.dbdv_id >= dbdv_min_id]
+    if dbdv_max_id is not None:
+        assert dbdv_min_id < dbdv_max_id
+        filter.append(model.dbdv_id < dbdv_max_id)
+    query = db.query(model.id).filter(*filter)
+    return query.count()
